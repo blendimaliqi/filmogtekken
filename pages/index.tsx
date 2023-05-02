@@ -1,31 +1,36 @@
-import Image from "next/image";
-import { Inter } from "next/font/google";
 import Nav from "@/components/Nav";
 import HomepageImage from "@/components/HomepageImage";
 import MovieTitle from "@/components/MovieTitle";
 import Movies from "@/components/Movies";
-import { useEffect, useState } from "react";
-import {client} from "../config/client"
-import movie from '@/studio/schemas/movie';
+import { client, urlFor } from "../config/client";
 
-export default function Home() {
-  const [movies, setMovies] = useState([]);
 
-  useEffect(() => {
-    client
-      .fetch('*[_type == "movie"]{ title, releaseDate, poster }')
-      .then((data: any) => {
-        setMovies(data);
-        console.log("DATAA", data);
-      });
-  }, []);
+const movieQuery = `*[_type == "movie"] {
+  _id,
+  title,
+  releaseDate,
+  poster,
+  castMembers
+}`;
+
+export default function Home({ movies }: any) {
   return (
     <main>
-      <HomepageImage>
+      <HomepageImage url={urlFor(movies[0]?.poster.asset).url()}>
         <Nav />
-        <MovieTitle />
+        <MovieTitle movie={movies[0]} />
       </HomepageImage>
-      <Movies movies={movies}/>
+      <Movies movies={movies} />
     </main>
   );
+}
+
+export async function getStaticProps() {
+  const movieData = await client.fetch(movieQuery);
+  return {
+    props: {
+      movies: movieData,
+    },
+    revalidate: 1,
+  };
 }
