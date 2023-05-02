@@ -1,5 +1,7 @@
 //create movie component
-import React from "react";
+import React, { useEffect } from "react";
+import { urlFor } from "../config/client";
+import Image from "next/image";
 
 export interface MovieProps {
   title: string;
@@ -9,22 +11,27 @@ export interface MovieProps {
 
 function Movie({ title, year, poster }: MovieProps) {
   return (
-    <div className="
-    //hover effect and pops out a bit
+    <div
+      className="
       hover:opacity-75
       transition ease-in-out duration-150
       transform hover:scale-105
       cursor-pointer
-
-
-    ">
-      <img className="
-      //same height and width on my pictures
+    "
+    >
+      {
+        <Image
+          className="
         h-96 w-96
         mt-5
         rounded-3xl
-      " src={poster} alt={title} />
-
+      "
+          width={200}
+          height={300}
+          src={urlFor(poster).width(200).url()}
+          alt="poster"
+        />
+      }
     </div>
   );
 }

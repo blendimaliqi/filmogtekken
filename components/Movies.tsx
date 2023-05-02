@@ -1,23 +1,34 @@
 //create movies component
 import React, { useEffect, useState } from "react";
 import Movie, { MovieProps } from "./Movie";
+import { client } from "@/config/client";
+import { urlFor } from "../config/client";
 
 function Movies() {
   const [movies, setMovies] = useState([]);
 
   useEffect(() => {
-    const getMovieRequest = async () => {
-      const url = `http://www.omdbapi.com/?s=wrong+turn&apikey=62d896b5`;
-
-      const response = await fetch(url);
-      const responseJson = await response.json();
-
-      setMovies(responseJson.Search);
-    };
-
-    getMovieRequest();
-    console.timeLog("getMovieRequest", movies);
+    client
+      .fetch('*[_type == "movie"]{ title, releaseDate, poster }')
+      .then((data: any) => {
+        setMovies(data);
+        console.log("DATAA", data);
+      });
   }, []);
+
+  // useEffect(() => {
+  //   const getMovieRequest = async () => {
+  //     const url = `http://www.omdbapi.com/?s=wrong+turn&apikey=62d896b5`;
+
+  //     const response = await fetch(url);
+  //     const responseJson = await response.json();
+
+  //     setMovies(responseJson.Search);
+  //   };
+
+  //   getMovieRequest();
+  //   console.timeLog("getMovieRequest", movies);
+  // }, []);
 
   return (
     <div className="">
@@ -65,10 +76,10 @@ function Movies() {
         {movies &&
           movies.map((movie: any) => (
             <Movie
-              key={movie.imdbID}
-              title={movie.Title}
-              year={movie.Year}
-              poster={movie.Poster}
+              key={movie.title}
+              title={movie.title}
+              year={movie.year}
+              poster={movie.poster.asset}
             />
           ))}
       </div>
