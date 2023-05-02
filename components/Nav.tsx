@@ -3,8 +3,6 @@ import React from "react";
 //Import searchicon with outline from react icons
 import { FaSearch } from "react-icons/fa";
 
-
-
 type Props = {};
 
 function Nav({}: Props) {
@@ -18,14 +16,12 @@ function Nav({}: Props) {
     transition duration-300 ease-in-out
     cursor-pointer
     whitespace-nowrap
-    "
     
-     
+    "
       >
         Film og Tekken
       </h1>
       <nav className="flex flex-row w-full justify-between">
-
         <ul
           className="
             flex flex-row
@@ -39,8 +35,6 @@ function Nav({}: Props) {
             justify-between
             "
         >
-
-
           <li
             className="ml-10
   border-b-2 border-transparent
@@ -64,9 +58,8 @@ function Nav({}: Props) {
           >
             <Link href="/tekken">Tekken</Link>
           </li>
-  
         </ul>
-       <FaSearch />
+        <FaSearch />
       </nav>
     </div>
   );
