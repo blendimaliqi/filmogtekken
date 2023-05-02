@@ -19,13 +19,17 @@ function Movies(movies: any) {
   const [input, setInput] = useState("");
 
   const getMovieRequest = async () => {
-    const url = `http://www.omdbapi.com/?s=${input}&apikey=62d896b5`;
+    try {
+      const url = `http://www.omdbapi.com/?s=${input}&apikey=62d896b5`;
 
-    const response = await fetch(url);
-    const responseJson = await response.json();
-    const movies: any[] = await responseJson.Search;
-    console.log("responseJson", movies);
-    setOmdbMovies(movies);
+      const response = await fetch(url);
+      const responseJson = await response.json();
+      const movies: any[] = await responseJson.Search;
+      console.log("responseJson", movies);
+      setOmdbMovies(movies);
+    } catch (error) {
+      console.log("error", error);
+    }
   };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,7 +46,12 @@ function Movies(movies: any) {
       const movieData = {
         _type: "movie",
         title: mov.Title,
-        releaseDate: mov.Year,
+        releaseDate: new Date(),
+        slug: {
+          _type: "slug",
+          current: mov.Title,
+        },
+
         poster: {
           _type: "image",
           asset: {

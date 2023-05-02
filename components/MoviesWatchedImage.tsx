@@ -1,5 +1,3 @@
-import { urlFor } from "@/config/client";
-import Image from "next/image";
 import React from "react";
 
 type Props = {
@@ -20,8 +18,12 @@ function MoviesWatchedImage({ children, poster }: Props) {
       "
       style={{
         backgroundImage: `url(${poster})`,
+        //show the image as is and not cover the whole div
+        backgroundSize: "contain",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
+        
 
-        //gradient shadow bottom
 
       }}
     >

@@ -4,7 +4,7 @@ import { FaInfoCircle } from "react-icons/fa";
 function MovieTitle(movie: any) {
   return (
     <div className="flex flex-col p-24 mt-44">
-      <h1 className="text-9xl py-8 font-bold text-white  cursor-pointer whitespace-nowrap">
+      <h1 className="text-8xl py-8 font-bold text-white  cursor-pointer whitespace">
         {movie.movie.title}
       </h1>
       <h2 className="text-4xl py-2 font-bold text-white  cursor-pointer whitespace-nowrap">

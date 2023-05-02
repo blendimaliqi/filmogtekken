@@ -4,7 +4,6 @@ import MovieTitle from "@/components/MovieTitle";
 import Movies from "@/components/Movies";
 import { client, urlFor } from "../config/client";
 
-
 const movieQuery = `*[_type == "movie"] {
   _id,
   title,
@@ -14,13 +13,26 @@ const movieQuery = `*[_type == "movie"] {
 }`;
 
 export default function Home({ movies }: any) {
+  const sortedMovies = movies.sort((a: any, b: any) => {
+    return (
+      new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
+    );
+  });
+
   return (
     <main>
-      <HomepageImage url={urlFor(movies[0]?.poster.asset).url()}>
-        <Nav />
-        <MovieTitle movie={movies[0]} />
+      <HomepageImage  url={urlFor(movies[0]?.poster.asset).url()}>
+        <div
+          className="
+    
+          "
+        >
+          <Nav />
+          <MovieTitle movie={movies[0]} />
+        </div>
       </HomepageImage>
-      <Movies movies={movies} />
+
+      <Movies movies={sortedMovies} />
     </main>
   );
 }
@@ -31,6 +43,7 @@ export async function getStaticProps() {
     props: {
       movies: movieData,
     },
-    revalidate: 1,
+    //revalidate after 30 seconds
+    revalidate: 30,
   };
 }

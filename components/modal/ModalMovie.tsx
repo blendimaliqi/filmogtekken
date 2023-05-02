@@ -1,8 +1,6 @@
 //create movie component
 import React, { useEffect } from "react";
-
 import Image from "next/image";
-import { urlFor } from "@/config/client";
 
 export interface MovieProps {
   title: string;
