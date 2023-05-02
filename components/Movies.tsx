@@ -45,6 +45,23 @@ function Movies() {
         text-xl
       "
       >
+        <button
+          className="text-gray-300
+        hover:text-gray-400
+        transition duration-300 ease-in-out
+        cursor-pointer
+        //give border when hover
+        hover:border-2
+        border-gray-300
+        rounded-2xl
+        hover:border-opacity-50
+        p-2
+        h-96
+        w-full
+        "
+        >
+          Legg til
+        </button>
         {movies &&
           movies.map((movie: any) => (
             <Movie
