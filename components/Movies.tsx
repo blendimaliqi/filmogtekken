@@ -1,8 +1,7 @@
 //create movies component
-import React, { useEffect, useState } from "react";
-import Movie, { MovieProps } from "./Movie";
+import React, { useState } from "react";
+import Movie from "./Movie";
 import { client, createPost } from "@/config/client";
-import { urlFor } from "../config/client";
 import { Modal } from "./modal/Modal";
 import ModalMovie from "./modal/ModalMovie";
 
@@ -17,9 +16,6 @@ export async function uploadExternalImage(url: string) {
 
 function Movies(movies: any) {
   const [omdbMovies, setOmdbMovies] = useState<any[]>([]);
-
-  //input from modal ref
-  //input from modal ref
   const [input, setInput] = useState("");
 
   const getMovieRequest = async () => {
@@ -37,31 +33,31 @@ function Movies(movies: any) {
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
-  async function addMovie() {
-    console.log("addMovie");
+  async function addMovie(mov: any) {
+    try {
+      const imageUrl = mov.Poster;
+      const imageAsset = await uploadExternalImage(imageUrl);
+      const imageAssetId = imageAsset._id;
+
+      const movieData = {
+        _type: "movie",
+        title: mov.Title,
+        releaseDate: mov.Year,
+        poster: {
+          _type: "image",
+          asset: {
+            _ref: imageAssetId,
+            _type: "reference",
+          },
+        },
+      };
+
+      const createdMovie = await createPost(movieData);
+      console.log("Created movie:", createdMovie);
+    } catch (error) {
+      console.log("error", error);
+    }
   }
-
-  // async function addMovie(movie: any) {
-  //   const imageUrl =
-  //     "https://image.tmdb.org/t/p/original//hiKmpZMGZsrkA3cdce8a7Dpos1j.jpg";
-  //   const imageAsset = await uploadExternalImage(imageUrl);
-  //   const imageAssetId = imageAsset._id;
-
-  //   const movieData = {
-  //     _type: "movie",
-  //     title: "Example Movie",
-  //     releaseDate: "2023-01-01T00:00:00Z",
-  //     poster: {
-  //       _type: "image",
-  //       asset: {
-  //         _ref: imageAssetId,
-  //         _type: "reference",
-  //       },
-  //     },
-  //   };
-  //   const createdMovie = await createPost(movieData);
-  //   console.log("Created movie:", createdMovie);
-  // }
 
   return (
     <div className="">
@@ -119,7 +115,6 @@ function Movies(movies: any) {
             <input
               type="text"
               placeholder="Søk film"
-              //activate something when typing enter
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   getMovieRequest();
@@ -161,8 +156,7 @@ function Movies(movies: any) {
                   title={movie.Title}
                   year={movie.Year}
                   poster={movie.Poster}
-                  callack={addMovie}
-                  movie={movie}
+                  callack={() => addMovie(movie)}
                 />
               ))}
           </div>

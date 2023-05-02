@@ -8,10 +8,9 @@ export interface MovieProps {
   title: string;
   year: string;
   poster: string;
-  callack?: () => void;
-  movie:any;
+  callack?: (movie: any) => void;
 }
-function ModalMovie({ title, year, poster, callack, movie }: MovieProps) {
+function ModalMovie({ title, year, poster, callack }: MovieProps) {
   const isValidUrl = (url: string) =>
     url.startsWith("/") ||
     url.startsWith("http://") ||
@@ -39,7 +38,7 @@ function ModalMovie({ title, year, poster, callack, movie }: MovieProps) {
           mt-5
           rounded-3xl
         "
-       //   onClick={movie != undefined ? () => callack(movie) : () => {}}
+          onClick={callack}
           width={200}
           height={300}
           src={poster}
