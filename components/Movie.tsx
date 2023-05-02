@@ -28,7 +28,7 @@ function Movie({ title, year, poster }: MovieProps) {
       "
           width={200}
           height={300}
-          src={urlFor(poster).width(200).url()}
+          src={urlFor(poster).url()}
           alt="poster"
         />
       }
