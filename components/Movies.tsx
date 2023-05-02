@@ -37,7 +37,11 @@ function Movies(movies: any) {
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
-  // async function addMovie() {
+  async function addMovie() {
+    console.log("addMovie");
+  }
+
+  // async function addMovie(movie: any) {
   //   const imageUrl =
   //     "https://image.tmdb.org/t/p/original//hiKmpZMGZsrkA3cdce8a7Dpos1j.jpg";
   //   const imageAsset = await uploadExternalImage(imageUrl);
@@ -157,6 +161,7 @@ function Movies(movies: any) {
                   title={movie.Title}
                   year={movie.Year}
                   poster={movie.Poster}
+                  callack={addMovie}
                 />
               ))}
           </div>

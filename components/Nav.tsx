@@ -16,7 +16,6 @@ function Nav({}: Props) {
     transition duration-300 ease-in-out
     cursor-pointer
     whitespace-nowrap
-    
     "
       >
         Film og Tekken
@@ -39,12 +38,11 @@ function Nav({}: Props) {
             className="ml-10
   border-b-2 border-transparent
   hover:text-gray-200
-
   transition duration-300 ease-in-out
   p-2
 "
           >
-            <Link href="/film">Film</Link>
+            <Link href="/">Film</Link>
           </li>
 
           <li

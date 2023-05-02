@@ -8,10 +8,10 @@ export interface MovieProps {
   title: string;
   year: string;
   poster: string;
+  callack?: () => void;
+  movie:any;
 }
-function ModalMovie({ title, year, poster }: MovieProps) {
-  console.log("POSTER", poster);
-
+function ModalMovie({ title, year, poster, callack, movie }: MovieProps) {
   const isValidUrl = (url: string) =>
     url.startsWith("/") ||
     url.startsWith("http://") ||
@@ -20,7 +20,7 @@ function ModalMovie({ title, year, poster }: MovieProps) {
   const handleOnError = (
     event: React.SyntheticEvent<HTMLImageElement, Event>
   ) => {
-    event.currentTarget.src = "/static/default-image.jpg"; // Replace with your default image path
+    event.currentTarget.src = " https://i.imgur.com/5sKoyuq.jpeg";
   };
 
   return (
@@ -39,6 +39,7 @@ function ModalMovie({ title, year, poster }: MovieProps) {
           mt-5
           rounded-3xl
         "
+       //   onClick={movie != undefined ? () => callack(movie) : () => {}}
           width={200}
           height={300}
           src={poster}
