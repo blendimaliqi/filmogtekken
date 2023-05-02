@@ -4,18 +4,7 @@ import Movie, { MovieProps } from "./Movie";
 import { client } from "@/config/client";
 import { urlFor } from "../config/client";
 
-function Movies() {
-  const [movies, setMovies] = useState([]);
-
-  useEffect(() => {
-    client
-      .fetch('*[_type == "movie"]{ title, releaseDate, poster }')
-      .then((data: any) => {
-        setMovies(data);
-        console.log("DATAA", data);
-      });
-  }, []);
-
+function Movies(movies: any) {
   // useEffect(() => {
   //   const getMovieRequest = async () => {
   //     const url = `http://www.omdbapi.com/?s=wrong+turn&apikey=62d896b5`;
@@ -73,15 +62,14 @@ function Movies() {
         >
           Legg til
         </button>
-        {movies &&
-          movies.map((movie: any) => (
-            <Movie
-              key={movie.title}
-              title={movie.title}
-              year={movie.year}
-              poster={movie.poster.asset}
-            />
-          ))}
+        {movies.movies.map((movie: any) => (
+          <Movie
+            key={movie.title}
+            title={movie.title}
+            year={movie.year}
+            poster={movie.poster.asset}
+          />
+        ))}
       </div>
     </div>
   );
