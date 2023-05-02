@@ -1,8 +1,17 @@
 //create movies component
 import React, { useEffect, useState } from "react";
 import Movie, { MovieProps } from "./Movie";
-import { client } from "@/config/client";
+import { client, createPost } from "@/config/client";
 import { urlFor } from "../config/client";
+
+export async function uploadExternalImage(url: string) {
+  const response = await fetch(url);
+  const blob = await response.blob();
+  const contentType = response.headers.get("content-type") || "image/jpeg"; // Provide a default value
+
+  const asset = await client.assets.upload("image", blob, { contentType });
+  return asset;
+}
 
 function Movies(movies: any) {
   // useEffect(() => {
@@ -18,6 +27,28 @@ function Movies(movies: any) {
   //   getMovieRequest();
   //   console.timeLog("getMovieRequest", movies);
   // }, []);
+
+  async function addMovie() {
+    const imageUrl =
+      "https://image.tmdb.org/t/p/original//hiKmpZMGZsrkA3cdce8a7Dpos1j.jpg";
+    const imageAsset = await uploadExternalImage(imageUrl);
+    const imageAssetId = imageAsset._id;
+
+    const movieData = {
+      _type: "movie",
+      title: "Example Movie",
+      releaseDate: "2023-01-01T00:00:00Z",
+      poster: {
+        _type: "image",
+        asset: {
+          _ref: imageAssetId,
+          _type: "reference",
+        },
+      },
+    };
+    const createdMovie = await createPost(movieData);
+    console.log("Created movie:", createdMovie);
+  }
 
   return (
     <div className="">
@@ -59,6 +90,7 @@ function Movies(movies: any) {
         h-96
         w-full
         "
+          onClick={addMovie}
         >
           Legg til
         </button>
