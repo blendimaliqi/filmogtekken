@@ -162,6 +162,7 @@ function Movies(movies: any) {
                   year={movie.Year}
                   poster={movie.Poster}
                   callack={addMovie}
+                  movie={movie}
                 />
               ))}
           </div>
