@@ -31,7 +31,7 @@ function MovieTitle(movie: any) {
         items-center
         "
       >
-        <FaInfoCircle /> <p className="">Mer info</p>
+        <FaInfoCircle /> <p className="ml-4">Mer info</p>
       </button>
     </div>
   );
