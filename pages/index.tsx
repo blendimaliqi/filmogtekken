@@ -1,7 +1,10 @@
-import Nav from "@/components/Nav";
+import React from "react";
+import { Carousel } from "react-responsive-carousel";
+import "react-responsive-carousel/lib/styles/carousel.min.css";
 import HomepageImage from "@/components/HomepageImage";
 import MovieTitle from "@/components/MovieTitle";
 import Movies from "@/components/Movies";
+import Nav from "@/components/Nav";
 import { client, urlFor } from "../config/client";
 
 const movieQuery = `*[_type == "movie"] {
@@ -19,18 +22,33 @@ export default function Home({ movies }: any) {
     );
   });
 
+  const moviesToDisplay = sortedMovies.slice(0, 5);
+
   return (
-    <main>
-      <HomepageImage  url={urlFor(movies[0]?.poster.asset).url()}>
-        <div
-          className="
-    
-          "
-        >
-          <Nav />
-          <MovieTitle movie={movies[0]} />
-        </div>
-      </HomepageImage>
+    <main style={{ position: "relative" }}>
+      <div style={{ position: "absolute", top: "0", left: "0", zIndex: "2" }}>
+        <Nav />
+      </div>
+      <Carousel
+        autoPlay={true}
+        interval={5000}
+        stopOnHover={false}
+        infiniteLoop={true}
+        showThumbs={false}
+        showStatus={false}
+      >
+        {moviesToDisplay.map((movie: any) => (
+          <HomepageImage
+            key={movie._id}
+            url={urlFor(movie.poster.asset).url()}
+            movie={movie}
+          >
+            <div >
+            <MovieTitle movie={movie} />
+            </div>
+          </HomepageImage>
+        ))}
+      </Carousel>
 
       <Movies movies={sortedMovies} />
     </main>

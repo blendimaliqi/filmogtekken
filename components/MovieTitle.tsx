@@ -3,11 +3,15 @@ import { FaInfoCircle } from "react-icons/fa";
 
 function MovieTitle(movie: any) {
   return (
-    <div className="flex flex-col p-24 mt-44">
-      <h1 className="text-8xl py-8 font-bold text-white  cursor-pointer whitespace">
+    <div className="flex flex-col items-start p-24 z-10000" style={{ zIndex: "100" }}>
+      <h1 className="text-4xl md:text-6xl lg:text-8xl mt-96
+      //text at start 
+      text-left
+      font-bold text-white py-8 cursor-pointer z-9000" style={{zIndex: 9090}}>
         {movie.movie.title}
       </h1>
-      <h2 className="text-4xl py-2 font-bold text-white  cursor-pointer whitespace-nowrap">
+
+      <h2 className="text-4xl py-2 font-bold text-white z-9000  cursor-pointer whitespace-nowrap" style={{zIndex:9090}}>
         Samlet rating: 7.9
       </h2>
       <button
@@ -27,7 +31,7 @@ function MovieTitle(movie: any) {
         items-center
         "
       >
-        <FaInfoCircle /> <p className="ml-4">Mer info</p>
+        <FaInfoCircle /> <p className="">Mer info</p>
       </button>
     </div>
   );
