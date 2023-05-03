@@ -176,6 +176,7 @@ function Movies(movies: any) {
             title={movie.title}
             year={movie.year}
             poster={movie.poster.asset}
+            movie={movie}
           />
         ))}
       </div>

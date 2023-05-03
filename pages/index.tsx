@@ -26,9 +26,7 @@ export default function Home({ movies }: any) {
 
   return (
     <main style={{ position: "relative" }}>
-      <div style={{ position: "absolute", top: "0", left: "0", zIndex: "2" }}>
-        <Nav />
-      </div>
+
       <Carousel
         autoPlay={true}
         interval={5000}

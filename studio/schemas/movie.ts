@@ -13,6 +13,16 @@ export default defineType({
       type: 'string',
     }),
     defineField({
+      name: 'rating',
+      title: 'Rating',
+      type: 'string',
+    }),
+    defineField({
+      name: 'length',
+      title: 'Length',
+      type: 'string',
+    }),
+    defineField({
       name: 'slug',
       title: 'Slug',
       type: 'slug',

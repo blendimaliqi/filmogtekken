@@ -2,16 +2,19 @@
 import React, { useEffect } from "react";
 import { urlFor } from "../config/client";
 import Image from "next/image";
+import Link from "next/link";
 
 export interface MovieProps {
   title: string;
   year: string;
   poster: string;
+  movie: any;
 }
 
-function Movie({ title, year, poster }: MovieProps) {
+function Movie({ title, year, poster, movie }: MovieProps) {
   return (
-    <div
+    <Link
+      href={`/${movie._id}`}
       className="
       hover:opacity-75
       transition ease-in-out duration-150
@@ -32,7 +35,7 @@ function Movie({ title, year, poster }: MovieProps) {
           alt="poster"
         />
       }
-    </div>
+    </Link>
   );
 }
 
