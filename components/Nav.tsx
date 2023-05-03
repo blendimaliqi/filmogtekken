@@ -57,7 +57,7 @@ function Nav({}: Props) {
             <Link href="/tekken">Tekken</Link>
           </li>
         </ul>
-        <FaSearch />
+        {/* <FaSearch /> */}
       </nav>
     </div>
   );
