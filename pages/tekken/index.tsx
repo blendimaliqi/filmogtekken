@@ -7,7 +7,10 @@ function Tekken({}: Props) {
   return (
     <main>
       <Nav />
-      <h1>Tekken</h1>
+      <div className="flex justify-center">
+
+      <h1 className="text-7xl" >Coming Soon!</h1>
+      </div>
     </main>
   );
 }
