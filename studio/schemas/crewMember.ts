@@ -40,7 +40,7 @@ export default defineType({
       department: 'department',
       media: 'person.image',
     },
-    prepare(selection) {
+    prepare(selection:any) {
       const {name, job, department, media} = selection
       return {
         title: name,

@@ -11,7 +11,7 @@ export default defineType({
       name: 'title',
       title: 'Title',
       type: 'string',
-      validation: (Rule) => Rule.required().error('Title is required'),
+      validation: (Rule:any) => Rule.required().error('Title is required'),
     }),
     defineField({
       name: 'ratings',
@@ -56,7 +56,7 @@ export default defineType({
         source: 'title',
         maxLength: 100,
       },
-      validation: (Rule) => Rule.required().error('Slug is required'),
+      validation: (Rule: any) => Rule.required().error('Slug is required'),
     }),
     defineField({
       name: 'overview',
@@ -75,7 +75,7 @@ export default defineType({
       options: {
         hotspot: true,
       },
-      validation: (Rule) => Rule.required().error('Poster is required'),
+      validation: (Rule: any) => Rule.required().error('Poster is required'),
     }),
     //genres movie
     defineField({
@@ -93,7 +93,7 @@ export default defineType({
       options: {
         hotspot: true,
       },
-      validation: (Rule) => Rule.required().error('Poster Backdrop Image is required'),
+      validation: (Rule: any) => Rule.required().error('Poster Backdrop Image is required'),
     }),
 
     defineField({
@@ -127,7 +127,7 @@ export default defineType({
       castName0: 'castMembers.0.person.name',
       castName1: 'castMembers.1.person.name',
     },
-    prepare(selection) {
+    prepare(selection: any) {
       const year = selection.date && selection.date.split('-')[0]
       const cast = [selection.castName0, selection.castName1].filter(Boolean).join(', ')
 
