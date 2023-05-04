@@ -30,7 +30,6 @@ const movieQuery = `*[_type == "movie" && _id == $movieId] {
 
 function SingleMovie({ movie }: Props) {
   const router = useRouter();
-  const { slug } = router.query;
 
   if (router.isFallback) {
     return <div>Loading...</div>;
@@ -59,7 +58,6 @@ function SingleMovie({ movie }: Props) {
           height: "80%",
           opacity: 0.3,
           zIndex: -1,
-          // show top of the image
         }}
       />
       <h1
@@ -96,8 +94,7 @@ function SingleMovie({ movie }: Props) {
             <p>{new Date(movie.releaseDate).getFullYear()}</p>
             <p>{movie.length}min</p>
             {movie.ratings ? (
-              <div className="flex flex-row- items-center ">
-                {/* Calculate and show the combined rating of the different rating values with max 2 decimals and show how many people rated it */}
+              <div className="flex flex-row- items-center">
                 <p>
                   {(
                     movie.ratings.reduce(
@@ -135,12 +132,10 @@ function SingleMovie({ movie }: Props) {
           </div>
           <div className="mt-10 text-3xl flex flex-col">
             <h1>Individuell rating</h1>
-            {/* get img of person that has rated */}
             <div className="flex flex-row space-x-10 w-2/3 
             //make it wrap
             flex-wrap
             ">
-
             {movie.ratings &&
               movie.ratings.map((rating: any) => (
                 <div
@@ -153,9 +148,9 @@ function SingleMovie({ movie }: Props) {
                     src={urlFor(rating.person.image.asset).url()}
                     alt={rating.person.name}
                     className="
-        rounded-full
-        z-909090
-        "
+                    rounded-full
+                    z-909090
+                    "
                   />
                   <div className="flex flex-col">
                     <p>{rating.person.name}</p>
