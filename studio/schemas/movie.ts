@@ -11,12 +11,33 @@ export default defineType({
       name: 'title',
       title: 'Title',
       type: 'string',
+      validation: (Rule) => Rule.required().error('Title is required'),
     }),
     defineField({
-      name: 'rating',
-      title: 'Rating',
-      type: 'string',
+      name: 'ratings',
+      title: 'Ratings',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            {
+              name: 'person',
+              title: 'Person',
+              type: 'reference',
+              to: [{ type: 'person' }],
+            },
+            {
+              name: 'rating',
+              title: 'Rating',
+              type: 'number',
+            },
+          ],
+        },
+      ],
     }),
+    
+    
     defineField({
       name: 'length',
       title: 'Length',
@@ -35,6 +56,7 @@ export default defineType({
         source: 'title',
         maxLength: 100,
       },
+      validation: (Rule) => Rule.required().error('Slug is required'),
     }),
     defineField({
       name: 'overview',
@@ -53,6 +75,7 @@ export default defineType({
       options: {
         hotspot: true,
       },
+      validation: (Rule) => Rule.required().error('Poster is required'),
     }),
     //genres movie
     defineField({
@@ -70,7 +93,9 @@ export default defineType({
       options: {
         hotspot: true,
       },
+      validation: (Rule) => Rule.required().error('Poster Backdrop Image is required'),
     }),
+
     defineField({
       name: 'externalId',
       title: 'External ID',

@@ -41,7 +41,7 @@ export default function Home({ movies }: any) {
         {moviesToDisplay.map((movie: any) => (
           <HomepageImage
             key={movie._id}
-            url={urlFor(movie.poster_backdrop.asset).url()}
+            url={urlFor(movie.poster_backdrop.asset).url() ?? ""}
             movie={movie}
           >
             <MovieTitle movie={movie} />

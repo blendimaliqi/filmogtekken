@@ -15,8 +15,15 @@ const movieQuery = `*[_type == "movie" && _id == $movieId] {
   releaseDate,
   poster,
   poster_backdrop,
+  plot,
+  genres,
   castMembers,
-  rating,
+  ratings[] {
+    person-> {
+      name
+    },
+    rating
+  },
   length
 }[0]`;
 
@@ -27,7 +34,6 @@ function SingleMovie({ movie }: Props) {
   if (router.isFallback) {
     return <div>Loading...</div>;
   }
-
 
   return (
     <div
@@ -52,7 +58,7 @@ function SingleMovie({ movie }: Props) {
           height: "80%",
           opacity: 0.3,
           zIndex: -1,
-          objectFit: "cover",         
+          // show top of the image
         }}
       />
       <h1
@@ -77,19 +83,54 @@ function SingleMovie({ movie }: Props) {
         rounded-3xl
         "
         />
-        <div
-          className="flex flex-row items-center mt-10
+        <div>
+          <div
+            className="flex flex-row items-center mt-10
         text-gray-400
         space-x-5
         // font size
         text-3xl
         "
-        >
-          <p>{new Date(movie.releaseDate).getFullYear()}</p>
-          <p>{movie.length}</p>
-          <div className="flex flex-row- items-center ">
-            <p className="mr-2">{movie.rating}</p>
-            <AiFillStar />
+          >
+            <p>{new Date(movie.releaseDate).getFullYear()}</p>
+            <p>{movie.length}min</p>
+            {movie.ratings ? (
+              <div className="flex flex-row- items-center ">
+                {/* Calculate and show the combined rating of the different rating values with max 2 decimals and show how many people rated it */}
+                <p>
+                  {(
+                    movie.ratings.reduce(
+                      (acc: number, curr: any) => acc + curr.rating,
+                      0
+                    ) / movie.ratings.length
+                  ).toFixed(2)}
+                </p>
+                <AiFillStar />
+                <p className="ml-2">
+                  {" "}
+                  ({movie.ratings.length}{" "}
+                  {movie.ratings.length === 1 ? "rating" : "ratings"})
+                </p>
+              </div>
+            ) : (
+              <p>Ingen rating enda</p>
+            )}
+          </div>
+          <div className="flex flex-row mt-4">
+            {movie.genres &&
+              movie.genres.map((genre: string) => (
+                <p
+                  className="mr-4 text-2xl font-light border 
+                  rounded-lg p-2
+                "
+                  key={genre}
+                >
+                  {genre}
+                </p>
+              ))}
+          </div>
+          <div className="mt-4">
+            <p>{movie.plot}</p>
           </div>
         </div>
       </div>

@@ -41,6 +41,7 @@ function Movies(movies: any) {
       const fetchDetails = await fetch(movieDetails);
       const responeDetails = await fetchDetails.json();
 
+      console.log("responeDetails", responeDetails);
       const imageUrl = `https://image.tmdb.org/t/p/original${mov.poster_path}`;
       const imageAsset = await uploadExternalImage(imageUrl);
       const imageAssetId = imageAsset._id;
@@ -59,7 +60,9 @@ function Movies(movies: any) {
           _type: "slug",
           current: mov.title,
         },
-        rating: "0",
+
+        //rating: "Ingen rating enda",
+        //rating: responeDetails.vote_average,
 
         genres: responeDetails.genres.map((genre: any) => genre.name),
 
