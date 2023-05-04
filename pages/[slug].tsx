@@ -62,7 +62,7 @@ function SingleMovie({ movie }: Props) {
         }}
       />
       <h1
-      style={{zIndex: 90}}
+        style={{ zIndex: 90 }}
         className="
         text-7xl font-bold
         text-white
@@ -77,13 +77,13 @@ function SingleMovie({ movie }: Props) {
           height={240}
           src={urlFor(movie.poster).url()}
           alt={movie.title}
-          style={{zIndex: 90}}
+          style={{ zIndex: 90 }}
           className="
         mt-10
         rounded-3xl
         "
         />
-        <div style={{zIndex:90}}>
+        <div style={{ zIndex: 90 }}>
           <div
             className="flex flex-row items-center mt-10
         text-gray-400
@@ -110,9 +110,15 @@ function SingleMovie({ movie }: Props) {
                   ({movie.ratings.length}{" "}
                   {movie.ratings.length === 1 ? "rating" : "ratings"})
                 </p>
-                <a href={`https://filmogtekken.sanity.studio/desk/movie;${movie._id}`} target="_blank" className="bg-gray-800 ml-2 p-1 rounded-xl w-20 text-center text-white text-lg font-semibold
+                <a
+                  href={`https://filmogtekken.sanity.studio/desk/movie;${movie._id}`}
+                  target="_blank"
+                  className="bg-gray-800 ml-2 p-1 rounded-xl w-20 text-center text-white text-lg font-semibold
                 hover:bg-gray-500
-                ">Rate it!</a>
+                "
+                >
+                  Rate it!
+                </a>
               </div>
             ) : (
               <p>Ingen rating enda</p>
@@ -123,8 +129,9 @@ function SingleMovie({ movie }: Props) {
               movie.genres.map((genre: string) => (
                 <p
                   className="mr-4 text-2xl font-light border 
-                  rounded-lg p-2
+                  rounded-lg p-2 
                 "
+                  style={{ zIndex: 90 }}
                   key={genre}
                 >
                   {genre}
