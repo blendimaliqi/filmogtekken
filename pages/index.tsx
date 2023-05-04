@@ -13,13 +13,14 @@ const movieQuery = `*[_type == "movie"] {
   releaseDate,
   poster,
   poster_backdrop,
-  castMembers
+  castMembers,
+  _createdAt
 }`;
 
 export default function Home({ movies }: any) {
   const sortedMovies = movies.sort((a: any, b: any) => {
     return (
-      new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
+      new Date(b._createdAt).getTime() - new Date(a._createdAt).getTime()
     );
   });
 

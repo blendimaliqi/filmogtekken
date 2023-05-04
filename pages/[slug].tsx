@@ -14,6 +14,7 @@ const movieQuery = `*[_type == "movie" && _id == $movieId] {
   title,
   releaseDate,
   poster,
+  poster_backdrop,
   castMembers,
   rating,
   length
@@ -27,6 +28,7 @@ function SingleMovie({ movie }: Props) {
     return <div>Loading...</div>;
   }
 
+
   return (
     <div
       className="
@@ -34,17 +36,31 @@ function SingleMovie({ movie }: Props) {
         justify-end
         p-24
         w-full h-screen
-
     "
     >
+      <Image
+        src={urlFor(movie.poster_backdrop.asset).url()}
+        height={0}
+        width={0}
+        sizes="100vh"
+        alt="background"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "80%",
+          opacity: 0.3,
+          zIndex: -1,
+          objectFit: "cover",         
+        }}
+      />
       <h1
         className="
         text-7xl font-bold
         text-white
         cursor-pointer
         whitespace-nowrap
-    
-
       "
       >
         {movie.title}
@@ -61,17 +77,19 @@ function SingleMovie({ movie }: Props) {
         rounded-3xl
         "
         />
-        <div className="flex flex-row items-center mt-10
+        <div
+          className="flex flex-row items-center mt-10
         text-gray-400
         space-x-5
         // font size
         text-3xl
-        ">
+        "
+        >
           <p>{new Date(movie.releaseDate).getFullYear()}</p>
           <p>{movie.length}</p>
           <div className="flex flex-row- items-center ">
-          <p className="mr-2">{movie.rating}</p>
-          <AiFillStar />
+            <p className="mr-2">{movie.rating}</p>
+            <AiFillStar />
           </div>
         </div>
       </div>
