@@ -59,7 +59,7 @@ function SingleMovie({ movie }: Props) {
           width: "100%",
           height: "80%",
           opacity: 0.3,
-          zIndex: -1,
+
         }}
       />
       <h1
