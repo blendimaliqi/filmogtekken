@@ -53,15 +53,19 @@ function Movies(movies: any) {
         _type: "movie",
         title: mov.title,
         createdAt: new Date().toISOString(),
-        releaseDate: mov.release_date,,
+
+        releaseDate: mov.release_date,
         slug: {
           _type: "slug",
           current: mov.title,
         },
         rating: "0",
+
         genres: responeDetails.genres.map((genre: any) => genre.name),
+
         length: responeDetails.runtime,
         plot: mov.overview,
+
         poster: {
           _type: "image",
           asset: {
