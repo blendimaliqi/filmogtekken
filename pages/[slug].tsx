@@ -60,17 +60,15 @@ function SingleMovie({ movie }: Props) {
           zIndex: -1,
         }}
       />
-      <h1
+      <h1        
         className="
         text-7xl font-bold
         text-white
-        cursor-pointer
         whitespace-nowrap
       "
       >
         {movie.title}
       </h1>
-
       <div className="flex flex-row items-start space-x-5">
         <Image
           width={240}
@@ -131,38 +129,37 @@ function SingleMovie({ movie }: Props) {
             <p>{movie.plot}</p>
           </div>
           <div className="mt-10 text-3xl flex flex-col">
-            <h1>Individuell rating</h1>
-            <div className="flex flex-row space-x-10 w-2/3 
-            //make it wrap
+            {movie.ratings && <h1>Individuell rating</h1>}
+            <div
+              className="flex flex-row space-x-10 w-2/3 
             flex-wrap
-            ">
-            {movie.ratings &&
-              movie.ratings.map((rating: any) => (
-                <div
-                  key={rating}
-                  className="flex flex-row items-center space-x-5 mt-5"
-                >
-                  <Image
-                    width={70}
-                    height={70}
-                    src={urlFor(rating.person.image.asset).url()}
-                    alt={rating.person.name}
-                    className="
+            "
+            >
+              {movie.ratings &&
+                movie.ratings.map((rating: any) => (
+                  <div
+                    key={rating}
+                    className="flex flex-row items-center space-x-5 mt-5"
+                  >
+                    <Image
+                      width={70}
+                      height={70}
+                      src={urlFor(rating.person.image.asset).url()}
+                      alt={rating.person.name}
+                      className="
                     rounded-full
                     z-909090
                     "
-                  />
-                  <div className="flex flex-col">
-                    <p>{rating.person.name}</p>
-                    <div className="flex flex-row items-center">
-                      <p>
-                        {rating.rating}
-                      </p>
-                      <AiFillStar />
+                    />
+                    <div className="flex flex-col">
+                      <p>{rating.person.name}</p>
+                      <div className="flex flex-row items-center">
+                        <p>{rating.rating}</p>
+                        <AiFillStar />
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           </div>
         </div>
