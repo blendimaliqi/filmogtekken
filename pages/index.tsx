@@ -4,21 +4,7 @@ import "react-responsive-carousel/lib/styles/carousel.min.css";
 import HomepageImage from "@/components/HomepageImage";
 import MovieTitle from "@/components/MovieTitle";
 import Movies from "@/components/Movies";
-import Nav from "@/components/Nav";
 import { client, urlFor } from "../config/client";
-
-// const movieQuery = `*[_type == "movie"] {
-//   _id,
-//   title,
-//   releaseDate,
-//   poster,
-//   rating,
-//   genres,
-//   length,
-//   poster_backdrop,
-//   castMembers,
-
-// }`;
 
 const movieQuery = `*[_type == "movie"] {
   _id,
