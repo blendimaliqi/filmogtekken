@@ -12,6 +12,9 @@ const movieQuery = `*[_type == "movie"] {
   title,
   releaseDate,
   poster,
+  rating,
+  genres,
+  length,
   poster_backdrop,
   castMembers,
   _createdAt

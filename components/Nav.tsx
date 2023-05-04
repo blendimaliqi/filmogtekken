@@ -8,7 +8,8 @@ type Props = {};
 function Nav({}: Props) {
   return (
     <div className="flex items-center p-24">
-      <h1
+      <Link
+        href="/"
         className="
     text-5xl font-bold
     text-yellow-400
@@ -19,7 +20,7 @@ function Nav({}: Props) {
     "
       >
         Film og Tekken
-      </h1>
+      </Link>
       <nav className="flex flex-row w-full justify-between">
         <ul
           className="

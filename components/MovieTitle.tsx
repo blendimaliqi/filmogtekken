@@ -1,7 +1,9 @@
+import Link from "next/link";
 import React from "react";
 import { FaInfoCircle } from "react-icons/fa";
 
 function MovieTitle(movie: any) {
+  console.log("YOOOO", movie.movie._id);
   return (
     <div
       className="flex flex-col items-start justify-center h-full mt-52 p-24 z-10000"
@@ -17,31 +19,46 @@ function MovieTitle(movie: any) {
         {movie.movie.title}
       </h1>
 
-      <h2
-        className="text-4xl py-2 font-bold text-white z-9000  cursor-pointer whitespace-nowrap"
-        style={{ zIndex: 9090 }}
-      >
-        Samlet rating: 7.9
-      </h2>
-      <button
+      {movie.movie.rating && (
+        <h2
+          className="text-4xl py-2 font-bold text-white z-9000  cursor-pointer whitespace-nowrap"
+          style={{ zIndex: 9090 }}
+        >
+          Rating: {movie.movie.rating}
+        </h2>
+      )}
+
+      <div className="flex">
+        {movie.movie.genres &&
+          movie.movie.genres.map((genre: string) => (
+            <p className="mr-4 text-2xl font-light" key={genre}>
+              {genre}
+            </p>
+          ))}
+      </div>
+      <Link
+        href={`/${movie.movie._id}`}
         className="
-        //create grayish background with transparent
-        bg-gray-500 bg-opacity-80
-        hover:bg-gray-700
-        w-52
-        transition duration-300 ease-in-out
-        text-white
-        p-4
-        rounded-lg
-        text-2xl
-        mt-4
-        flex
-        justify-center
-        items-center
+     
+          flex flex-row items-center
+          justify-center
+          bg-gray-800 
+          hover:bg-gray-700
+          transition duration-300 ease-in-out
+          cursor-pointer
+      
+    
+          hover:border-opacity-50
+          rounded-2xl
+          p-2
+          h-16
+          w-64
+          mt-4
         "
       >
-        <FaInfoCircle /> <p className="ml-4">Mer info</p>
-      </button>
+        <FaInfoCircle size={23} color="white" />
+        <p className=" ml-4 text-3xl text-white font-semibold">Mer info</p>
+      </Link>
     </div>
   );
 }
