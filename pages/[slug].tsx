@@ -59,10 +59,10 @@ function SingleMovie({ movie }: Props) {
           width: "100%",
           height: "80%",
           opacity: 0.3,
-
         }}
       />
       <h1
+      style={{zIndex: 90}}
         className="
         text-7xl font-bold
         text-white
@@ -77,12 +77,13 @@ function SingleMovie({ movie }: Props) {
           height={240}
           src={urlFor(movie.poster).url()}
           alt={movie.title}
+          style={{zIndex: 90}}
           className="
         mt-10
         rounded-3xl
         "
         />
-        <div>
+        <div style={{zIndex:90}}>
           <div
             className="flex flex-row items-center mt-10
         text-gray-400
