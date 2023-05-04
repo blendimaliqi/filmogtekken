@@ -20,13 +20,11 @@ function Movies(movies: any) {
 
   const getMovieRequest = async () => {
     try {
-      const url = `http://www.omdbapi.com/?s=${input}&apikey=62d896b5`;
+      const url = `https://api.themoviedb.org/3/search/movie?api_key=${process.env.TMDB_API_KEY}&language=en-US&query=${input}&page=1&include_adult=false`;
 
       const response = await fetch(url);
       const responseJson = await response.json();
-      const movies: any[] = await responseJson.Search;
-      console.log("responseJson", movies);
-      setOmdbMovies(movies);
+      setOmdbMovies(responseJson.results);
     } catch (error) {
       console.log("error", error);
     }
@@ -39,23 +37,38 @@ function Movies(movies: any) {
 
   async function addMovie(mov: any) {
     try {
-      const imageUrl = mov.Poster;
+      console.log("mov", mov);
+      const imageUrl = `https://image.tmdb.org/t/p/original${mov.poster_path}`;
+
       const imageAsset = await uploadExternalImage(imageUrl);
       const imageAssetId = imageAsset._id;
 
+      const imageUrlBackdrop = `https://image.tmdb.org/t/p/original${mov.backdrop_path}`;
+
+      const imageAssetBackdrop = await uploadExternalImage(imageUrlBackdrop);
+      const imageAssetIdBackdrop = imageAssetBackdrop._id;
+
       const movieData = {
         _type: "movie",
-        title: mov.Title,
+        title: mov.title,
         releaseDate: new Date(),
+        // releaseDate: mov.release_date,
         slug: {
           _type: "slug",
-          current: mov.Title,
+          current: mov.title,
         },
 
         poster: {
           _type: "image",
           asset: {
             _ref: imageAssetId,
+            _type: "reference",
+          },
+        },
+        poster_backdrop: {
+          _type: "image",
+          asset: {
+            _ref: imageAssetIdBackdrop,
             _type: "reference",
           },
         },
@@ -69,7 +82,7 @@ function Movies(movies: any) {
   }
 
   return (
-    <div className="">
+    <div draggable={false} className="">
       <div
         className="
         grid
@@ -159,12 +172,13 @@ function Movies(movies: any) {
           "
           >
             {omdbMovies &&
-              omdbMovies.map((movie: any) => (
+              omdbMovies.map((movie: any, index) => (
                 <ModalMovie
-                  key={movie.imdbID}
-                  title={movie.Title}
-                  year={movie.Year}
-                  poster={movie.Poster}
+                  key={movie.id + index}
+                  title={movie.title}
+                  year={movie.release_date}
+                  id={movie.id}
+                  poster={movie.poster_path}
                   callack={() => addMovie(movie)}
                 />
               ))}

@@ -7,19 +7,15 @@ export interface MovieProps {
   year: string;
   poster: string;
   callack?: (movie: any) => void;
+  id: number;
 }
-function ModalMovie({ title, year, poster, callack }: MovieProps) {
-  const isValidUrl = (url: string) =>
-    url.startsWith("/") ||
-    url.startsWith("http://") ||
-    url.startsWith("https://");
 
-  const handleOnError = (
-    event: React.SyntheticEvent<HTMLImageElement, Event>
-  ) => {
-    event.currentTarget.src = " https://i.imgur.com/5sKoyuq.jpeg";
-  };
 
+
+function ModalMovie({ title, year, poster, callack, id }: MovieProps) {
+  const url = `https://image.tmdb.org/t/p/w500/${poster}`;
+  
+  
   return (
     <div
       className="
@@ -29,7 +25,7 @@ function ModalMovie({ title, year, poster, callack }: MovieProps) {
         cursor-pointer
       "
     >
-      {isValidUrl(poster) && (
+      {poster && (
         <Image
           className="
           h-72 w-64
@@ -39,9 +35,9 @@ function ModalMovie({ title, year, poster, callack }: MovieProps) {
           onClick={callack}
           width={200}
           height={300}
-          src={poster}
+          src={url}
           alt="poster"
-          onError={handleOnError}
+          // onError={handleOnError}
         />
       )}
     </div>

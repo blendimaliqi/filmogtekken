@@ -12,6 +12,7 @@ const movieQuery = `*[_type == "movie"] {
   title,
   releaseDate,
   poster,
+  poster_backdrop,
   castMembers
 }`;
 
@@ -23,10 +24,8 @@ export default function Home({ movies }: any) {
   });
 
   const moviesToDisplay = sortedMovies.slice(0, 5);
-
   return (
-    <main style={{ position: "relative" }}>
-
+    <main>
       <Carousel
         autoPlay={true}
         interval={5000}
@@ -38,12 +37,10 @@ export default function Home({ movies }: any) {
         {moviesToDisplay.map((movie: any) => (
           <HomepageImage
             key={movie._id}
-            url={urlFor(movie.poster.asset).url()}
+            url={urlFor(movie.poster_backdrop.asset).url()}
             movie={movie}
           >
-            <div >
             <MovieTitle movie={movie} />
-            </div>
           </HomepageImage>
         ))}
       </Carousel>

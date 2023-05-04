@@ -15,6 +15,7 @@ function Movie({ title, year, poster, movie }: MovieProps) {
   return (
     <Link
       href={`/${movie._id}`}
+      draggable={false}
       className="
       hover:opacity-75
       transition ease-in-out duration-150
@@ -28,7 +29,10 @@ function Movie({ title, year, poster, movie }: MovieProps) {
         h-96 w-96
         mt-5
         rounded-3xl
+        select-none
       "
+          draggable={false}
+          
           width={200}
           height={300}
           src={urlFor(poster).url()}

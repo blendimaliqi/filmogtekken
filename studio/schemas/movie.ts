@@ -50,6 +50,14 @@ export default defineType({
       },
     }),
     defineField({
+      name: 'poster_backdrop',
+      title: 'Poster Backdrop Image',
+      type: 'image',
+      options: {
+        hotspot: true,
+      },
+    }),
+    defineField({
       name: 'externalId',
       title: 'External ID',
       type: 'number',

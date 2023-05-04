@@ -11,23 +11,30 @@ type Props = {
 
 function HomepageImage({ children, url, movie }: Props) {
   return (
-    <div className="relative h-screen w-screen bg-cover bg-center">
+    <div
+      className="relative
+      bg-cover bg-center bg-no-repeat"
+      style={{ height: "100vh" }}
+    >
       <Image
-        className="absolute top-0 left-0 w-full h-full object-contain 
-        //opacity 50%
-        opacity-70
-        //blur
-        filter blur-[4px]        
+        style={{ backgroundPosition: "center 25%" }}
+        className=" 
+        z-0
+        opacity-50
         "
         src={url}
         alt="Homepage background"
-        width={1920}
-        height={1080}
+        width={0}
+        height={0}
+        sizes="100vh"
       />
-
-      {children}
+      <div className="absolute top-0 left-0 w-full h-full">
+        {children}
+      </div>
     </div>
   );
 }
+
+
 
 export default HomepageImage;
