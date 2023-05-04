@@ -24,7 +24,6 @@ function Movies(movies: any) {
 
       const response = await fetch(url);
       const responseJson = await response.json();
-      console.log("responseJson", responseJson);
       setOmdbMovies(responseJson.results);
     } catch (error) {
       console.log("error", error);
@@ -38,42 +37,31 @@ function Movies(movies: any) {
 
   async function addMovie(mov: any) {
     try {
-      console.log("addMovie ", mov);
       const movieDetails = `https://api.themoviedb.org/3/movie/${mov.id}?api_key=${process.env.TMDB_API_KEY}`;
       const fetchDetails = await fetch(movieDetails);
       const responeDetails = await fetchDetails.json();
 
-      console.log("mov details", movieDetails);
       const imageUrl = `https://image.tmdb.org/t/p/original${mov.poster_path}`;
-
       const imageAsset = await uploadExternalImage(imageUrl);
       const imageAssetId = imageAsset._id;
 
       const imageUrlBackdrop = `https://image.tmdb.org/t/p/original${mov.backdrop_path}`;
-
       const imageAssetBackdrop = await uploadExternalImage(imageUrlBackdrop);
       const imageAssetIdBackdrop = imageAssetBackdrop._id;
 
       const movieData = {
         _type: "movie",
         title: mov.title,
-
-        //when i created this post
         createdAt: new Date().toISOString(),
-
-        releaseDate: mov.release_date,
-        // releaseDate: mov.release_date,
+        releaseDate: mov.release_date,,
         slug: {
           _type: "slug",
           current: mov.title,
         },
         rating: "0",
-
         genres: responeDetails.genres.map((genre: any) => genre.name),
-
         length: responeDetails.runtime,
         plot: mov.overview,
-
         poster: {
           _type: "image",
           asset: {

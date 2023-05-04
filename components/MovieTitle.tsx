@@ -3,7 +3,6 @@ import React from "react";
 import { FaInfoCircle } from "react-icons/fa";
 
 function MovieTitle(movie: any) {
-  console.log("YOOOO", movie.movie._id);
   return (
     <div
       className="flex flex-col items-start justify-center h-full mt-52 p-24 z-10000"
