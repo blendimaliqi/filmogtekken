@@ -53,8 +53,6 @@ function Movies(movies: any) {
       const movieData = {
         _type: "movie",
         title: mov.title,
-        createdAt: new Date().toISOString(),
-
         releaseDate: mov.release_date,
         slug: {
           _type: "slug",

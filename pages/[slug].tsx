@@ -60,7 +60,7 @@ function SingleMovie({ movie }: Props) {
           zIndex: -1,
         }}
       />
-      <h1        
+      <h1
         className="
         text-7xl font-bold
         text-white
@@ -92,7 +92,7 @@ function SingleMovie({ movie }: Props) {
             <p>{new Date(movie.releaseDate).getFullYear()}</p>
             <p>{movie.length}min</p>
             {movie.ratings ? (
-              <div className="flex flex-row- items-center">
+              <div className="flex flex-row items-center">
                 <p>
                   {(
                     movie.ratings.reduce(
@@ -107,6 +107,9 @@ function SingleMovie({ movie }: Props) {
                   ({movie.ratings.length}{" "}
                   {movie.ratings.length === 1 ? "rating" : "ratings"})
                 </p>
+                <a href={`https://filmogtekken.sanity.studio/desk/movie;${movie._id}`} target="_blank" className="bg-gray-800 ml-2 p-1 rounded-xl w-20 text-center text-white text-lg font-semibold
+                hover:bg-gray-500
+                ">Rate it!</a>
               </div>
             ) : (
               <p>Ingen rating enda</p>
@@ -146,11 +149,10 @@ function SingleMovie({ movie }: Props) {
                       height={70}
                       src={urlFor(rating.person.image.asset).url()}
                       alt={rating.person.name}
-                      className="
-                    rounded-full
-                    z-909090
-                    "
+                      className="rounded-full w-30 h-30 object-cover"
+                      style={{ width: "70px", height: "70px" }}
                     />
+
                     <div className="flex flex-col">
                       <p>{rating.person.name}</p>
                       <div className="flex flex-row items-center">
