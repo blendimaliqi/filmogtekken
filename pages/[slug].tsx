@@ -35,8 +35,6 @@ function SingleMovie({ movie }: Props) {
     return <div>Loading...</div>;
   }
 
-  console.log("BACKDROP", movie.poster_backdrop.asset);
-
   return (
     <div
       className="

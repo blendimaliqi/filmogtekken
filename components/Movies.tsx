@@ -40,8 +40,6 @@ function Movies(movies: any) {
       const movieDetails = `https://api.themoviedb.org/3/movie/${mov.id}?api_key=${process.env.TMDB_API_KEY}`;
       const fetchDetails = await fetch(movieDetails);
       const responeDetails = await fetchDetails.json();
-
-      console.log("responeDetails", responeDetails);
       const imageUrl = `https://image.tmdb.org/t/p/original${mov.poster_path}`;
       const imageAsset = await uploadExternalImage(imageUrl);
       const imageAssetId = imageAsset._id;
