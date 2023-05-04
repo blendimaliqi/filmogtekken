@@ -119,7 +119,18 @@ function SingleMovie({ movie }: Props) {
                 </a>
               </div>
             ) : (
-              <p>Ingen rating enda</p>
+              <div className="flex flex-row items-center">
+                <p>Ingen rating enda</p>
+                <a
+                  href={`https://filmogtekken.sanity.studio/desk/movie;${movie._id}`}
+                  target="_blank"
+                  className="bg-gray-800 ml-2 mt-2 p-1 rounded-xl w-20 text-center text-white text-lg font-semibold
+                hover:bg-gray-500
+                "
+                >
+                  Rate it!
+                </a>
+              </div>
             )}
           </div>
           <div className="flex flex-row mt-4">

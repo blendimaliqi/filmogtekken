@@ -10,12 +10,9 @@ export interface MovieProps {
   id: number;
 }
 
-
-
 function ModalMovie({ title, year, poster, callack, id }: MovieProps) {
   const url = `https://image.tmdb.org/t/p/w500/${poster}`;
-  
-  
+
   return (
     <div
       className="

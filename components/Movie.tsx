@@ -11,7 +11,7 @@ export interface MovieProps {
   movie: any;
 }
 
-function Movie({ title, year, poster, movie }: MovieProps) {
+function Movie({ title, year, poster, movie,  }: MovieProps) {
   return (
     <Link
       href={`/${movie._id}`}
@@ -23,22 +23,19 @@ function Movie({ title, year, poster, movie }: MovieProps) {
       cursor-pointer
     "
     >
-      {
-        <Image
-          className="
+      <Image
+        className="
         h-96 w-96
         mt-5
         rounded-3xl
         select-none
       "
-          draggable={false}
-          
-          width={200}
-          height={300}
-          src={urlFor(poster).url()}
-          alt="poster"
-        />
-      }
+        draggable={false}
+        width={200}
+        height={300}
+        src={urlFor(poster).url()}
+        alt="poster"
+      />
     </Link>
   );
 }

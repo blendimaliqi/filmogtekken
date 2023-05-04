@@ -35,8 +35,13 @@ function Movies(movies: any) {
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
+  const [loading, setLoading] = useState(false);
+
+
+
   async function addMovie(mov: any) {
     try {
+      setLoading(true);
       const movieDetails = `https://api.themoviedb.org/3/movie/${mov.id}?api_key=${process.env.TMDB_API_KEY}`;
       const fetchDetails = await fetch(movieDetails);
       const responeDetails = await fetchDetails.json();
@@ -82,7 +87,11 @@ function Movies(movies: any) {
       };
 
       const createdMovie = await createPost(movieData);
+      setLoading(false);
       console.log("Created movie:", createdMovie);
+
+      //revalidate cache
+      
     } catch (error) {
       console.log("error", error);
     }
@@ -178,7 +187,37 @@ function Movies(movies: any) {
           
           "
           >
-            {omdbMovies &&
+            {loading ? (
+              <div
+                className="
+              lg:ml-[800px] 
+              md:ml-[400px]
+              sm:ml-[200px]
+              h-96 mt-5 rounded-3xl select-none"
+              >
+                <svg
+                  className="animate-spin lg:h-96 lg:w-96 md:h-64 md:w-64 sm:h-48 sm:w-48 text-gray-800"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 100 100"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="50"
+                    cy="50"
+                    r="50"
+                    stroke="currentColor"
+                    strokeWidth="10"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="#FFFFFF"
+                    d="M50 10a40 40 0 0140 40H90A50 50 0 0050 0V10z"
+                  ></path>
+                </svg>
+              </div>
+            ) : (
+              omdbMovies &&
               omdbMovies.map((movie: any, index) => (
                 <ModalMovie
                   key={movie.id + index}
@@ -187,8 +226,10 @@ function Movies(movies: any) {
                   id={movie.id}
                   poster={movie.poster_path}
                   callack={() => addMovie(movie)}
+                  loading={loading}
                 />
-              ))}
+              ))
+            )}
           </div>
         </Modal>
         {movies.movies.map((movie: any) => (
@@ -198,6 +239,7 @@ function Movies(movies: any) {
             year={movie.year}
             poster={movie.poster.asset}
             movie={movie}
+            loading={loading}
           />
         ))}
       </div>
