@@ -37,8 +37,6 @@ function Movies(movies: any) {
 
   const [loading, setLoading] = useState(false);
 
-
-
   async function addMovie(mov: any) {
     try {
       setLoading(true);
@@ -61,10 +59,6 @@ function Movies(movies: any) {
           _type: "slug",
           current: mov.title,
         },
-
-        //rating: "Ingen rating enda",
-        //rating: responeDetails.vote_average,
-
         genres: responeDetails.genres.map((genre: any) => genre.name),
 
         length: responeDetails.runtime,
@@ -89,9 +83,6 @@ function Movies(movies: any) {
       const createdMovie = await createPost(movieData);
       setLoading(false);
       console.log("Created movie:", createdMovie);
-
-      //revalidate cache
-      
     } catch (error) {
       console.log("error", error);
     }
@@ -126,7 +117,6 @@ function Movies(movies: any) {
         hover:text-gray-400
         transition duration-300 ease-in-out
         cursor-pointer
-        //give border when hover
         hover:border-2
         border-gray-300
         rounded-2xl
@@ -167,7 +157,7 @@ function Movies(movies: any) {
             />
           </div>
           <div
-            className="
+            className="relative group
           grid
           grid-cols-1
           sm:grid-cols-2
@@ -226,7 +216,6 @@ function Movies(movies: any) {
                   id={movie.id}
                   poster={movie.poster_path}
                   callack={() => addMovie(movie)}
-                  loading={loading}
                 />
               ))
             )}
@@ -239,7 +228,6 @@ function Movies(movies: any) {
             year={movie.year}
             poster={movie.poster.asset}
             movie={movie}
-            loading={loading}
           />
         ))}
       </div>

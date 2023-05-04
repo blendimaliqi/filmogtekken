@@ -4,7 +4,6 @@ import "react-responsive-carousel/lib/styles/carousel.min.css";
 import HomepageImage from "@/components/HomepageImage";
 import MovieTitle from "@/components/MovieTitle";
 import Movies from "@/components/Movies";
-import Nav from "@/components/Nav";
 import { client, urlFor } from "../config/client";
 
 const movieQuery = `*[_type == "movie"] {
@@ -12,19 +11,21 @@ const movieQuery = `*[_type == "movie"] {
   title,
   releaseDate,
   poster,
-  rating,
-  genres,
-  length,
   poster_backdrop,
+  plot,
+  genres,
   castMembers,
-  _createdAt
-}`;
+  ratings[] {
+    person-> {
+      name,
+      image
+    },
+    rating
+  }}`;
 
 export default function Home({ movies }: any) {
   const sortedMovies = movies.sort((a: any, b: any) => {
-    return (
-      new Date(b._createdAt).getTime() - new Date(a._createdAt).getTime()
-    );
+    return new Date(b._createdAt).getTime() - new Date(a._createdAt).getTime();
   });
 
   const moviesToDisplay = sortedMovies.slice(0, 5);
