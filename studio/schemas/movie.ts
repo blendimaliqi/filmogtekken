@@ -20,7 +20,12 @@ export default defineType({
     defineField({
       name: 'length',
       title: 'Length',
-      type: 'string',
+      type: 'number',
+    }),
+    defineField({
+      name: 'plot',
+      title: 'Plot',
+      type: 'text',
     }),
     defineField({
       name: 'slug',
@@ -49,6 +54,15 @@ export default defineType({
         hotspot: true,
       },
     }),
+    //genres movie
+    defineField({
+      name: 'genres',
+      title: 'Genres',
+      type: 'array',
+      //type string
+      of: [{type: 'string'}],
+    }),
+
     defineField({
       name: 'poster_backdrop',
       title: 'Poster Backdrop Image',
