@@ -29,7 +29,7 @@ function Movie({ title, year, poster, movie }: MovieProps) {
           alt="poster"
         />
 
-        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-200"></div>
+        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-80 transition-opacity duration-200"></div>
 
         <div className="absolute bottom-0 left-0 w-full bg-opacity-0 text-start p-4 opacity-0 group-hover:bg-opacity-50 group-hover:opacity-100 transition-opacity duration-200">
           {movie.title && (
@@ -65,6 +65,5 @@ function Movie({ title, year, poster, movie }: MovieProps) {
     </Link>
   );
 }
-
 
 export default Movie;
