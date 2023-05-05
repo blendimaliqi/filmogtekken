@@ -16,12 +16,20 @@ function Nav({}: Props) {
     hover:text-yellow-700
     transition duration-300 ease-in-out
     cursor-pointer
-    whitespace-nowrap
+    whitespace-normal
+    md:whitespace-nowrap
+
     "
       >
         Film og Tekken
       </Link>
-      <nav className="flex flex-row w-full justify-between">
+      <nav
+        className="md:flex md:flex-row   md:w-full md:justify-between
+      
+      //display nothing
+      hidden
+      "
+      >
         <ul
           className="
             flex flex-row

@@ -38,7 +38,6 @@ function Movies(movies: any) {
   const [loading, setLoading] = useState(false);
 
   async function addMovie(mov: any) {
-    console.log("ADDINGMOVIE", mov);
     try {
       setLoading(true);
       const movieDetails = `https://api.themoviedb.org/3/movie/${mov.id}?api_key=${process.env.TMDB_API_KEY}`;
@@ -93,47 +92,48 @@ function Movies(movies: any) {
     <div draggable={false} className="">
       <div
         className="
-     
-        grid
-        grid-cols-1
-        sm:grid-cols-2
-        md:grid-cols-3
-        lg:grid-cols-4
-        xl:grid-cols-5
-        2xl:grid-cols-6
-        gap-4
-        p-10
-        sm:px-8
-        md:px-16
-        lg:px-20
-        xl:px-32
-        2xl:px-40
-        justify-items-center
-        items-center
-        text-gray-800
-        text-xl
-      "
+    grid
+    grid-cols-1
+    sm:grid-cols-2
+    md:grid-cols-3
+    lg:grid-cols-4
+    xl:grid-cols-5
+    2xl:grid-cols-6
+    gap-8
+    p-10
+    sm:px-8
+    md:px-16
+    lg:px-20
+    xl:px-32
+    2xl:px-40
+    justify-items-center
+    sm:justify-items-stretch
+    items-center
+    text-gray-800
+    text-xl
+  "
       >
         <button
-          className="text-gray-400
-        hover:text-gray-300
-        transition duration-300 ease-in-out
-        cursor-pointer
-        border-2
-  
-        border-opacity-60
-        border-gray-300
-        hover:border-gray-400
-        rounded-2xl
-
-        p-2
-        h-96
-        w-full
-        "
+          className="
+    text-gray-400
+    hover:text-gray-300
+    transition duration-300 ease-in-out
+    cursor-pointer
+    border-2
+    border-opacity-60
+    border-gray-300
+    hover:border-gray-400
+    rounded-2xl
+    p-2
+    h-full
+    w-72
+    sm:w-auto
+  "
           onClick={openModal}
         >
           Legg til
         </button>
+
         <Modal isOpen={isModalOpen} onClose={closeModal}>
           <div
             className="
@@ -164,17 +164,18 @@ function Movies(movies: any) {
                 }
               }}
               onChange={(e) => setInput(e.target.value)}
-              className="border-2 text-black border-gray-300 rounded-lg p-2 mb-4  z-50
-              focus:outline-none
-              sm:text-sm
-              md:text-md
-              lg:text-lg
-              xl:text-xl
-              2xl:text-2xl
-              sm:w-56
-              md:w-64
-              lg:w-96
-              "
+              className="
+    border-2
+    text-black
+    border-gray-300
+    rounded-lg
+    p-2
+    mb-4
+    z-50
+    focus:outline-none
+    sm:text-sm
+    md:text-md
+ "
             />
           </div>
           <div

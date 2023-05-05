@@ -13,7 +13,13 @@ function HomepageImage({ children, url, movie }: Props) {
   return (
     <div
       className="relative
-      bg-cover bg-center bg-no-repeat"
+      
+      bg-cover bg-center bg-no-repeat
+      //make smaller on mobile
+      h-screen
+      w-screen
+      
+      "
       style={{ height: "100vh" }}
     >
       <Image
@@ -28,13 +34,9 @@ function HomepageImage({ children, url, movie }: Props) {
         height={0}
         sizes="100vh"
       />
-      <div className="absolute top-0 left-0 w-full h-full">
-        {children}
-      </div>
+      <div className="absolute top-0 left-0 w-full h-full">{children}</div>
     </div>
   );
 }
-
-
 
 export default HomepageImage;
