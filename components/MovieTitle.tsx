@@ -38,25 +38,24 @@ function MovieTitle(movie: any) {
       <Link
         href={`/${movie.movie._id}`}
         className="
-     
-          flex flex-row items-center
-          justify-center
-          bg-gray-800 
-          hover:bg-gray-700
-          transition duration-300 ease-in-out
-          cursor-pointer
-      
-    
-          hover:border-opacity-50
-          rounded-2xl
-          p-2
-          h-16
-          w-64
-          mt-4
+        flex flex-row items-center
+        justify-center
+        bg-gray-500
+        bg-opacity-70
+        hover:bg-opacity-50
+        transition duration-300 ease-in-out
+        cursor-pointer
+        rounded-2xl
+        p-2
+        h-16
+        w-52
+        mt-4
         "
       >
-        <FaInfoCircle size={23} color="white" />
-        <p className=" ml-4 text-3xl text-white font-semibold">Mer info</p>
+        <div className="flex flex-row items-center">
+          <FaInfoCircle size={20} color="white" />
+          <p className=" ml-4 text-3xl text-white font-light">Mer info</p>
+        </div>
       </Link>
     </div>
   );
