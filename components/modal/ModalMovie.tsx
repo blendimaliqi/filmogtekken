@@ -6,12 +6,11 @@ export interface MovieProps {
   title: string;
   year: string;
   poster: string;
-  callack?: (movie: any) => void;
   id: number;
   movie: any;
 }
 
-function ModalMovie({ title, year, poster, callack, id, movie }: MovieProps) {
+function ModalMovie({ title, year, poster, id, movie }: MovieProps) {
   const url = `https://image.tmdb.org/t/p/w500/${poster}`;
 
   return (
@@ -23,7 +22,6 @@ function ModalMovie({ title, year, poster, callack, id, movie }: MovieProps) {
               className="
               sm:h-96 sm:w-96
               rounded-3xl"
-              onClick={callack}
               width={200}
               height={300}
               src={url}

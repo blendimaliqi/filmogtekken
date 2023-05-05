@@ -38,6 +38,7 @@ function Movies(movies: any) {
   const [loading, setLoading] = useState(false);
 
   async function addMovie(mov: any) {
+    console.log("ADDINGMOVIE", mov);
     try {
       setLoading(true);
       const movieDetails = `https://api.themoviedb.org/3/movie/${mov.id}?api_key=${process.env.TMDB_API_KEY}`;
@@ -223,22 +224,24 @@ function Movies(movies: any) {
             ) : (
               omdbMovies &&
               omdbMovies.map((movie: any, index) => (
-                <ModalMovie
-                  key={movie.id + index}
-                  title={movie.title}
-                  year={movie.release_date}
-                  id={movie.id}
-                  poster={movie.poster_path}
-                  movie={movie}
-                  callack={() => addMovie(movie)}
-                />
+                <div key={index} onClick={() => addMovie(movie)}>
+                  <ModalMovie
+                    key={movie.id + index}
+                    title={movie.title}
+                    year={movie.release_date}
+                    id={movie.id}
+                    poster={movie.poster_path}
+                    movie={movie}
+                    callack={() => addMovie(movie)}
+                  />
+                </div>
               ))
             )}
           </div>
         </Modal>
-        {movies.movies.map((movie: any) => (
+        {movies.movies.map((movie: any, index) => (
           <Movie
-            key={movie.title}
+            key={movie._id + index}
             title={movie.title}
             year={movie.year}
             poster={movie.poster.asset}
