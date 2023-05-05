@@ -17,9 +17,9 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mouseup", handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("mouseup", handleClickOutside);
     };
   }, [onClose]);
 
@@ -27,7 +27,7 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
     <>
       {isOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50 overflow-y-scroll custom-scrollbar">
-          <div className="absolute inset-0 bg-black opacity-10 overflow-y-scroll z-50 custom-scrollbar" />
+          <div className="absolute inset-0 bg-black opacity-80 overflow-y-scroll z-50 custom-scrollbar" />
           <div
             ref={ref}
             className="text-white shadow-xl w-3/4 h-4/5 bg-gray-800
