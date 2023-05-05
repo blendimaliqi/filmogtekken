@@ -139,7 +139,17 @@ function Movies(movies: any) {
           z-50
           "
           >
-            <h2 className="text-xl font-bold mb-4">Søk film</h2>
+            <h2
+              className="text-xl font-bold mb-4
+            sm:text-lg
+            md:text-xl
+            lg:text-2xl
+            xl:text-3xl
+            2xl:text-4xl
+            "
+            >
+              Søk film
+            </h2>
             <input
               type="text"
               placeholder="Søk film"
@@ -150,31 +160,35 @@ function Movies(movies: any) {
               }}
               onChange={(e) => setInput(e.target.value)}
               className="border-2 text-black border-gray-300 rounded-lg p-2 mb-4  z-50
-              //remove focus style
               focus:outline-none
-              w-96
+              sm:text-sm
+              md:text-md
+              lg:text-lg
+              xl:text-xl
+              2xl:text-2xl
+              sm:w-56
+              md:w-64
+              lg:w-96
               "
             />
           </div>
           <div
-            className="relative group
+            className=" 
           grid
           grid-cols-1
-          sm:grid-cols-2
-          md:grid-cols-3
-          lg:grid-cols-4
+          sm:grid-cols-1
+          md:grid-cols-2
+          lg:grid-cols-2
+          xl:grid-cols-3
           z-50
-          gap-4
+          gap-14
           p-10
           sm:px-8
           md:px-16
           lg:px-20
           xl:px-32
           2xl:px-40
-      
           justify-items-center
-          items-center
-          
           "
           >
             {loading ? (
@@ -215,6 +229,7 @@ function Movies(movies: any) {
                   year={movie.release_date}
                   id={movie.id}
                   poster={movie.poster_path}
+                  movie={movie}
                   callack={() => addMovie(movie)}
                 />
               ))

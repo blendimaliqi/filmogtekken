@@ -10,6 +10,9 @@ interface ModalProps {
 export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
   const ref = useRef<HTMLDivElement | null>(null);
 
+  const handleClickInside = (event: React.MouseEvent) => {
+    event.stopPropagation();
+  };
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (ref.current && !ref.current.contains(event.target as Node)) {
@@ -43,9 +46,8 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
             ref={ref}
             className="text-white shadow-xl w-3/4 h-4/5 bg-gray-800
             z-50 rounded-3xl custom-scrollbar py-14 px-5
-            //overflow
-            overflow-y-scroll
-          "
+            overflow-y-scroll"
+            onClick={handleClickInside}
           >
             {children}
           </div>
