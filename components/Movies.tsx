@@ -232,14 +232,13 @@ function Movies(movies: any) {
                     id={movie.id}
                     poster={movie.poster_path}
                     movie={movie}
-                    callack={() => addMovie(movie)}
                   />
                 </div>
               ))
             )}
           </div>
         </Modal>
-        {movies.movies.map((movie: any, index) => (
+        {movies.movies.map((movie: any, index: number) => (
           <Movie
             key={movie._id + index}
             title={movie.title}
