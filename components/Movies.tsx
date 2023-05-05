@@ -93,6 +93,7 @@ function Movies(movies: any) {
     <div draggable={false} className="">
       <div
         className="
+     
         grid
         grid-cols-1
         sm:grid-cols-2
@@ -114,14 +115,17 @@ function Movies(movies: any) {
       "
       >
         <button
-          className="text-gray-300
-        hover:text-gray-400
+          className="text-gray-400
+        hover:text-gray-300
         transition duration-300 ease-in-out
         cursor-pointer
-        hover:border-2
+        border-2
+  
+        border-opacity-60
         border-gray-300
+        hover:border-gray-400
         rounded-2xl
-        hover:border-opacity-50
+
         p-2
         h-96
         w-full
@@ -190,6 +194,7 @@ function Movies(movies: any) {
           xl:px-32
           2xl:px-40
           justify-items-center
+
           "
           >
             {loading ? (

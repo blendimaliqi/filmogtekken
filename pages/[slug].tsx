@@ -38,10 +38,14 @@ function SingleMovie({ movie }: Props) {
   return (
     <div
       className="
+
         flex flex-col items-start
-        justify-end
+        mt-64
         p-24
-        w-full h-screen
+
+        //make height and width resposnive on all screens
+        h-screen
+        w-screen
     "
     >
       <Image
@@ -62,14 +66,18 @@ function SingleMovie({ movie }: Props) {
       <h1
         style={{ zIndex: 90 }}
         className="
-        text-7xl font-bold
+        text-4xl
+        md:text-7xl font-bold
         text-white
-        whitespace-nowrap
+        whitespace
       "
       >
         {movie.title}
       </h1>
-      <div className="flex flex-row items-start space-x-5">
+      <div
+        className="flex flex-col md:flex-row items-start space-x-5
+      "
+      >
         <Image
           width={240}
           height={240}
@@ -83,40 +91,45 @@ function SingleMovie({ movie }: Props) {
         />
         <div style={{ zIndex: 90 }}>
           <div
-            className="flex flex-row items-center mt-10
+            className="flex flex-col md:flex-row items-center mt-10
         text-gray-400
         space-x-5
         // font size
         text-3xl
+        my-5
         "
           >
             <p>{new Date(movie.releaseDate).getFullYear()}</p>
-            <p>{movie.length}min</p>
+            <p className="my-5">{movie.length}min</p>
             {movie.ratings ? (
-              <div className="flex flex-row items-center">
-                <p>
-                  {(
-                    movie.ratings.reduce(
-                      (acc: number, curr: any) => acc + curr.rating,
-                      0
-                    ) / movie.ratings.length
-                  ).toFixed(2)}
-                </p>
-                <AiFillStar />
-                <p className="ml-2">
-                  {" "}
-                  ({movie.ratings.length}{" "}
-                  {movie.ratings.length === 1 ? "rating" : "ratings"})
-                </p>
-                <a
-                  href={`https://filmogtekken.sanity.studio/desk/movie;${movie._id}`}
-                  target="_blank"
-                  className="bg-gray-800 ml-2 p-1 rounded-xl w-20 text-center text-white text-lg font-semibold
+              <div className="flex flex-col md:flex-row items-center justify-center ">
+                <div className="flex flex-row items-center ">
+                  <p>
+                    {(
+                      movie.ratings.reduce(
+                        (acc: number, curr: any) => acc + curr.rating,
+                        0
+                      ) / movie.ratings.length
+                    ).toFixed(2)}
+                  </p>
+                  <AiFillStar />
+                  <p className="ml-2 whitespace-nowrap">
+                    {" "}
+                    ({movie.ratings.length}{" "}
+                    {movie.ratings.length === 1 ? "rating" : "ratings"})
+                  </p>
+                </div>
+                <div className=" sm:mt-4 md:mt-0 p-2">
+                  <a
+                    href={`https://filmogtekken.sanity.studio/desk/movie;${movie._id}`}
+                    target="_blank"
+                    className="bg-gray-800 ml-2 p-2 rounded-xl w-20 text-center text-white text-lg font-semibold
                 hover:bg-gray-500
                 "
-                >
-                  Rate it!
-                </a>
+                  >
+                    Rate it!
+                  </a>
+                </div>
               </div>
             ) : (
               <div className="flex flex-row items-center">
@@ -133,12 +146,19 @@ function SingleMovie({ movie }: Props) {
               </div>
             )}
           </div>
-          <div className="flex flex-row mt-4">
+          <div
+            className="flex flex-row  flex-wrap
+          //make responsive on smaller width
+          w-2/3
+          
+          "
+          >
             {movie.genres &&
               movie.genres.map((genre: string) => (
                 <p
                   className="mr-4 text-2xl font-light border 
                   rounded-lg p-2 
+                  mb-4
                 "
                   style={{ zIndex: 90 }}
                   key={genre}
@@ -153,26 +173,26 @@ function SingleMovie({ movie }: Props) {
           <div className="mt-10 text-3xl flex flex-col">
             {movie.ratings && <h1>Individuell rating</h1>}
             <div
-              className="flex flex-row space-x-10 w-2/3 
+              className="flex flex-row  w-2/3 
             flex-wrap
             "
             >
               {movie.ratings &&
                 movie.ratings.map((rating: any) => (
-                  <div
-                    key={rating}
-                    className="flex flex-row items-center space-x-5 mt-5"
-                  >
+                  <div key={rating} className="flex flex-row items-center mt-5">
                     <Image
                       width={70}
                       height={70}
                       src={urlFor(rating.person.image.asset).url()}
                       alt={rating.person.name}
                       className="rounded-full w-30 h-30 object-cover"
-                      style={{ width: "70px", height: "70px" }}
+                      style={{
+                        width: "70px",
+                        height: "70px",
+                      }}
                     />
 
-                    <div className="flex flex-col">
+                    <div className="flex flex-col mr-10">
                       <p>{rating.person.name}</p>
                       <div className="flex flex-row items-center">
                         <p>{rating.rating}</p>
