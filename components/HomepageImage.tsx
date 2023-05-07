@@ -13,20 +13,18 @@ function HomepageImage({ children, url, movie }: Props) {
   return (
     <div
       className="relative
-      
       bg-cover bg-center bg-no-repeat
-      //make smaller on mobile
       h-screen
       w-screen
-      
       "
       style={{ height: "100vh" }}
     >
       <Image
-        style={{ backgroundPosition: "center 25%" }}
+        style={{}}
         className=" 
         z-0
         opacity-50
+        w-screen
         "
         src={url}
         alt="Homepage background"

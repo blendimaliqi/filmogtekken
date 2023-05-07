@@ -32,25 +32,30 @@ export default function Home({ movies }: any) {
 
   const moviesToDisplay = sortedMovies.slice(0, 5);
   return (
-    <main>
-      <Carousel
-        autoPlay={true}
-        interval={5000}
-        stopOnHover={false}
-        infiniteLoop={true}
-        showThumbs={false}
-        showStatus={false}
-      >
-        {moviesToDisplay.map((movie: any) => (
-          <HomepageImage
-            key={movie._id}
-            url={urlFor(movie.poster_backdrop.asset).url() ?? ""}
-            movie={movie}
-          >
-            <MovieTitle movie={movie} />
-          </HomepageImage>
-        ))}
-      </Carousel>
+    <main className="w-screen custom-scrollbar">
+      {
+        //
+        <Carousel
+          //make invisible when mobile screen
+          className="hidden sm:block"
+          autoPlay={true}
+          interval={5000}
+          stopOnHover={false}
+          infiniteLoop={true}
+          showThumbs={false}
+          showStatus={false}
+        >
+          {moviesToDisplay.map((movie: any) => (
+            <HomepageImage
+              key={movie._id}
+              url={urlFor(movie.poster_backdrop.asset).url() ?? ""}
+              movie={movie}
+            >
+              <MovieTitle movie={movie} />
+            </HomepageImage>
+          ))}
+        </Carousel>
+      }
 
       <Movies movies={sortedMovies} />
     </main>

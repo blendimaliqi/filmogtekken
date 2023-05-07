@@ -5,11 +5,11 @@ import { FaInfoCircle } from "react-icons/fa";
 function MovieTitle(movie: any) {
   return (
     <div
-      className="flex flex-col items-start justify-center h-full mt-52 p-24 z-10000"
+      className="flex flex-col items-start justify-center h-full mt-16 md:mt-52 p-24 z-10000"
       style={{ zIndex: "100" }}
     >
       <h1
-        className="text-4xl md:text-6xl lg:text-8xl 
+        className="text-2xl md:text-6xl lg:text-8xl 
       //text at start 
       text-left
       font-bold text-white py-8 cursor-pointer z-9000"
@@ -30,9 +30,18 @@ function MovieTitle(movie: any) {
       <div className="flex">
         {movie.movie.genres &&
           movie.movie.genres.map((genre: string) => (
-            <p className="mr-4 text-2xl font-light" key={genre}>
-              {genre}
-            </p>
+            <div
+              className="
+                //make items wrap 
+                flex flex-wrap
+                //text size
+                
+
+              text-lg md:text-2xl font-light"
+              key={genre}
+            >
+              <p className="mr-2">{genre}</p>
+            </div>
           ))}
       </div>
       <Link
@@ -47,14 +56,18 @@ function MovieTitle(movie: any) {
         cursor-pointer
         rounded-2xl
         p-2
-        h-16
-        w-52
+        w-40
+        h-10
+        md:h-16
+        md:w-52
         mt-4
         "
       >
         <div className="flex flex-row items-center">
           <FaInfoCircle size={20} color="white" />
-          <p className=" ml-4 text-3xl text-white font-light">Mer info</p>
+          <p className=" ml-4 text-base md:text-3xl text-white font-light">
+            Mer info
+          </p>
         </div>
       </Link>
     </div>

@@ -38,13 +38,9 @@ function SingleMovie({ movie }: Props) {
   return (
     <div
       className="
-
         flex flex-col items-start
         mt-64
         p-24
-
-        //make height and width resposnive on all screens
-        h-screen
         w-screen
     "
     >
@@ -148,9 +144,7 @@ function SingleMovie({ movie }: Props) {
           </div>
           <div
             className="flex flex-row  flex-wrap
-          //make responsive on smaller width
           w-2/3
-          
           "
           >
             {movie.genres &&

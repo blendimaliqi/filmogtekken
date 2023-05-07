@@ -1,13 +1,15 @@
-import Nav from '@/components/Nav';
-import { Html, Head, Main, NextScript } from 'next/document'
+import HamburgerMenu from "@/components/HamburgerMenu";
+import Nav from "@/components/Nav";
+import { Html, Head, Main, NextScript } from "next/document";
 
 export default function Document() {
   return (
     <Html lang="en">
-      <Head  title='Film og Tekken'/>
+      <Head title="Film og Tekken" />
       <body>
         <div style={{ position: "absolute", top: "0", left: "0", zIndex: "2" }}>
           <Nav />
+          <HamburgerMenu />
         </div>
         <Main />
         <NextScript />

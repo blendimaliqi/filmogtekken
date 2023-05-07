@@ -2,27 +2,40 @@ import Link from "next/link";
 import React from "react";
 //Import searchicon with outline from react icons
 import { FaSearch } from "react-icons/fa";
+import HamuburgerMenu from "./HamburgerMenu";
 
 type Props = {};
 
 function Nav({}: Props) {
   return (
-    <div className="flex items-center p-24">
+    <div
+      className="
+      //hide on small screens
+    
+    hidden
+    md:flex 
+    items-center 
+    
+    p-24"
+    >
       <Link
         href="/"
         className="
-    text-5xl font-bold
+    text-3xl 
+    font-bold
+    md:text-5xl 
     text-yellow-400
     hover:text-yellow-700
     transition duration-300 ease-in-out
     cursor-pointer
-    whitespace-normal
-    md:whitespace-nowrap
+        whitespace-nowrap
 
+    
     "
       >
         Film og Tekken
       </Link>
+
       <nav
         className="md:flex md:flex-row   md:w-full md:justify-between
       
@@ -38,8 +51,6 @@ function Nav({}: Props) {
             space-x-4
             text-2xl 
             cursor-pointer
-            //make the ul 80& of the screen
-
             justify-between
             "
         >
