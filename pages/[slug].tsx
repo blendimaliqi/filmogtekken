@@ -186,7 +186,7 @@ function SingleMovie({ movie }: Props) {
                       }}
                     />
 
-                    <div className="flex flex-col mr-10">
+                    <div className="flex flex-col mr-10 ml-5 ">
                       <p>{rating.person.name}</p>
                       <div className="flex flex-row items-center">
                         <p>{rating.rating}</p>

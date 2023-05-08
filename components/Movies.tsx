@@ -4,6 +4,7 @@ import Movie from "./Movie";
 import { client, createPost } from "@/config/client";
 import { Modal } from "./modal/Modal";
 import ModalMovie from "./modal/ModalMovie";
+import { Audio, Puff } from "react-loader-spinner";
 
 export async function uploadExternalImage(url: string) {
   const response = await fetch(url);
@@ -171,6 +172,8 @@ function Movies(movies: any) {
     rounded-lg
     p-2
     mb-4
+    sm:w-52ww
+    md:w-96
     z-50
     focus:outline-none
     sm:text-sm
@@ -201,31 +204,25 @@ function Movies(movies: any) {
             {loading ? (
               <div
                 className="
-              lg:ml-[800px] 
-              md:ml-[400px]
-              sm:ml-[200px]
-              h-96 mt-5 rounded-3xl select-none"
+       fixed
+       inset-0
+       flex
+       justify-center
+       items-center
+     "
               >
-                <svg
-                  className="animate-spin lg:h-96 lg:w-96 md:h-64 md:w-64 sm:h-48 sm:w-48 text-gray-800"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 100 100"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="50"
-                    cy="50"
-                    r="50"
-                    stroke="currentColor"
-                    strokeWidth="10"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="#FFFFFF"
-                    d="M50 10a40 40 0 0140 40H90A50 50 0 0050 0V10z"
-                  ></path>
-                </svg>
+                <div>
+                  <Puff
+                    height="150"
+                    width="150"
+                    radius={1}
+                    color="#cacaca"
+                    ariaLabel="puff-loading"
+                    wrapperStyle={{}}
+                    wrapperClass=""
+                    visible={true}
+                  />
+                </div>
               </div>
             ) : (
               omdbMovies &&

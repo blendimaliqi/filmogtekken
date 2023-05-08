@@ -1,5 +1,6 @@
 import { useState } from "react";
 import NavItems from "./NavItems";
+import React from "react";
 
 function HamburgerMenu() {
   const [isOpen, setIsOpen] = useState(false);
