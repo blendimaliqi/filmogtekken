@@ -5,6 +5,9 @@ import { client, createPost } from "@/config/client";
 import { Modal } from "./modal/Modal";
 import ModalMovie from "./modal/ModalMovie";
 import { Audio, Puff } from "react-loader-spinner";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useRouter } from "next/router";
 
 export async function uploadExternalImage(url: string) {
   const response = await fetch(url);
@@ -81,9 +84,42 @@ function Movies(movies: any) {
         },
       };
 
-      const createdMovie = await createPost(movieData);
-      setLoading(false);
-      console.log("Created movie:", createdMovie);
+      //check if movie exists in movies prop
+      const movieExists = movies.movies.some(
+        (movie: any) => movie.title === mov.title
+      );
+
+      if (!movieExists) {
+        const createdMovie = await createPost(movieData);
+        setLoading(false);
+        console.log("Created movie:", createdMovie);
+
+        toast(`${createdMovie.title} lagt til 😁`, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "dark",
+        });
+        closeModal();
+        //revalidate after adding movie in sanity
+        movies.revalidate("/");
+      } else {
+        toast.error(`${mov.title} finnes allerede 😅`, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "dark",
+        });
+        setLoading(false);
+        closeModal();
+      }
     } catch (error) {
       console.log("error", error);
     }
@@ -241,6 +277,7 @@ function Movies(movies: any) {
             )}
           </div>
         </Modal>
+
         {movies.movies.map((movie: any, index: number) => (
           <Movie
             key={movie._id + index}
@@ -250,6 +287,7 @@ function Movies(movies: any) {
             movie={movie}
           />
         ))}
+        <ToastContainer />
       </div>
     </div>
   );
