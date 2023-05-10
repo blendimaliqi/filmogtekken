@@ -7,7 +7,6 @@ import Movies from "@/components/Movies";
 import { client, urlFor } from "../config/client";
 import { ColorRing, Puff } from "react-loader-spinner";
 import { useQuery } from "react-query";
-//import react query
 
 const movieQuery = `*[_type == "movie"] {
   _id,
@@ -67,7 +66,6 @@ export default function Home() {
   return (
     <main>
       <Carousel
-        //make invisible when mobile screen
         className="hidden sm:block "
         autoPlay={true}
         interval={10000}
@@ -75,7 +73,6 @@ export default function Home() {
         infiniteLoop={true}
         showThumbs={false}
         showStatus={false}
-        //remove arrows
       >
         {moviesToDisplay.map((movie: any) => (
           <HomepageImage

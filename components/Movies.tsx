@@ -4,10 +4,11 @@ import Movie from "./Movie";
 import { client, createPost } from "@/config/client";
 import { Modal } from "./modal/Modal";
 import ModalMovie from "./modal/ModalMovie";
-import { Audio, Puff } from "react-loader-spinner";
+import { Audio, ColorRing, Puff } from "react-loader-spinner";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useRouter } from "next/router";
+import { centerStyle } from "@/pages";
 
 export async function uploadExternalImage(url: string) {
   const response = await fetch(url);
@@ -240,23 +241,28 @@ function Movies(movies: any) {
             {loading ? (
               <div
                 className="
-       fixed
-       inset-0
-       flex
-       justify-center
-       items-center
-     "
+                fixed
+                inset-0
+                flex
+                justify-center
+                items-center
+                "
               >
-                <div>
-                  <Puff
-                    height="150"
-                    width="150"
-                    radius={1}
-                    color="#cacaca"
-                    ariaLabel="puff-loading"
-                    wrapperStyle={{}}
-                    wrapperClass=""
+                <div style={centerStyle}>
+                  <ColorRing
                     visible={true}
+                    height="80"
+                    width="80"
+                    ariaLabel="blocks-loading"
+                    wrapperStyle={{}}
+                    wrapperClass="blocks-wrapper"
+                    colors={[
+                      "#cacaca",
+                      "#cacaca",
+                      "#cacaca",
+                      "#cacaca",
+                      "#cacaca",
+                    ]}
                   />
                 </div>
               </div>
