@@ -99,18 +99,21 @@ function SingleMovie() {
         />
 
         <h1
-          style={{ zIndex: 90 }}
+          style={{ zIndex: 90, textAlign: "center" }}
           className="
-        text-4xl
-        md:text-7xl font-bold
-        text-white
-        whitespace
-      "
+    text-4xl
+    md:text-7xl font-bold
+    text-white
+    whitespace
+    ml-2      
+    md:w-auto
+  "
         >
           {movie.title}
         </h1>
+
         <div
-          className="flex flex-col md:flex-row items-start md:space-x-5
+          className="flex flex-col md:flex-row items-center sm:items-start md:space-x-5
       "
         >
           <Image
@@ -154,12 +157,12 @@ function SingleMovie() {
                       {movie.ratings.length === 1 ? "rating" : "ratings"})
                     </p>
                   </div>
-                  <div className="   p-2">
+                  <div className="">
                     <a
                       href={`https://filmogtekken.sanity.studio/desk/movie;${movie._id}`}
                       target="_blank"
-                      className="bg-gray-800 ml-2 p-2 rounded-xl w-20 text-center text-white text-lg font-semibold
-                hover:bg-gray-500
+                      className="bg-gray-800 md:ml-2 mt-10 sm:mt-2 p-1 rounded-xl w-20 text-center text-white text-lg font-semibold
+                      hover:bg-gray-500
                 "
                     >
                       Rate it!
@@ -182,7 +185,7 @@ function SingleMovie() {
               )}
             </div>
             <div
-              className="flex flex-col md:flex-row  md:flex-wrap items-center justify-center
+              className="flex flex-col md:flex-row  md:flex-wrap items-center sm:items-start 
           md:w-2/3
           "
             >
