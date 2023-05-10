@@ -126,7 +126,7 @@ function Movies(movies: any) {
   }
 
   return (
-    <div draggable={false} className="mt-52 md:mt-auto">
+    <div draggable={false} className="mt-52 md:mt-auto ">
       <div
         className="
     grid
