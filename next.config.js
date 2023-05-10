@@ -8,6 +8,7 @@ const nextConfig = {
       "api.themoviedb.org",
       "image.tmdb.org",
       "www.themoviedb.org",
+      "localhost",
     ],
   },
   env: {

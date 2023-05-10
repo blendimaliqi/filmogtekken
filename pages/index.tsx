@@ -69,7 +69,7 @@ export default function Home() {
   return (
     <main>
       <Carousel
-        className="hidden sm:block "
+        className="hidden md:block "
         autoPlay={true}
         interval={10000}
         stopOnHover={false}
