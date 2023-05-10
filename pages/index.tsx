@@ -92,14 +92,3 @@ export default function Home() {
     </main>
   );
 }
-
-// export async function getStaticProps() {
-//   const movieData = await client.fetch(movieQuery);
-//   return {
-//     props: {
-//       movies: movieData,
-//     },
-//     //revalidate after 30 seconds
-//     revalidate: 30,
-//   };
-// }
