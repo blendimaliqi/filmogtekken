@@ -39,7 +39,6 @@ export default function Home() {
     queryKey: ["movies"],
     queryFn: () => client.fetch(movieQuery),
     staleTime: 5000,
-    cacheTime: 60000,
   });
 
   if (isLoading)
