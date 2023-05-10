@@ -110,7 +110,7 @@ function SingleMovie() {
           {movie.title}
         </h1>
         <div
-          className="flex flex-col md:flex-row items-start space-x-5
+          className="flex flex-col md:flex-row items-start md:space-x-5
       "
         >
           <Image
@@ -128,7 +128,7 @@ function SingleMovie() {
             <div
               className="flex flex-col md:flex-row items-center mt-10
         text-gray-400
-        space-x-5
+          md:space-x-5
         // font size
         text-3xl
         my-5
@@ -154,7 +154,7 @@ function SingleMovie() {
                       {movie.ratings.length === 1 ? "rating" : "ratings"})
                     </p>
                   </div>
-                  <div className=" sm:mt-4 md:mt-0 p-2">
+                  <div className="   p-2">
                     <a
                       href={`https://filmogtekken.sanity.studio/desk/movie;${movie._id}`}
                       target="_blank"
@@ -167,12 +167,12 @@ function SingleMovie() {
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-row items-center">
-                  <p>Ingen rating enda</p>
+                <div className="flex flex-col md:flex-row items-center">
+                  <p className="text-center sm:text-start">Ingen rating enda</p>
                   <a
                     href={`https://filmogtekken.sanity.studio/desk/movie;${movie._id}`}
                     target="_blank"
-                    className="bg-gray-800 ml-2 mt-2 p-1 rounded-xl w-20 text-center text-white text-lg font-semibold
+                    className="bg-gray-800 md:ml-2 mt-6 sm:mt-2 p-1 rounded-xl w-20 text-center text-white text-lg font-semibold
                 hover:bg-gray-500
                 "
                   >
@@ -182,8 +182,8 @@ function SingleMovie() {
               )}
             </div>
             <div
-              className="flex flex-row  flex-wrap
-          w-2/3
+              className="flex flex-col md:flex-row  md:flex-wrap items-center justify-center
+          md:w-2/3
           "
             >
               {movie.genres &&
