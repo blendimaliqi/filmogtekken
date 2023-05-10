@@ -17,7 +17,7 @@ function HomepageImage({ children, url, movie }: Props) {
     >
       <Image
         style={{}}
-        className="z-0 opacity-50"
+        className="z-0 opacity-50 "
         src={url}
         alt="Homepage background"
         width={0}
@@ -27,14 +27,11 @@ function HomepageImage({ children, url, movie }: Props) {
       <div
         className="absolute top-0 left-0 w-full h-full"
         style={{
-          // Set the background color of the pseudo-element to transparent
-          // and set its opacity to increase from top to bottom
           background: "linear-gradient(to bottom, transparent 40%, #000000)",
         }}
       />
       <div
         className="absolute inset-0 
-        
       "
       >
         {children}
