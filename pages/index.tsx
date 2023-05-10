@@ -5,6 +5,9 @@ import HomepageImage from "@/components/HomepageImage";
 import MovieTitle from "@/components/MovieTitle";
 import Movies from "@/components/Movies";
 import { client, urlFor } from "../config/client";
+import { ColorRing, Puff } from "react-loader-spinner";
+import { useQuery } from "react-query";
+//import react query
 
 const movieQuery = `*[_type == "movie"] {
   _id,
@@ -25,56 +28,78 @@ const movieQuery = `*[_type == "movie"] {
     rating
   }}`;
 
-export default function Home({ movies }: any) {
-  const sortedMovies = movies.sort((a: any, b: any) => {
+const centerStyle = {
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  height: "100vh",
+};
+
+export default function Home() {
+  const { isLoading, error, data } = useQuery({
+    queryKey: ["movies"],
+    queryFn: () => client.fetch(movieQuery),
+  });
+
+  if (isLoading)
+    return (
+      <div style={centerStyle}>
+        <ColorRing
+          visible={true}
+          height="80"
+          width="80"
+          ariaLabel="blocks-loading"
+          wrapperStyle={{}}
+          wrapperClass="blocks-wrapper"
+          colors={["#cacaca", "#cacaca", "#cacaca", "#cacaca", "#cacaca"]}
+        />
+      </div>
+    );
+
+  if (error) return "An error has occurred: ";
+
+  const sortedMovies = data.sort((a: any, b: any) => {
     return new Date(b._createdAt).getTime() - new Date(a._createdAt).getTime();
   });
 
   const moviesToDisplay = sortedMovies.slice(0, 5);
-  return (
-    <main
-      className="
-    
-    "
-    >
-      {
-        //
-        <Carousel
-          //make invisible when mobile screen
-          className="hidden sm:block "
-          autoPlay={true}
-          interval={5000}
-          stopOnHover={false}
-          infiniteLoop={true}
-          showThumbs={false}
-          showStatus={false}
 
-          //remove arrows
-        >
-          {moviesToDisplay.map((movie: any) => (
-            <HomepageImage
-              key={movie._id}
-              url={urlFor(movie.poster_backdrop.asset).url() ?? ""}
-              movie={movie}
-            >
-              <MovieTitle movie={movie} />
-            </HomepageImage>
-          ))}
-        </Carousel>
-      }
+  return (
+    <main>
+      <Carousel
+        //make invisible when mobile screen
+        className="hidden sm:block "
+        autoPlay={true}
+        interval={10000}
+        stopOnHover={false}
+        infiniteLoop={true}
+        showThumbs={false}
+        showStatus={false}
+        //remove arrows
+      >
+        {moviesToDisplay.map((movie: any) => (
+          <HomepageImage
+            key={movie._id}
+            url={urlFor(movie.poster_backdrop.asset).url() ?? ""}
+            movie={movie}
+          >
+            <MovieTitle movie={movie} />
+          </HomepageImage>
+        ))}
+      </Carousel>
 
       <Movies movies={sortedMovies} />
     </main>
   );
 }
 
-export async function getStaticProps() {
-  const movieData = await client.fetch(movieQuery);
-  return {
-    props: {
-      movies: movieData,
-    },
-    //revalidate after 30 seconds
-    revalidate: 30,
-  };
-}
+// export async function getStaticProps() {
+//   const movieData = await client.fetch(movieQuery);
+//   return {
+//     props: {
+//       movies: movieData,
+//     },
+//     //revalidate after 30 seconds
+//     revalidate: 30,
+//   };
+// }

@@ -2,11 +2,14 @@ import { client, urlFor } from "@/config/client";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { AiFillStar } from "react-icons/ai";
+import { ColorRing } from "react-loader-spinner";
+import { useQuery } from "react-query";
 
-type Props = {
-  children: React.ReactNode;
-  url: string;
-  movie: any;
+const centerStyle = {
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  height: "100vh",
 };
 
 const movieQuery = `*[_type == "movie" && _id == $movieId] {
@@ -28,12 +31,34 @@ const movieQuery = `*[_type == "movie" && _id == $movieId] {
   length
 }[0]`;
 
-function SingleMovie({ movie }: Props) {
+function SingleMovie() {
   const router = useRouter();
 
-  if (router.isFallback) {
-    return <div>Loading...</div>;
-  }
+  const {
+    isLoading,
+    error,
+    data: movie,
+  } = useQuery({
+    queryKey: ["movie"],
+    queryFn: () => client.fetch(movieQuery, { movieId: router.query.slug }),
+  });
+
+  if (isLoading)
+    return (
+      <div style={centerStyle}>
+        <ColorRing
+          visible={true}
+          height="80"
+          width="80"
+          ariaLabel="blocks-loading"
+          wrapperStyle={{}}
+          wrapperClass="blocks-wrapper"
+          colors={["#cacaca", "#cacaca", "#cacaca", "#cacaca", "#cacaca"]}
+        />
+      </div>
+    );
+
+  if (error) return "An error has occurred: ";
 
   return (
     <div
@@ -59,6 +84,15 @@ function SingleMovie({ movie }: Props) {
           opacity: 0.3,
         }}
       />
+      <div
+        className="absolute top-0 left-0 w-full h-[80%]"
+        style={{
+          // Set the background color of the pseudo-element to transparent
+          // and set its opacity to increase from top to bottom
+          background: "linear-gradient(to bottom, transparent 40%, #000000)",
+        }}
+      />
+
       <h1
         style={{ zIndex: 90 }}
         className="
@@ -164,6 +198,7 @@ function SingleMovie({ movie }: Props) {
           <div className="mt-4">
             <p>{movie.plot}</p>
           </div>
+
           <div className="mt-10 text-3xl flex flex-col">
             {movie.ratings && <h1>Individuell rating</h1>}
             <div
@@ -204,23 +239,3 @@ function SingleMovie({ movie }: Props) {
 }
 
 export default SingleMovie;
-
-export async function getStaticProps({ params }: any) {
-  const { slug } = params;
-  const movieData = await client.fetch(movieQuery, { movieId: slug });
-  return {
-    props: {
-      movie: movieData,
-    },
-    revalidate: 30,
-  };
-}
-
-export async function getStaticPaths() {
-  const movies = await client.fetch(`*[_type == "movie"]`);
-  const paths = movies.map((movie: any) => ({ params: { slug: movie._id } }));
-  return {
-    paths,
-    fallback: true,
-  };
-}
