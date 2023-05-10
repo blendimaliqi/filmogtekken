@@ -40,7 +40,7 @@ function MovieTitle(movie: any) {
               text-lg md:text-2xl font-light"
               key={genre}
             >
-              <p className="mr-2">{genre}</p>
+              <p className="mr-4">{genre}</p>
             </div>
           ))}
       </div>
