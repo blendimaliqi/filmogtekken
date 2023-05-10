@@ -195,7 +195,7 @@ function SingleMovie() {
                 </p>
               ))}
           </div>
-          <div className="mt-4">
+          <div className="mt-4 sm:w-3/4">
             <p>{movie.plot}</p>
           </div>
 
