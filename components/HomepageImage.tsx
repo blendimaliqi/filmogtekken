@@ -13,7 +13,7 @@ function HomepageImage({ children, url, movie }: Props) {
   return (
     <div
       className="relative bg-cover bg-center bg-no-repeat"
-      style={{ height: "100vh" }}
+      style={{ height: "88vh" }}
     >
       <Image
         style={{}}
