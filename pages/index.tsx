@@ -27,7 +27,7 @@ const movieQuery = `*[_type == "movie"] {
     rating
   }}`;
 
-const centerStyle = {
+export const centerStyle = {
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
@@ -38,6 +38,8 @@ export default function Home() {
   const { isLoading, error, data } = useQuery({
     queryKey: ["movies"],
     queryFn: () => client.fetch(movieQuery),
+    staleTime: 5000,
+    cacheTime: 60000,
   });
 
   if (isLoading)
@@ -62,6 +64,8 @@ export default function Home() {
   });
 
   const moviesToDisplay = sortedMovies.slice(0, 5);
+
+  console.log(data);
 
   return (
     <main>

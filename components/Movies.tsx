@@ -7,7 +7,8 @@ import ModalMovie from "./modal/ModalMovie";
 import { Audio, ColorRing, Puff } from "react-loader-spinner";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useRouter } from "next/router";
+import { useQuery, useMutation, useQueryClient } from "react-query";
+
 import { centerStyle } from "@/pages";
 
 export async function uploadExternalImage(url: string) {
@@ -22,7 +23,7 @@ export async function uploadExternalImage(url: string) {
 function Movies(movies: any) {
   const [omdbMovies, setOmdbMovies] = useState<any[]>([]);
   const [input, setInput] = useState("");
-
+  const queryClient = useQueryClient();
   const getMovieRequest = async () => {
     try {
       const url = `https://api.themoviedb.org/3/search/movie?api_key=${process.env.TMDB_API_KEY}&language=en-US&query=${input}&page=1&include_adult=false`;
@@ -41,6 +42,21 @@ function Movies(movies: any) {
   const closeModal = () => setIsModalOpen(false);
 
   const [loading, setLoading] = useState(false);
+
+  // create a new movie and update the "movies" query
+
+  const { mutate } = useMutation(createPost, {
+    onSuccess: () => {
+      queryClient.invalidateQueries("movies");
+
+      //wait for 3 seconds before refetching
+      queryClient.refetchQueries("movies");
+      // show success message, close modal, etc.
+    },
+    onError: () => {
+      // show error message, etc.
+    },
+  });
 
   async function addMovie(mov: any) {
     try {
@@ -91,23 +107,25 @@ function Movies(movies: any) {
       );
 
       if (!movieExists) {
-        const createdMovie = await createPost(movieData);
+        // const createdMovie = await createPost(movieData);
         setLoading(false);
-        console.log("Created movie:", createdMovie);
+        console.log("Created movie:", mov);
 
-        toast(`${createdMovie.title} lagt til 😁`, {
+        toast.success(`${mov.title} lagt til 😁`, {
           position: "top-right",
           autoClose: 5000,
           hideProgressBar: false,
           closeOnClick: true,
           pauseOnHover: true,
           draggable: true,
-          progress: undefined,
           theme: "dark",
         });
         closeModal();
-        //revalidate after adding movie in sanity
-        movies.revalidate("/");
+
+        mutate(movieData);
+        queryClient.invalidateQueries("movies");
+
+        // movies.revalidate("movies");
       } else {
         toast.error(`${mov.title} finnes allerede 😅`, {
           position: "top-right",
@@ -246,7 +264,7 @@ function Movies(movies: any) {
                 flex
                 justify-center
                 items-center
-                "
+              "
               >
                 <div style={centerStyle}>
                   <ColorRing
