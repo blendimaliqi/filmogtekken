@@ -126,19 +126,28 @@ function SingleMovie() {
         "
           />
 
-          <div className=" z-50 flex flex-col items-center lg:items-start">
+          <div className=" z-50 flex flex-col items-center lg:items-start justify-center">
             <div
-              className="flex flex-col sm:flex-col md:flex-row items-center justify-center lg:justify-normal mt-10
-        text-gray-400
-          sm:space-x-5
-        // font size
-        text-3xl
-        my-5
+              className="
+              flex 
+              flex-col 
+              sm:flex-col 
+              md:flex-row 
+              items-center 
+              justify-center 
+              lg:justify-normal 
+              mt-10
+              text-gray-400
+              md:space-x-5
+              space-y-5
+              md:space-y-0
+              text-3xl
+              my-5
         "
             >
               <p>{new Date(movie.releaseDate).getFullYear()}</p>
               <p className="my-5">{movie.length}min</p>
-              {movie.ratings ? (
+              {movie.ratings && (
                 <div className="flex flex-col sm:flex-row items-center justify-center ">
                   <div className="flex flex-row items-center justify-center ">
                     <p>
@@ -156,39 +165,30 @@ function SingleMovie() {
                       {movie.ratings.length === 1 ? "rating" : "ratings"})
                     </p>
                   </div>
-                  <div className="flex flex-col sm:flex-row">
-                    <a
-                      href={`https://filmogtekken.sanity.studio/desk/movie;${movie._id}`}
-                      target="_blank"
-                      className="bg-gray-800 sm:ml-2 mt-10 sm:mt-2 p-1 rounded-xl w-20 text-center text-white text-lg font-semibold
-                      hover:bg-gray-500
-                "
-                    >
-                      Rate it!
-                    </a>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col md:flex-row items-center">
-                  <p className="text-center sm:text-start">Ingen rating enda</p>
-                  <a
-                    href={`https://filmogtekken.sanity.studio/desk/movie;${movie._id}`}
-                    target="_blank"
-                    className="bg-gray-800 sm:ml-2 mt-6 sm:mt-2 p-1 rounded-xl w-20 text-center text-white text-lg font-semibold
-                hover:bg-gray-500
-                "
-                  >
-                    Rate it!
-                  </a>
                 </div>
               )}
+              {!movie.ratings && (
+                <p className="text-3xl text-start whitespace-nowrap">
+                  Ingen rating enda
+                </p>
+              )}
+              <div className="flex flex-col items-center justify-center w-full sm:flex-row">
+                <a
+                  href={`https://filmogtekken.sanity.studio/desk/movie;${movie._id}`}
+                  target="_blank"
+                  className="bg-gray-800 rounded-xl   text-center text-white text-lg font-semibold p-2
+                "
+                >
+                  Rate it!
+                </a>
+              </div>
             </div>
             <div
-              className="flex flex-col  items-center justify-center lg:justify-normal lg:items-start 
+              className="flex flex-col  items-center justify-center lg:justify-center lg:items-start 
         
           "
             >
-              <div className="flex flex-col md:flex-row text-center">
+              <div className="flex flex-col  md:flex-row text-center">
                 {movie.genres &&
                   movie.genres.map((genre: string) => (
                     <p
