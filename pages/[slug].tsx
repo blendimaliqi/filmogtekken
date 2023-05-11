@@ -168,7 +168,7 @@ function SingleMovie() {
                 </div>
               )}
               {!movie.ratings && (
-                <p className="text-3xl text-start whitespace-nowrap">
+                <p className="text-3xl text-center whitespace-nowrap">
                   Ingen rating enda
                 </p>
               )}
@@ -176,7 +176,7 @@ function SingleMovie() {
                 <a
                   href={`https://filmogtekken.sanity.studio/desk/movie;${movie._id}`}
                   target="_blank"
-                  className="bg-gray-800 rounded-xl   text-center text-white text-lg font-semibold p-2
+                  className="bg-gray-800 rounded-xl w-full text-center text-white text-lg font-semibold p-2
                 "
                 >
                   Rate it!
@@ -188,18 +188,19 @@ function SingleMovie() {
         
           "
             >
-              <div className="flex flex-col  md:flex-row text-center">
+              <div className="flex flex-col  md:flex-row text-center ">
                 {movie.genres &&
                   movie.genres.map((genre: string) => (
                     <p
-                      className="mr-4 text-2xl font-light border 
+                      className="md:mr-4 text-2xl font-light border 
                   rounded-lg p-2 
-                  mb-4
+                  mt-2
+                  mb-2
                 "
                       style={{ zIndex: 90 }}
                       key={genre}
                     >
-                      {genre}
+                      <p>{genre}</p>
                     </p>
                   ))}
               </div>
