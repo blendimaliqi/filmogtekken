@@ -31,21 +31,24 @@ function ModalMovie({ title, year, poster, id, movie }: MovieProps) {
               <div className="flex flex-col justify-between items-center h-full">
                 <span className="text-white font-semibold text-2xl mt-40">
                   <div className="flex flex-col">
-                    <div className="flex items-center mb-2">
+                    <div className="flex justify-center items-center mb-2">
                       <p className="text-2xl">
                         {movie.vote_average.toFixed(2)}
                       </p>
                       <AiFillStar style={{ marginTop: "4px" }} size={30} />
                     </div>
 
-                    <p className="font-light text-base">
+                    <p className="font-light text-center text-base">
                       {" "}
                       {movie.vote_count} ratings
                     </p>
                   </div>
                 </span>
-                <span className="text-white text-start font-semibold  p-4">
+                <span className="text-white text-center font-semibold ">
                   {movie.title}
+                </span>
+                <span className="text-white text-center font-semibold  pb-2">
+                  {movie.release_date.slice(0, 4)}
                 </span>
               </div>
             </div>

@@ -38,7 +38,7 @@ export default function Home() {
   const { isLoading, error, data } = useQuery({
     queryKey: ["movies"],
     queryFn: () => client.fetch(movieQuery),
-    staleTime: 5000,
+    staleTime: 60000,
   });
 
   if (isLoading)
