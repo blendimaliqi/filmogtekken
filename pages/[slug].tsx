@@ -100,17 +100,11 @@ function SingleMovie() {
         <h1
           style={{ zIndex: 90 }}
           className="
-          flex
-          flex-wrap
-    text-4xl
-    md:text-5xl
-    lg:text-7xl font-bold
-    text-white
-    px-5
-    lg:px-0
-    w-screen
-    lg:text-start
-    text-center
+          text-5xl
+          lg:text-7xl
+          font-bold
+          text-center
+          lg:text-start
   "
         >
           {movie.title}
