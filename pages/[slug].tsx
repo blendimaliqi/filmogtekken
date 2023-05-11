@@ -68,10 +68,10 @@ function SingleMovie() {
       </Head>
       <div
         className="
-        flex flex-col items-start
+        flex flex-col items-center
+        lg:items-start
         mt-64
         p-24
-        w-screen
     "
       >
         <Image
@@ -97,23 +97,27 @@ function SingleMovie() {
             background: "linear-gradient(to bottom, transparent 40%, #000000)",
           }}
         />
-
         <h1
-          style={{ zIndex: 90, textAlign: "center" }}
+          style={{ zIndex: 90 }}
           className="
+          flex
+          flex-wrap
     text-4xl
-    md:text-7xl font-bold
+    md:text-5xl
+    lg:text-7xl font-bold
     text-white
-    whitespace
-    ml-2      
-    md:w-auto
+    px-5
+    lg:px-0
+    w-screen
+    lg:text-start
+    text-center
   "
         >
           {movie.title}
         </h1>
 
         <div
-          className="flex flex-col md:flex-row items-center sm:items-start md:space-x-5
+          className="flex flex-col  lg:flex-row items-center lg:items-start sm:space-x-5
       "
         >
           <Image
@@ -127,11 +131,12 @@ function SingleMovie() {
         rounded-3xl
         "
           />
-          <div style={{ zIndex: 90 }}>
+
+          <div className=" z-50 flex flex-col items-center lg:items-start">
             <div
-              className="flex flex-col md:flex-row items-center mt-10
+              className="flex flex-col sm:flex-col md:flex-row items-center justify-center lg:justify-normal mt-10
         text-gray-400
-          md:space-x-5
+          sm:space-x-5
         // font size
         text-3xl
         my-5
@@ -140,8 +145,8 @@ function SingleMovie() {
               <p>{new Date(movie.releaseDate).getFullYear()}</p>
               <p className="my-5">{movie.length}min</p>
               {movie.ratings ? (
-                <div className="flex flex-col md:flex-row items-center justify-center ">
-                  <div className="flex flex-row items-center ">
+                <div className="flex flex-col sm:flex-row items-center justify-center ">
+                  <div className="flex flex-row items-center justify-center ">
                     <p>
                       {(
                         movie.ratings.reduce(
@@ -157,11 +162,11 @@ function SingleMovie() {
                       {movie.ratings.length === 1 ? "rating" : "ratings"})
                     </p>
                   </div>
-                  <div className="">
+                  <div className="flex flex-col sm:flex-row">
                     <a
                       href={`https://filmogtekken.sanity.studio/desk/movie;${movie._id}`}
                       target="_blank"
-                      className="bg-gray-800 md:ml-2 mt-10 sm:mt-2 p-1 rounded-xl w-20 text-center text-white text-lg font-semibold
+                      className="bg-gray-800 sm:ml-2 mt-10 sm:mt-2 p-1 rounded-xl w-20 text-center text-white text-lg font-semibold
                       hover:bg-gray-500
                 "
                     >
@@ -175,7 +180,7 @@ function SingleMovie() {
                   <a
                     href={`https://filmogtekken.sanity.studio/desk/movie;${movie._id}`}
                     target="_blank"
-                    className="bg-gray-800 md:ml-2 mt-6 sm:mt-2 p-1 rounded-xl w-20 text-center text-white text-lg font-semibold
+                    className="bg-gray-800 sm:ml-2 mt-6 sm:mt-2 p-1 rounded-xl w-20 text-center text-white text-lg font-semibold
                 hover:bg-gray-500
                 "
                   >
@@ -185,32 +190,34 @@ function SingleMovie() {
               )}
             </div>
             <div
-              className="flex flex-col md:flex-row  md:flex-wrap items-center sm:items-start 
-          md:w-2/3
+              className="flex flex-col  items-center justify-center lg:justify-normal lg:items-start 
+        
           "
             >
-              {movie.genres &&
-                movie.genres.map((genre: string) => (
-                  <p
-                    className="mr-4 text-2xl font-light border 
+              <div className="flex flex-col md:flex-row text-center">
+                {movie.genres &&
+                  movie.genres.map((genre: string) => (
+                    <p
+                      className="mr-4 text-2xl font-light border 
                   rounded-lg p-2 
                   mb-4
                 "
-                    style={{ zIndex: 90 }}
-                    key={genre}
-                  >
-                    {genre}
-                  </p>
-                ))}
-            </div>
-            <div className="mt-4 sm:w-3/4">
-              <p>{movie.plot}</p>
-            </div>
+                      style={{ zIndex: 90 }}
+                      key={genre}
+                    >
+                      {genre}
+                    </p>
+                  ))}
+              </div>
 
-            <div className="mt-10 text-3xl flex flex-col">
+              <div className=" mt-4 sm:w-3/4 ">
+                <p>{movie.plot}</p>
+              </div>
+            </div>
+            <div className="mt-10 text-3xl text-center lg:text-start flex flex-col ">
               {movie.ratings && <h1>Individuell rating</h1>}
               <div
-                className="flex flex-row  w-2/3 
+                className="flex flex-row justify-center lg:justify-start
             flex-wrap
             "
               >
