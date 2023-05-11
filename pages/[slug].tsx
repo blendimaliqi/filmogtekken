@@ -177,6 +177,7 @@ function SingleMovie() {
                   href={`https://filmogtekken.sanity.studio/desk/movie;${movie._id}`}
                   target="_blank"
                   className="bg-gray-800 rounded-xl w-full text-center text-white text-lg font-semibold p-2
+                  hover:bg-gray-700
                 "
                 >
                   Rate it!
@@ -213,7 +214,7 @@ function SingleMovie() {
               {movie.ratings && <h1>Individuell rating</h1>}
               <div
                 className="flex flex-row justify-center lg:justify-start
-            flex-wrap
+            flex-wrap md:flex-nowrap
             "
               >
                 {movie.ratings &&
