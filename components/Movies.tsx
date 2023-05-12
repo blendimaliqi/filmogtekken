@@ -161,25 +161,18 @@ function Movies(movies: any) {
       >
         <button
           className="
-    text-gray-400
-    hover:text-gray-300
-    transition duration-300 ease-in-out
-    cursor-pointer
-    border-2
-    border-opacity-60
-    border-gray-300
-    hover:border-gray-400
-    rounded-2xl
-    p-2
-    h-96
-    w-72
-    sm:w-auto
-    appearance-none
-    bg-transparent
-    outline-none
-    focus:outline-none
-    mt-6
-  "
+          text-gray-400
+          hover:text-gray-300
+          transition duration-300 ease-in-out
+          cursor-pointer
+          border-2
+          border-opacity-60
+          border-gray-300
+          hover:border-gray-400
+          rounded-2xl
+          p-2
+          h-full
+          w-full"
           onClick={openModal}
         >
           Legg til
