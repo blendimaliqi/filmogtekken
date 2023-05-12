@@ -225,17 +225,19 @@ function SingleMovie() {
                       key={rating}
                       className="flex flex-row items-center mt-5"
                     >
-                      <Image
-                        width={70}
-                        height={70}
-                        src={urlFor(rating.person.image.asset).url()}
-                        alt={rating.person.name}
-                        className="rounded-full w-30 h-30 object-cover"
-                        style={{
-                          width: "70px",
-                          height: "70px",
-                        }}
-                      />
+                      {rating.person.image.asset && (
+                        <Image
+                          width={70}
+                          height={70}
+                          src={urlFor(rating.person.image.asset).url()}
+                          alt={rating.person.name ?? "Ukjent"}
+                          className="rounded-full w-30 h-30 object-cover"
+                          style={{
+                            width: "70px",
+                            height: "70px",
+                          }}
+                        />
+                      )}
 
                       <div className="flex flex-col mr-10 ml-5 ">
                         <p>{rating.person.name}</p>
