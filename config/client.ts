@@ -6,7 +6,7 @@ export const client = createClient({
   dataset: "production",
   useCdn: true,
   apiVersion: "2023-05-02",
-  token: process.env.SANITY_TOKEN ,
+  token: process.env.SANITY_TOKEN,
 });
 
 const builder = imageUrlBuilder(client);

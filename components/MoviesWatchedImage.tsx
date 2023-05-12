@@ -14,17 +14,12 @@ function MoviesWatchedImage({ children, poster }: Props) {
         w-60
         sm:h-96
         sm:w-72
-        
       "
       style={{
         backgroundImage: `url(${poster})`,
-        //show the image as is and not cover the whole div
         backgroundSize: "contain",
         backgroundRepeat: "no-repeat",
         backgroundPosition: "center",
-        
-
-
       }}
     >
       {children}

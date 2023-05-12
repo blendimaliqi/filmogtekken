@@ -1,4 +1,3 @@
-//create movies component
 import React, { useState } from "react";
 import Movie from "./Movie";
 import { client, createPost } from "@/config/client";
@@ -43,18 +42,13 @@ function Movies(movies: any) {
 
   const [loading, setLoading] = useState(false);
 
-  // create a new movie and update the "movies" query
-
   const { mutate } = useMutation(createPost, {
     onSuccess: () => {
       queryClient.invalidateQueries("movies");
-
-      //wait for 3 seconds before refetching
       queryClient.refetchQueries("movies");
-      // show success message, close modal, etc.
     },
     onError: () => {
-      // show error message, etc.
+      console.log("error");
     },
   });
 
@@ -101,13 +95,11 @@ function Movies(movies: any) {
         },
       };
 
-      //check if movie exists in movies prop
       const movieExists = movies.movies.some(
         (movie: any) => movie.title === mov.title
       );
 
       if (!movieExists) {
-        // const createdMovie = await createPost(movieData);
         setLoading(false);
         console.log("Created movie:", mov);
 
@@ -124,8 +116,6 @@ function Movies(movies: any) {
 
         mutate(movieData);
         queryClient.invalidateQueries("movies");
-
-        // movies.revalidate("movies");
       } else {
         toast.error(`${mov.title} finnes allerede 😅`, {
           position: "top-right",
@@ -162,7 +152,7 @@ function Movies(movies: any) {
     lg:px-20
     xl:px-32
     2xl:px-40
-    justify-items-center
+    justify-center
     sm:justify-items-stretch
     items-center
     text-gray-800
@@ -181,9 +171,14 @@ function Movies(movies: any) {
     hover:border-gray-400
     rounded-2xl
     p-2
-    h-full
+    h-96
     w-72
     sm:w-auto
+    appearance-none
+    bg-transparent
+    outline-none
+    focus:outline-none
+    mt-6
   "
           onClick={openModal}
         >

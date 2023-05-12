@@ -1,4 +1,3 @@
-//create movie component
 import React, { useEffect } from "react";
 import { urlFor } from "../config/client";
 import Image from "next/image";
