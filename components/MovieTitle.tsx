@@ -10,7 +10,6 @@ function MovieTitle(movie: any) {
     >
       <h1
         className="text-2xl md:text-6xl lg:text-8xl 
-      //text at start 
       text-left
       font-bold text-white py-8 cursor-pointer z-9000"
         style={{ zIndex: 9090 }}
@@ -32,11 +31,8 @@ function MovieTitle(movie: any) {
           movie.movie.genres.map((genre: string) => (
             <div
               className="
-                //make items wrap 
-                flex flex-wrap
-                //text size
-                
-
+              flex 
+              flex-wrap
               text-lg md:text-2xl font-light"
               key={genre}
             >
@@ -45,6 +41,7 @@ function MovieTitle(movie: any) {
           ))}
       </div>
       <Link
+        draggable={false}
         href={`/${movie.movie._id}`}
         className="
         flex flex-row items-center

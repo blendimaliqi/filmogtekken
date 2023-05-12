@@ -72,6 +72,7 @@ function SingleMovie() {
         lg:items-start
         mt-64
         p-24
+        no-drag
     "
       >
         <Image
@@ -80,6 +81,7 @@ function SingleMovie() {
           width={0}
           sizes="100vh"
           alt="background"
+          className="draggable select-none"
           style={{
             position: "absolute",
             top: 0,
@@ -92,8 +94,6 @@ function SingleMovie() {
         <div
           className="absolute top-0 left-0 w-full h-[80%]"
           style={{
-            // Set the background color of the pseudo-element to transparent
-            // and set its opacity to increase from top to bottom
             background: "linear-gradient(to bottom, transparent 40%, #000000)",
           }}
         />
@@ -123,6 +123,7 @@ function SingleMovie() {
             className="
         mt-10
         rounded-3xl
+        no-drag
         "
           />
 
@@ -174,6 +175,7 @@ function SingleMovie() {
               )}
               <div className="flex flex-col items-center justify-center w-full sm:flex-row">
                 <a
+                  draggable={false}
                   href={`https://filmogtekken.sanity.studio/desk/movie;${movie._id}`}
                   target="_blank"
                   className="bg-gray-800 rounded-xl w-full text-center text-white text-lg font-semibold p-2
