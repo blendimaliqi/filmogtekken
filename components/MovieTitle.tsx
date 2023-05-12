@@ -1,8 +1,10 @@
 import Link from "next/link";
 import React from "react";
+import { AiFillStar } from "react-icons/ai";
 import { FaInfoCircle } from "react-icons/fa";
 
 function MovieTitle(movie: any) {
+  console.log("movie lol", movie.movie.ratings);
   return (
     <div
       className="flex flex-col items-start justify-center h-full mt-16 md:mt-52 p-24 z-10000"
@@ -11,19 +13,24 @@ function MovieTitle(movie: any) {
       <h1
         className="text-2xl md:text-6xl lg:text-8xl 
       text-left
-      font-bold text-white py-8 cursor-pointer z-9000"
+      font-bold text-white py-8  z-9000"
         style={{ zIndex: 9090 }}
       >
         {movie.movie.title}
       </h1>
 
-      {movie.movie.rating && (
-        <h2
-          className="text-4xl py-2 font-bold text-white z-9000  cursor-pointer whitespace-nowrap"
-          style={{ zIndex: 9090 }}
-        >
-          Rating: {movie.movie.rating}
-        </h2>
+      {movie.movie.ratings && (
+        <div className="flex items-center">
+          <p className="text-lg md:text-2xl font-light text-white mt-4 flex items-center flex-row gap-2">
+            {(
+              movie.movie.ratings.reduce(
+                (acc: any, curr: any) => acc + curr.rating,
+                0
+              ) / movie.movie.ratings.length
+            ).toFixed(2)}
+            <AiFillStar style={{ marginTop: "4px" }} size={25} />
+          </p>
+        </div>
       )}
 
       <div className="flex">
