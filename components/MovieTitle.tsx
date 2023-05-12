@@ -50,8 +50,8 @@ function MovieTitle(movie: any) {
         flex flex-row items-center
         justify-center
         bg-gray-500
-        bg-opacity-40
-        hover:bg-opacity-50
+        bg-opacity-30
+        hover:bg-opacity-20
         transition duration-300 ease-in-out
         cursor-pointer
         rounded-2xl
@@ -66,7 +66,7 @@ function MovieTitle(movie: any) {
         <div className="flex flex-row items-center justify-center gap-4 ">
           <FaInfoCircle size={20} color="white" className="mt-1" />
           <p className="text-base md:text-2xl text-white font-light">
-            Mer info
+            Sjekk ut filmen
           </p>
         </div>
       </Link>
