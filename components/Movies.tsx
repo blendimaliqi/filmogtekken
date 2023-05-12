@@ -201,7 +201,7 @@ function Movies(movies: any) {
           "
           >
             <h2
-              className="text-xl font-bold mb-4
+              className="text-lg font-bold mb-6
             sm:text-lg
             md:text-xl
             lg:text-2xl
@@ -209,7 +209,7 @@ function Movies(movies: any) {
             2xl:text-4xl
             "
             >
-              Søk film
+              Legg til film
             </h2>
             <input
               type="text"
@@ -227,11 +227,9 @@ function Movies(movies: any) {
     rounded-lg
     p-2
     mb-4
-    sm:w-52ww
-    md:w-96
+    w-[60%]
     z-50
     focus:outline-none
-    sm:text-sm
     md:text-md
  "
             />

@@ -55,16 +55,16 @@ function MovieTitle(movie: any) {
         transition duration-300 ease-in-out
         cursor-pointer
         rounded-2xl
-        p-2
+        p-4
         w-40
         h-10
         md:h-16
-        md:w-40
+        md:w-auto
         mt-4
         "
       >
-        <div className="flex flex-row items-center gap-4 ">
-          <FaInfoCircle size={20} color="white" />
+        <div className="flex flex-row items-center justify-center gap-4 ">
+          <FaInfoCircle size={20} color="white" className="mt-1" />
           <p className="text-base md:text-2xl text-white font-light">
             Mer info
           </p>
