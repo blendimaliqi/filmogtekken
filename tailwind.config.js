@@ -31,5 +31,6 @@ module.exports = {
       };
       addUtilities(newUtilities);
     },
+    require("tailwind-scrollbar"),
   ],
 };

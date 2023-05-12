@@ -12,7 +12,7 @@ export default function Document() {
         name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
       />
-      <body>
+      <body className=" scrollbar-thumb-gray-600 scrollbar-track-transparent scrollbar-track-rounded-full scrollbar-thin">
         <div style={{ position: "absolute", top: "0", left: "0", zIndex: "2" }}>
           <Nav />
         </div>
