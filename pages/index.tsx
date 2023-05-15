@@ -1,14 +1,16 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import HomepageImage from "@/components/HomepageImage";
 import MovieTitle from "@/components/MovieTitle";
-import Movies from "@/components/Movies";
 import { client, urlFor } from "../config/client";
 import { ColorRing, Puff } from "react-loader-spinner";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
+import { atom, useAtom } from "jotai";
+import Movies from "@/components/Movies";
+import { Movie } from "../components/Movies";
 
-const movieQuery = `*[_type == "movie"] {
+export const movieQuery = `*[_type == "movie"] {
   _id,
   title,
   releaseDate,
@@ -17,6 +19,7 @@ const movieQuery = `*[_type == "movie"] {
   plot,
   genres,
   castMembers,
+  slug,
   _createdAt,
   length,
   ratings[] {
@@ -34,11 +37,15 @@ export const centerStyle = {
   height: "100vh",
 };
 
+export const moviesAtom = atom<Movie[]>([]);
+
 export default function Home() {
-  const { isLoading, error, data } = useQuery({
+  const [movies, setMovies] = useAtom(moviesAtom);
+
+  const { isLoading, error, data } = useQuery<Movie[]>({
     queryKey: ["movies"],
     queryFn: () => client.fetch(movieQuery),
-    staleTime: 60000,
+    onSuccess: (data) => setMovies(data),
   });
 
   if (isLoading)
@@ -58,13 +65,11 @@ export default function Home() {
 
   if (error) return "An error has occurred: ";
 
-  const sortedMovies = data.sort((a: any, b: any) => {
+  const sortedMovies = movies.sort((a: any, b: any) => {
     return new Date(b._createdAt).getTime() - new Date(a._createdAt).getTime();
   });
 
   const moviesToDisplay = sortedMovies.slice(0, 5);
-
-  console.log(data);
 
   return (
     <main>
@@ -88,7 +93,7 @@ export default function Home() {
         ))}
       </Carousel>
 
-      <Movies movies={sortedMovies} />
+      <Movies />
     </main>
   );
 }

@@ -4,7 +4,6 @@ import { AiFillStar } from "react-icons/ai";
 import { FaInfoCircle } from "react-icons/fa";
 
 function MovieTitle(movie: any) {
-  console.log("movie lol", movie.movie.ratings);
   return (
     <div
       className="flex flex-col items-start justify-center h-full mt-16 md:mt-52 p-24 z-10000"

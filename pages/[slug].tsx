@@ -1,10 +1,10 @@
 import { client, urlFor } from "@/config/client";
+import { useQuery } from "@tanstack/react-query";
 import Head from "next/head";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { AiFillStar } from "react-icons/ai";
 import { ColorRing } from "react-loader-spinner";
-import { useQuery } from "react-query";
 
 const centerStyle = {
   display: "flex",

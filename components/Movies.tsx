@@ -6,9 +6,39 @@ import ModalMovie from "./modal/ModalMovie";
 import { Audio, ColorRing, Puff } from "react-loader-spinner";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useQuery, useMutation, useQueryClient } from "react-query";
+//import mutate from "react-query";
 
-import { centerStyle } from "@/pages";
+import { centerStyle, movieQuery, moviesAtom } from "@/pages";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryClient } from "@/pages/_app";
+import { useAtom } from "jotai";
+
+export type Movie = {
+  _type: string;
+  title: string;
+  releaseDate: string;
+  slug: {
+    _type: string;
+    current: string;
+  };
+  genres: string[];
+  length: number;
+  plot: string;
+  poster: {
+    _type: string;
+    asset: {
+      _ref: string;
+      _type: string;
+    };
+  };
+  poster_backdrop: {
+    _type: string;
+    asset: {
+      _ref: string;
+      _type: string;
+    };
+  };
+};
 
 export async function uploadExternalImage(url: string) {
   const response = await fetch(url);
@@ -19,17 +49,24 @@ export async function uploadExternalImage(url: string) {
   return asset;
 }
 
-function Movies(movies: any) {
-  const [omdbMovies, setOmdbMovies] = useState<any[]>([]);
+function Movies() {
+  const [movies, setMovies] = useAtom(moviesAtom);
+  const { isLoading, error, data } = useQuery({
+    queryKey: ["movies"],
+    queryFn: () => client.fetch(movieQuery),
+    onSuccess: (data: any) => setMovies(data),
+  });
+
+  const [tmdbMovies, setTmdbMovies] = useState<any[]>([]);
   const [input, setInput] = useState("");
-  const queryClient = useQueryClient();
+
   const getMovieRequest = async () => {
     try {
       const url = `https://api.themoviedb.org/3/search/movie?api_key=${process.env.TMDB_API_KEY}&language=en-US&query=${input}&page=1&include_adult=false`;
 
       const response = await fetch(url);
       const responseJson = await response.json();
-      setOmdbMovies(responseJson.results);
+      setTmdbMovies(responseJson.results);
     } catch (error) {
       console.log("error", error);
     }
@@ -42,15 +79,14 @@ function Movies(movies: any) {
 
   const [loading, setLoading] = useState(false);
 
-  const { mutate } = useMutation(createPost, {
-    onSuccess: () => {
-      queryClient.invalidateQueries("movies");
-      queryClient.refetchQueries("movies");
-    },
-    onError: () => {
-      console.log("error");
-    },
-  });
+  async function refetchMovies() {
+    try {
+      const refetchedData = await client.fetch(movieQuery);
+      setMovies(refetchedData);
+    } catch (error) {
+      console.log("error", error);
+    }
+  }
 
   async function addMovie(mov: any) {
     try {
@@ -95,7 +131,7 @@ function Movies(movies: any) {
         },
       };
 
-      const movieExists = movies.movies.some(
+      const movieExists = movies.some(
         (movie: any) => movie.title === mov.title
       );
 
@@ -112,10 +148,12 @@ function Movies(movies: any) {
           draggable: true,
           theme: "dark",
         });
-        closeModal();
 
-        mutate(movieData);
-        queryClient.invalidateQueries("movies");
+        closeModal();
+        await createPost(movieData);
+        const newMovies = [...movies, movieData];
+        setMovies(newMovies);
+        refetchMovies();
       } else {
         toast.error(`${mov.title} finnes allerede 😅`, {
           position: "top-right",
@@ -271,8 +309,8 @@ function Movies(movies: any) {
                 </div>
               </div>
             ) : (
-              omdbMovies &&
-              omdbMovies.map((movie: any, index) => (
+              tmdbMovies &&
+              tmdbMovies.map((movie: any, index) => (
                 <div key={index} onClick={() => addMovie(movie)}>
                   <ModalMovie
                     key={movie.id + index}
@@ -288,7 +326,7 @@ function Movies(movies: any) {
           </div>
         </Modal>
 
-        {movies.movies.map((movie: any, index: number) => (
+        {movies.map((movie: any, index: number) => (
           <Movie
             key={movie._id + index}
             title={movie.title}
