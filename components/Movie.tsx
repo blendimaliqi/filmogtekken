@@ -20,7 +20,7 @@ function Movie({ title, year, poster, movie }: MovieProps) {
     >
       <div className="relative">
         <Image
-          className="h-96 w-96 mt-5 rounded-3xl select-none"
+          className="h-96 w-96 mt-5 rounded-3xl select-none object-cover"
           draggable={false}
           width={200}
           height={300}

@@ -81,7 +81,7 @@ function SingleMovie() {
           width={0}
           sizes="100vh"
           alt="background"
-          className="draggable select-none"
+          className="draggable select-none object-cover"
           style={{
             position: "absolute",
             top: 0,
