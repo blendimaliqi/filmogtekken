@@ -2,6 +2,30 @@ import React, { useEffect, useState } from "react";
 
 const Tekken = () => {
   const [numberOfVideos, setNumberOfVideos] = useState(2);
+  const [hoveredVideoIndex, setHoveredVideoIndex] = useState(null);
+
+  useEffect(() => {
+    const handleMouseEnter = (index) => {
+      setHoveredVideoIndex(index);
+    };
+
+    const handleMouseLeave = () => {
+      setHoveredVideoIndex(null);
+    };
+
+    const iframes = document.querySelectorAll(".video-frame");
+    iframes.forEach((iframe, index) => {
+      iframe.addEventListener("mouseenter", () => handleMouseEnter(index));
+      iframe.addEventListener("mouseleave", handleMouseLeave);
+    });
+
+    return () => {
+      iframes.forEach((iframe, index) => {
+        iframe.removeEventListener("mouseenter", () => handleMouseEnter(index));
+        iframe.removeEventListener("mouseleave", handleMouseLeave);
+      });
+    };
+  }, []);
 
   return (
     <main className="h-screen">
@@ -9,8 +33,9 @@ const Tekken = () => {
         {Array.from({ length: numberOfVideos }, (_, i) => (
           <iframe
             key={i}
-            className="w-3/5 h-[500px] mb-28 mt-10 rounded-3xl
-            "
+            className={`w-3/5 h-[500px] mb-28 mt-10 rounded-3xl video-frame ${
+              hoveredVideoIndex === i ? "scale-110" : ""
+            } transition-transform`}
             src={`https://www.youtube.com/embed?list=UULFwjlbRtoNraIuDGQIfg-WBw&index=${
               i + 1
             }`}
