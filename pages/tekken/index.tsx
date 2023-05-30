@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 
-const Tekken = () => {
-  const [numberOfVideos, setNumberOfVideos] = useState(2);
-  const [hoveredVideoIndex, setHoveredVideoIndex] = useState(null);
+const Tekken: React.FC = () => {
+  const [numberOfVideos, setNumberOfVideos] = useState<number>(2);
+  const [hoveredVideoIndex, setHoveredVideoIndex] = useState<number | null>(
+    null
+  );
 
   useEffect(() => {
-    const handleMouseEnter = (index) => {
+    const handleMouseEnter = (index: number) => {
       setHoveredVideoIndex(index);
     };
 
