@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 const Tekken: React.FC = () => {
-  const [numberOfVideos, setNumberOfVideos] = useState<number>(2);
+  const [numberOfVideos, setNumberOfVideos] = useState<number>(3);
   const [hoveredVideoIndex, setHoveredVideoIndex] = useState<number | null>(
     null
   );
