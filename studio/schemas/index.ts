@@ -5,11 +5,18 @@ import movie from './movie'
 import person from './person'
 import plotSummary from './plotSummary'
 import plotSummaries from './plotSummaries'
+import video from './video'
+import videoAndBody from './videoAndBody'
+
+import youtube from './youtube'
 
 export const schemaTypes = [
   // Document types
   movie,
   person,
+  video,
+  videoAndBody,
+  youtube,
 
   // Other types
   blockContent,
