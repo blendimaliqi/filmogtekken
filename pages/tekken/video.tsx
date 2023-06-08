@@ -11,7 +11,7 @@ interface VideoProps {
 function Video({ videoData, videoUrl }: VideoProps) {
   return (
     <div>
-      <h2 className="py-6 text-3xl">{videoData.title}</h2>
+      <h2 className="py-6 text-3xl">{videoData.title ?? ""}</h2>
       <video
         controls
         className="focus:outline-none rounded-2xl py-4
