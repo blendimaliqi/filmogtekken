@@ -6,8 +6,8 @@ import DiscordProvider from "next-auth/providers/discord";
 export const authOptions: AuthOptions = {
   providers: [
     DiscordProvider({
-      clientId: process.env.DISCORD_CLIENT_ID ?? "",
-      clientSecret: process.env.DISCORD_CLIENT_SECRET ?? "",
+      clientId: "1119999195206656101",
+      clientSecret: "VSqJA5nlREZiSIcWuyPci2IneLLTYksy",
       authorization:
         "https://discord.com/api/oauth2/authorize?scope=identify+email+guilds",
     }) as Provider,
@@ -15,7 +15,7 @@ export const authOptions: AuthOptions = {
   callbacks: {
     async signIn({ account }) {
       if (account?.provider === "discord") {
-        const guildId = process.env.DISCORD_GUILD_ID;
+        const guildId = "1089621917490761854";
 
         const response = await fetch(
           "https://discord.com/api/v10/users/@me/guilds",
