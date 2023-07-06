@@ -10,15 +10,17 @@ export default function LoginButton() {
       <div className="flex items-center gap-5">
         <div>
           <Image
+            draggable={false}
             src={session.user?.image!}
             width={50}
             height={50}
             alt="discord profile picture"
           />
-          {session?.user?.name}
+          <p>{session?.user?.name}</p>
         </div>
         <button
           className="whitespace-nowrap bg-yellow-700 p-2 rounded-lg w-24 text-white opacity-90
+          hover:bg-yellow-600 transition duration-300 ease-in-out
         "
           onClick={() => signOut()}
         >
@@ -31,6 +33,7 @@ export default function LoginButton() {
     <div className="">
       <button
         className="whitespace-nowrap bg-yellow-700 p-2 rounded-lg w-24 text-white opacity-90
+        hover:bg-yellow-600 transition duration-300 ease-in-out
         "
         onClick={() => signIn()}
       >

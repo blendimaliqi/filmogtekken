@@ -216,7 +216,7 @@ function Movies() {
           w-full"
             onClick={openModal}
           >
-            Legg til
+            Legg til film
           </button>
         ) : (
           <button
