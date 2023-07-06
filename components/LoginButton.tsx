@@ -11,7 +11,10 @@ export default function LoginButton() {
         <div>
           <Image
             draggable={false}
-            src={session.user?.image!}
+            src={
+              session.user?.image ??
+              "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Question_mark_%28black%29.svg/800px-Question_mark_%28black%29.svg.png"
+            }
             width={50}
             height={50}
             alt="discord profile picture"

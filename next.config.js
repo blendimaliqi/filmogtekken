@@ -11,6 +11,7 @@ const nextConfig = {
       "localhost",
       "discord.com",
       "cdn.discordapp.com",
+      "upload.wikimedia.org",
     ],
   },
   env: {
