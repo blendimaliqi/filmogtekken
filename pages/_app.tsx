@@ -7,6 +7,7 @@ import Head from "next/head";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Provider } from "jotai";
 import { SessionProvider } from "next-auth/react";
+import Nav from "@/components/Nav";
 
 export const queryClient = new QueryClient();
 
@@ -21,6 +22,11 @@ export default function App({
           <Head>
             <title>Film og Tekken</title>
           </Head>
+          <div
+            style={{ position: "absolute", top: "0", left: "0", zIndex: "2" }}
+          >
+            <Nav />
+          </div>
           <Component {...pageProps} />
         </Provider>
       </QueryClientProvider>

@@ -1,12 +1,13 @@
 import Link from "next/link";
 import React from "react";
+import LoginButton from "./LoginButton";
 
 type Props = {};
 
 function Nav({}: Props) {
   return (
     <div
-      className="hidden md:flex items-center p-24  
+      className="hidden md:flex items-center p-24 w-screen 
  "
     >
       <Link
@@ -20,8 +21,8 @@ function Nav({}: Props) {
         Film og Tekken
       </Link>
 
-      <nav className="md:flex md:flex-row md:w-full md:justify-between hidden">
-        <ul className="flex flex-row text-gray-400 font-semibold space-x-4 text-2xl cursor-pointer justify-between">
+      <nav className="md:flex md:flex-row md:w-screen md:justify-between hidden items-center">
+        <ul className="flex flex-row w-full text-gray-400 font-semibold space-x-4 text-2xl cursor-pointer">
           <li className="ml-10 border-b-2 border-transparent hover:text-gray-200 transition duration-300 ease-in-out p-2">
             <Link draggable={false} href="/">
               Film
@@ -34,6 +35,7 @@ function Nav({}: Props) {
             </Link>
           </li>
         </ul>
+        <LoginButton />
       </nav>
     </div>
   );

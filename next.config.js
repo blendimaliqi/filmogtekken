@@ -9,6 +9,8 @@ const nextConfig = {
       "image.tmdb.org",
       "www.themoviedb.org",
       "localhost",
+      "discord.com",
+      "cdn.discordapp.com",
     ],
   },
   env: {
