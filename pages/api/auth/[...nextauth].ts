@@ -18,7 +18,7 @@ export const authOptions: AuthOptions = {
       if (url.startsWith(baseUrl)) {
         return url;
       } else {
-        return `${baseUrl}/api/auth/callback/discord`;
+        return `https://filmogtekken-blendimaliqi.vercel.app/api/auth/callback/discord`;
       }
     },
 
