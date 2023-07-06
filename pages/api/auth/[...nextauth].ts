@@ -24,10 +24,11 @@ const authOptions: AuthOptions = {
               headers: {
                 Authorization: `Bearer ${account?.access_token}`,
                 Redirect: "follow",
-                Cors: "no-cors",
               },
             }
           );
+
+          console.log("RESPONSE", response);
 
           if (response.ok) {
             const guilds = await response.json();
