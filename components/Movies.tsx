@@ -12,6 +12,7 @@ import { centerStyle, movieQuery, moviesAtom } from "@/pages";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryClient } from "@/pages/_app";
 import { useAtom } from "jotai";
+import LoginButton from "./LoginButton";
 
 export type Movie = {
   _type: string;
@@ -215,6 +216,7 @@ function Movies() {
         >
           Legg til
         </button>
+        <LoginButton />
 
         <Modal isOpen={isModalOpen} onClose={closeModal}>
           <div
