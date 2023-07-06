@@ -12,7 +12,7 @@ import { centerStyle, movieQuery, moviesAtom } from "@/pages";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryClient } from "@/pages/_app";
 import { useAtom } from "jotai";
-import { useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 
 export type Movie = {
   _type: string;
@@ -233,6 +233,7 @@ function Movies() {
       p-2
       h-full
       w-full"
+            onClick={() => signIn()}
           >
             Logg inn for å legge til filmer
           </button>
