@@ -1,6 +1,6 @@
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
-
+import Image from "next/image";
 import { client } from "../config/client";
 import { ToastContainer } from "react-toastify";
 import Head from "next/head";
@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Provider } from "jotai";
 import { SessionProvider } from "next-auth/react";
 import Nav from "@/components/Nav";
+import MiniNav from "@/components/MiniNav";
 
 export const queryClient = new QueryClient();
 
@@ -27,6 +28,24 @@ export default function App({
           >
             <Nav />
           </div>
+          <div className="flex flex-col justify-center items-center">
+            <Image
+              style={{
+                zIndex: "9000000",
+              }}
+              className="flex md:hidden 
+            mx-auto
+            mt-64
+            z-50
+            "
+              src="/ft.png"
+              alt="Film og Tekken logo"
+              width={200}
+              height={300}
+            />
+            <MiniNav />
+          </div>
+
           <Component {...pageProps} />
         </Provider>
       </QueryClientProvider>
