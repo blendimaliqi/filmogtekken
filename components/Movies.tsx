@@ -12,7 +12,7 @@ import { centerStyle, movieQuery, moviesAtom } from "@/pages";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryClient } from "@/pages/_app";
 import { useAtom } from "jotai";
-import LoginButton from "./LoginButton";
+import { useSession } from "next-auth/react";
 
 export type Movie = {
   _type: string;
@@ -57,6 +57,7 @@ function Movies() {
     queryFn: () => client.fetch(movieQuery),
     onSuccess: (data: any) => setMovies(data),
   });
+  const { data: session, status } = useSession();
 
   const [tmdbMovies, setTmdbMovies] = useState<any[]>([]);
   const [input, setInput] = useState("");
@@ -198,8 +199,9 @@ function Movies() {
     text-xl
   "
       >
-        <button
-          className="
+        {session && status === "authenticated" ? (
+          <button
+            className="
           text-gray-400
           hover:text-gray-300
           transition duration-300 ease-in-out
@@ -212,11 +214,29 @@ function Movies() {
           p-2
           h-full
           w-full"
-          onClick={openModal}
-        >
-          Legg til
-        </button>
-        <LoginButton />
+            onClick={openModal}
+          >
+            Legg til
+          </button>
+        ) : (
+          <button
+            className="
+      text-gray-400
+      hover:text-gray-300
+      transition duration-300 ease-in-out
+      cursor-pointer
+      border-2
+      border-opacity-60
+      border-gray-300
+      hover:border-gray-400
+      rounded-2xl
+      p-2
+      h-full
+      w-full"
+          >
+            Logg inn for å legge til filmer
+          </button>
+        )}
 
         <Modal isOpen={isModalOpen} onClose={closeModal}>
           <div
