@@ -23,6 +23,8 @@ const authOptions: AuthOptions = {
             {
               headers: {
                 Authorization: `Bearer ${account?.access_token}`,
+                Redirect: "follow",
+                Cors: "no-cors",
               },
             }
           );
