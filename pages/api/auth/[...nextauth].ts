@@ -13,6 +13,15 @@ export const authOptions: AuthOptions = {
     }) as Provider,
   ],
   callbacks: {
+    async redirect(params: { url: string; baseUrl: string }) {
+      const { url, baseUrl } = params;
+      if (url.startsWith(baseUrl)) {
+        return url;
+      } else {
+        return `${baseUrl}/api/auth/callback/discord`;
+      }
+    },
+
     async signIn({ account }) {
       if (account?.provider === "discord") {
         const guildId = "1089621917490761854";
