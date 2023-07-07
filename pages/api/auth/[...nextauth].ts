@@ -10,7 +10,7 @@ const authOptions: AuthOptions = {
       clientSecret: process.env.DISCORD_CLIENT_SECRET ?? "",
       authorization:
         "https://discord.com/api/oauth2/authorize?scope=identify+email+guilds",
-    }) as Provider,
+    }),
   ],
   callbacks: {
     async signIn({ account }) {
@@ -23,7 +23,6 @@ const authOptions: AuthOptions = {
             {
               headers: {
                 Authorization: `Bearer ${account?.access_token}`,
-                Redirect: "follow",
               },
             }
           );
