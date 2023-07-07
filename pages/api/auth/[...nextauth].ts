@@ -3,7 +3,7 @@ import { Provider } from "next-auth/providers";
 import { AuthOptions } from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
 
-const authOptions: AuthOptions = {
+export const authOptions: AuthOptions = {
   providers: [
     DiscordProvider({
       clientId: process.env.DISCORD_CLIENT_ID ?? "",
