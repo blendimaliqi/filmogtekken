@@ -1,4 +1,3 @@
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { GetServerSidePropsContext } from "next";
 import { getServerSession } from "next-auth";
 import { useSession, signIn, signOut, getSession } from "next-auth/react";
@@ -47,12 +46,4 @@ export default function LoginButton() {
       </button>
     </div>
   );
-}
-// Export the `session` prop to use sessions with Server Side Rendering
-export async function getServerSideProps(context: GetServerSidePropsContext) {
-  return {
-    props: {
-      session: await getServerSession(context.req, context.res, authOptions),
-    },
-  };
 }
