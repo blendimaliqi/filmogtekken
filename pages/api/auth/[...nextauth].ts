@@ -19,34 +19,36 @@ const authOptions: AuthOptions = {
       if (account?.provider === "discord") {
         const guildId = process.env.DISCORD_GUILD_ID;
 
-        try {
-          const response = await fetch(
-            "https://discord.com/api/v10/users/@me/guilds",
-            {
-              headers: {
-                Authorization: `Bearer ${account?.access_token}`,
-              },
-            }
-          );
-
-          console.log("RESPONSE", response);
-
-          if (response.ok) {
-            const guilds = await response.json();
-
-            const isMember = guilds.some((guild: any) => guild.id === guildId);
-
-            if (!isMember) {
-              throw new Error("You are not a member of the desired guild");
-            }
-          } else {
-            console.error(
-              "Failed to fetch user guilds. Status:",
-              response.status
-            );
-            throw new Error("Failed to fetch user guilds");
+        const response = await fetch(
+          "https://discord.com/api/v10/users/@me/guilds",
+          {
+            headers: {
+              Authorization: `Bearer ${account?.access_token}`,
+            },
           }
-        } catch (error) {}
+        );
+
+        console.log("RESPONSE", response);
+
+        if (response.ok) {
+          const guilds = await response.json();
+
+          console.log("GUILDS", guilds);
+
+          const isMember = guilds.some((guild: any) => guild.id === guildId);
+
+          console.log("IS MEMBER", isMember);
+
+          if (!isMember) {
+            throw new Error("You are not a member of the desired guild");
+          }
+        } else {
+          console.error(
+            "Failed to fetch user guilds. Status:",
+            response.status
+          );
+          throw new Error("Failed to fetch user guilds");
+        }
       }
 
       return Promise.resolve(true);
