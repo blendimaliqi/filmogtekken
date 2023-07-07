@@ -10,7 +10,7 @@ const authOptions: AuthOptions = {
       clientSecret: process.env.DISCORD_CLIENT_SECRET ?? "",
       authorization:
         "https://discord.com/api/oauth2/authorize?scope=identify+email+guilds",
-    }),
+    }) as Provider,
   ],
 
   secret: process.env.NEXTAUTH_SECRET,
