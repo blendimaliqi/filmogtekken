@@ -51,9 +51,9 @@ const authOptions: AuthOptions = {
       return Promise.resolve(true);
     },
   },
-  pages: {
-    error: "/not-a-member",
-  },
+  // pages: {
+  //   error: "/not-a-member",
+  // },
 };
 
 export default NextAuth(authOptions);
