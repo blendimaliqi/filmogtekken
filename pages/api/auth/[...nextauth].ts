@@ -28,16 +28,10 @@ const authOptions: AuthOptions = {
           }
         );
 
-        console.log("RESPONSE", response);
-
         if (response.ok) {
           const guilds = await response.json();
 
-          console.log("GUILDS", guilds);
-
           const isMember = guilds.some((guild: any) => guild.id === guildId);
-
-          console.log("IS MEMBER", isMember);
 
           if (!isMember) {
             throw new Error("You are not a member of the desired guild");
