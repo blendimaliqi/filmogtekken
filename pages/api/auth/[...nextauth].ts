@@ -6,10 +6,10 @@ import DiscordProvider from "next-auth/providers/discord";
 const authOptions: AuthOptions = {
   providers: [
     DiscordProvider({
-      clientId: process.env.DISCORD_CLIENT_ID ?? "",
-      clientSecret: process.env.DISCORD_CLIENT_SECRET ?? "",
-      // authorization:
-      //   "https://discord.com/api/oauth2/authorize?scope=identify+email+guilds",
+      clientId: "1119999195206656101",
+      clientSecret: "VSqJA5nlREZiSIcWuyPci2IneLLTYksy",
+      authorization:
+        "https://discord.com/api/oauth2/authorize?scope=identify+email+guilds",
     }) as Provider,
   ],
   callbacks: {
