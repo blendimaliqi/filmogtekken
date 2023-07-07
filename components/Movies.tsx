@@ -57,7 +57,7 @@ function Movies() {
     queryFn: () => client.fetch(movieQuery),
     onSuccess: (data: any) => setMovies(data),
   });
-  // const { data: session, status } = useSession();
+  const { data: session, status } = useSession();
 
   const [tmdbMovies, setTmdbMovies] = useState<any[]>([]);
   const [input, setInput] = useState("");
@@ -199,7 +199,7 @@ function Movies() {
     text-xl
   "
       >
-        {/* {session && status === "authenticated" ? (
+        {session && status === "authenticated" ? (
           <button
             className="
           text-gray-400
@@ -237,26 +237,7 @@ function Movies() {
           >
             Logg inn for å legge til filmer
           </button>
-        )} */}
-
-        <button
-          className="
-      text-gray-400
-      hover:text-gray-300
-      transition duration-300 ease-in-out
-      cursor-pointer
-      border-2
-      border-opacity-60
-      border-gray-300
-      hover:border-gray-400
-      rounded-2xl
-      p-2
-      h-full
-      w-full"
-          onClick={() => signIn()}
-        >
-          Logg inn for å legge til filmer
-        </button>
+        )}
 
         <Modal isOpen={isModalOpen} onClose={closeModal}>
           <div

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import React from "react";
-// import LoginButton from "./LoginButton";
+import LoginButton from "./LoginButton";
 
 type Props = {};
 
@@ -35,7 +35,7 @@ function Nav({}: Props) {
             </Link>
           </li>
         </ul>
-        {/* <LoginButton /> */}
+        <LoginButton />
       </nav>
     </div>
   );
