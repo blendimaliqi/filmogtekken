@@ -15,6 +15,7 @@ const authOptions: AuthOptions = {
   session: {
     strategy: "jwt",
   },
+  secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async signIn({ account }) {
       if (account?.provider === "discord") {
