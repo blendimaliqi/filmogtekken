@@ -12,9 +12,7 @@ const authOptions: AuthOptions = {
         "https://discord.com/api/oauth2/authorize?scope=identify+email+guilds",
     }),
   ],
-  session: {
-    strategy: "jwt",
-  },
+
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async signIn({ account }) {
