@@ -23,10 +23,11 @@ export const moviesAtom = atom<Movie[]>([]);
 export default function Home() {
   const [movies, setMovies] = useAtom(moviesAtom);
 
-  const { isLoading, error } = useQuery<Movie[]>({
+  const { isLoading, error, refetch } = useQuery<Movie[]>({
     queryKey: ["movies"],
     queryFn: () => client.fetch(moviesQuery),
     onSuccess: (data) => setMovies(data),
+    onError: (error) => refetch(),
   });
 
   if (isLoading)
