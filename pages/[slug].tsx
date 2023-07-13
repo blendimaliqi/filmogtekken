@@ -1,5 +1,7 @@
+import { uploadExternalImage } from "@/components/Movies";
 import { client, urlFor } from "@/config/client";
 import { useQuery } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import Head from "next/head";
 import Image from "next/image";
 import { useRouter } from "next/router";
@@ -34,7 +36,7 @@ const movieQuery = `*[_type == "movie" && _id == $movieId] {
 
 function SingleMovie() {
   const router = useRouter();
-
+  const { data: session, status } = useSession();
   const {
     isLoading,
     error,
@@ -60,6 +62,99 @@ function SingleMovie() {
     );
 
   if (error) return "An error has occurred: ";
+
+  function uuidv4() {
+    // Public Domain/MIT
+    var d = new Date().getTime(); //Timestamp
+    var d2 =
+      (typeof performance !== "undefined" &&
+        performance.now &&
+        performance.now() * 1000) ||
+      0; //Time in microseconds since page-load or 0 if unsupported
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+      /[xy]/g,
+      function (c) {
+        var r = Math.random() * 16; //random number between 0 and 16
+        if (d > 0) {
+          //Use timestamp until depleted
+          r = (d + r) % 16 | 0;
+          d = Math.floor(d / 16);
+        } else {
+          //Use microseconds since page-load if supported
+          r = (d2 + r) % 16 | 0;
+          d2 = Math.floor(d2 / 16);
+        }
+        return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+      }
+    );
+  }
+
+  async function rateMovie(movieId: string, rating: number) {
+    try {
+      if (session == null || session == undefined) {
+        return;
+      } else {
+        if (session.user == null || session.user == undefined) return;
+      }
+      const userName = session.user.name;
+      const personQuery = `*[_type == "person" && name == "${userName}"]`;
+      const [existingPerson] = await client.fetch(personQuery);
+
+      let person;
+
+      if (!existingPerson) {
+        // Create a new person if not found
+        const imageAsset = await uploadExternalImage(session.user.image ?? "");
+        const imageAssetId = imageAsset._id;
+
+        const newPerson = {
+          _type: "person",
+          _id: uuidv4(),
+          name: userName,
+          image: {
+            _type: "image",
+            asset: {
+              _ref: imageAssetId,
+            },
+          },
+          slug: {
+            _type: "slug",
+            current: userName?.toLowerCase().replace(/\s+/g, "-"),
+          },
+        };
+
+        person = await client.create(newPerson);
+      } else {
+        person = existingPerson;
+      }
+
+      // Check if the movie already has a rating
+      const movieQuery = `*[_type == "movie" && _id == "${movieId}" && !defined(ratings)]`;
+      const [movieWithoutRating] = await client.fetch(movieQuery);
+
+      if (movieWithoutRating) {
+        // Create a new rating
+        const newRating = {
+          _key: uuidv4(),
+          person: { _type: "reference", _ref: person._id },
+          rating: rating,
+        };
+
+        // Add the new rating to the movie ratings array
+        const updatedMovie = await client
+          .patch(movieId)
+          .setIfMissing({ ratings: [] }) // Create the ratings array if it doesn't exist
+          .append("ratings", [newRating]) // Wrap the new rating inside an array
+          .commit();
+
+        console.log("Movie rating updated:", updatedMovie);
+      } else {
+        console.log("Movie already has a rating.");
+      }
+    } catch (error) {
+      console.error("Error updating movie rating:", error);
+    }
+  }
 
   return (
     <>
@@ -174,7 +269,7 @@ function SingleMovie() {
                 </p>
               )}
               <div className="flex flex-col items-center justify-center w-full sm:flex-row">
-                <a
+                {/* <a
                   draggable={false}
                   href={`https://filmogtekken.sanity.studio/desk/movie;${movie._id}`}
                   target="_blank"
@@ -183,7 +278,8 @@ function SingleMovie() {
                 "
                 >
                   Rate it!
-                </a>
+                </a> */}
+                <button onClick={() => rateMovie(movie._id, 8)}>RATEIT</button>
               </div>
             </div>
             <div
