@@ -33,6 +33,7 @@ function RatingModal({ open, setOpen, rateMovie, movieId }: Props) {
       >
         <div className="p-10 bg-gray-800 flex flex-col justify-center items-center rounded-lg">
           <h1 className="text-xl">Ranger film</h1>
+          <h3 className="font-semibold pt-4 ">Brutal ærlighet</h3>
           <Rating
             onChange={(event, newValue) => {
               handleRating(newValue ?? 0);
