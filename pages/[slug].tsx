@@ -2,7 +2,7 @@ import { uploadExternalImage } from "@/components/Movies";
 import RatingModal from "@/components/modal/RatingModal";
 import { client, urlFor } from "@/config/client";
 import { useQuery } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 import Head from "next/head";
 import Image from "next/image";
 import { useRouter } from "next/router";
@@ -46,8 +46,15 @@ function SingleMovie() {
     isLoading,
     error,
     data: movie,
+    refetch,
   } = useQuery({
     queryKey: ["movie"],
+    onError: (error) => {
+      //retry
+      refetch();
+      console.log(error);
+    },
+
     queryFn: () => client.fetch(movieQuery, { movieId: router.query.slug }),
   });
 
@@ -55,7 +62,7 @@ function SingleMovie() {
     setRating(1);
   }
 
-  if (isLoading)
+  if (isLoading || status === "loading")
     return (
       <div style={centerStyle}>
         <ColorRing
@@ -300,15 +307,29 @@ function SingleMovie() {
                 </p>
               )}
               <div className="flex flex-col items-center justify-center w-full sm:flex-row">
-                <button
-                  className="bg-yellow-700 rounded-xl w-full text-center text-white text-lg font-semibold py-2 px-4
+                {session ? (
+                  <button
+                    className="bg-yellow-700 rounded-xl w-full text-center text-white text-lg font-semibold py-2 px-4
                   hover:bg-yellow-600 flex items-center justify-center gap-1
 
                 "
-                  onClick={() => setOpen(!open)}
-                >
-                  <AiFillStar /> Rate
-                </button>
+                    onClick={() => setOpen(!open)}
+                  >
+                    <AiFillStar /> Rate
+                  </button>
+                ) : (
+                  <button
+                    className="bg-yellow-700 rounded-xl w-full text-center text-white text-lg font-semibold py-2 px-4
+              hover:bg-yellow-600 flex items-center justify-center gap-1
+
+            "
+                    onClick={() => {
+                      signIn();
+                    }}
+                  >
+                    <AiFillStar /> Logg inn for å rate
+                  </button>
+                )}
               </div>
             </div>
             <div
