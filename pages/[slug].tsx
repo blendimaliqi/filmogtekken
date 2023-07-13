@@ -1,10 +1,13 @@
 import { uploadExternalImage } from "@/components/Movies";
+import RatingModal from "@/components/modal/RatingModal";
 import { client, urlFor } from "@/config/client";
+import { Rating } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import Head from "next/head";
 import Image from "next/image";
 import { useRouter } from "next/router";
+import { useState } from "react";
 import { AiFillStar } from "react-icons/ai";
 import { ColorRing } from "react-loader-spinner";
 
@@ -37,6 +40,9 @@ const movieQuery = `*[_type == "movie" && _id == $movieId] {
 function SingleMovie() {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const [rating, setRating] = useState(0);
+  const [open, setOpen] = useState(false);
+
   const {
     isLoading,
     error,
@@ -223,6 +229,7 @@ function SingleMovie() {
           />
 
           <div className=" z-50 flex flex-col items-center lg:items-start justify-center">
+            <RatingModal open={open} setOpen={setOpen} />
             <div
               className="
               flex 
@@ -279,7 +286,7 @@ function SingleMovie() {
                 >
                   Rate it!
                 </a> */}
-                <button onClick={() => rateMovie(movie._id, 8)}>RATEIT</button>
+                <button onClick={() => setOpen(!open)}>RATEIT</button>
               </div>
             </div>
             <div
