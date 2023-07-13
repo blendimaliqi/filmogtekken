@@ -1,7 +1,7 @@
 import Link from "next/link";
 import React from "react";
-import { AiFillStar } from "react-icons/ai";
 import { FaInfoCircle } from "react-icons/fa";
+import { AiFillStar } from "react-icons/ai";
 
 function MovieTitle(movie: any) {
   return (
@@ -18,7 +18,7 @@ function MovieTitle(movie: any) {
         {movie.movie.title}
       </h1>
 
-      {/* {movie.movie.ratings && (
+      {movie.movie.ratings && (
         <div className="flex items-center">
           <p className="text-lg md:text-2xl font-light text-white mt-4 flex items-center flex-row gap-2">
             {(
@@ -30,7 +30,7 @@ function MovieTitle(movie: any) {
             <AiFillStar style={{ marginTop: "4px" }} size={25} />
           </p>
         </div>
-      )} */}
+      )}
 
       <div className="flex">
         {movie.movie.genres &&

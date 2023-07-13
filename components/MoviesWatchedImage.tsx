@@ -1,11 +1,11 @@
 import React from "react";
 
-type Props = {
+type MoviesWatchedImageProps = {
   children: React.ReactNode;
   poster: string;
 };
 
-function MoviesWatchedImage({ children, poster }: Props) {
+function MoviesWatchedImage({ children, poster }: MoviesWatchedImageProps) {
   return (
     <div
       className="

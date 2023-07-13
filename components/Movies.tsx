@@ -3,16 +3,14 @@ import Movie from "./Movie";
 import { client, createPost } from "@/config/client";
 import { Modal } from "./modal/Modal";
 import ModalMovie from "./modal/ModalMovie";
-import { Audio, ColorRing, Puff } from "react-loader-spinner";
+import { ColorRing } from "react-loader-spinner";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-//import mutate from "react-query";
-
-import { centerStyle, movieQuery, moviesAtom } from "@/pages";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { queryClient } from "@/pages/_app";
+import { centerStyle, moviesAtom } from "@/pages";
+import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { signIn, useSession } from "next-auth/react";
+import { moviesQuery } from "@/utils/groqQueries";
 
 export type Movie = {
   _type: string;
@@ -54,7 +52,7 @@ function Movies() {
   const [movies, setMovies] = useAtom(moviesAtom);
   const { isLoading, error, data } = useQuery({
     queryKey: ["movies"],
-    queryFn: () => client.fetch(movieQuery),
+    queryFn: () => client.fetch(moviesQuery),
     onSuccess: (data: any) => setMovies(data),
   });
   const { data: session, status } = useSession();
@@ -83,7 +81,7 @@ function Movies() {
 
   async function refetchMovies() {
     try {
-      const refetchedData = await client.fetch(movieQuery);
+      const refetchedData = await client.fetch(moviesQuery);
       setMovies(refetchedData);
     } catch (error) {
       console.log("error", error);

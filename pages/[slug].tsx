@@ -1,6 +1,8 @@
 import { uploadExternalImage } from "@/components/Movies";
 import RatingModal from "@/components/modal/RatingModal";
 import { client, urlFor } from "@/config/client";
+import { movieQuery } from "@/utils/groqQueries";
+import { uuidv4 } from "@/utils/helperFunctions";
 import { useQuery } from "@tanstack/react-query";
 import { useSession, signIn } from "next-auth/react";
 import Head from "next/head";
@@ -17,30 +19,10 @@ const centerStyle = {
   height: "100vh",
 };
 
-const movieQuery = `*[_type == "movie" && _id == $movieId] {
-  _id,
-  title,
-  releaseDate,
-  poster,
-  poster_backdrop,
-  plot,
-  genres,
-  castMembers,
-  ratings[] {
-    person-> {
-      name,
-      image
-    },
-    rating
-  },
-  length
-}[0]`;
-
 function SingleMovie() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [open, setOpen] = useState(false);
-  const [rating, setRating] = useState(0);
 
   const {
     isLoading,
@@ -58,10 +40,6 @@ function SingleMovie() {
     queryFn: () => client.fetch(movieQuery, { movieId: router.query.slug }),
   });
 
-  async function refetchMovies() {
-    setRating(1);
-  }
-
   if (isLoading || status === "loading")
     return (
       <div style={centerStyle}>
@@ -78,32 +56,6 @@ function SingleMovie() {
     );
 
   if (error) return "An error has occurred: ";
-
-  function uuidv4() {
-    // Public Domain/MIT
-    var d = new Date().getTime(); //Timestamp
-    var d2 =
-      (typeof performance !== "undefined" &&
-        performance.now &&
-        performance.now() * 1000) ||
-      0; //Time in microseconds since page-load or 0 if unsupported
-    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
-      /[xy]/g,
-      function (c) {
-        var r = Math.random() * 16; //random number between 0 and 16
-        if (d > 0) {
-          //Use timestamp until depleted
-          r = (d + r) % 16 | 0;
-          d = Math.floor(d / 16);
-        } else {
-          //Use microseconds since page-load if supported
-          r = (d2 + r) % 16 | 0;
-          d2 = Math.floor(d2 / 16);
-        }
-        return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
-      }
-    );
-  }
 
   async function rateMovie(movieId: string, rating: number) {
     try {
@@ -144,8 +96,6 @@ function SingleMovie() {
         person = existingPerson;
       }
 
-      // Check if the movie already has a rating
-      const movieQuery = `*[_type == "movie" && _id == "${movieId}" && !defined(ratings)]`;
       const movieQueryWithRating = `*[_type == "movie" && _id == "${movieId}" && defined(ratings)]`;
 
       const [movieWithtRating] = await client.fetch(movieQueryWithRating);
@@ -166,7 +116,6 @@ function SingleMovie() {
 
         console.log("Movie rating updated:", updatedMovie);
       } else {
-        // Create a new rating
         const newRating = {
           _key: uuidv4(),
           person: { _type: "reference", _ref: person._id },

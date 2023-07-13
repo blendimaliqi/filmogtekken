@@ -9,26 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { atom, useAtom } from "jotai";
 import Movies from "@/components/Movies";
 import { Movie } from "../components/Movies";
-
-export const movieQuery = `*[_type == "movie"] {
-  _id,
-  title,
-  releaseDate,
-  poster,
-  poster_backdrop,
-  plot,
-  genres,
-  castMembers,
-  slug,
-  _createdAt,
-  length,
-  ratings[] {
-    person-> {
-      name,
-      image
-    },
-    rating
-  }}`;
+import { moviesQuery } from "@/utils/groqQueries";
 
 export const centerStyle = {
   display: "flex",
@@ -44,7 +25,7 @@ export default function Home() {
 
   const { isLoading, error, data } = useQuery<Movie[]>({
     queryKey: ["movies"],
-    queryFn: () => client.fetch(movieQuery),
+    queryFn: () => client.fetch(moviesQuery),
     onSuccess: (data) => setMovies(data),
   });
 
