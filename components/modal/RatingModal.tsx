@@ -5,9 +5,17 @@ import { Rating } from "@mui/material";
 type Props = {
   open: boolean;
   setOpen: (open: boolean) => void;
+  movieId: string;
+  rateMovie: (movieId: string, rating: number) => Promise<void>;
 };
 
-function RatingModal({ open, setOpen }: Props) {
+function RatingModal({ open, setOpen, rateMovie, movieId }: Props) {
+  function handleRating(value: number) {
+    console.log(value);
+    setOpen(false);
+    rateMovie(movieId, value);
+  }
+
   return (
     <div
       className="
@@ -19,9 +27,6 @@ function RatingModal({ open, setOpen }: Props) {
     flex-col
     justify-center
     items-center
-    
-   
-    
     "
         open={open}
         onClose={() => setOpen(false)}
@@ -29,6 +34,9 @@ function RatingModal({ open, setOpen }: Props) {
         <div className="p-10 bg-gray-800 flex flex-col justify-center items-center rounded-lg">
           <h1 className="text-xl">Ranger film</h1>
           <Rating
+            onChange={(event, newValue) => {
+              handleRating(newValue ?? 0);
+            }}
             size="large"
             name="half-rating"
             max={10}

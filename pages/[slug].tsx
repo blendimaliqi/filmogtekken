@@ -1,7 +1,6 @@
 import { uploadExternalImage } from "@/components/Movies";
 import RatingModal from "@/components/modal/RatingModal";
 import { client, urlFor } from "@/config/client";
-import { Rating } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import Head from "next/head";
@@ -40,8 +39,8 @@ const movieQuery = `*[_type == "movie" && _id == $movieId] {
 function SingleMovie() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const [rating, setRating] = useState(0);
   const [open, setOpen] = useState(false);
+  const [rating, setRating] = useState(0);
 
   const {
     isLoading,
@@ -51,6 +50,10 @@ function SingleMovie() {
     queryKey: ["movie"],
     queryFn: () => client.fetch(movieQuery, { movieId: router.query.slug }),
   });
+
+  async function refetchMovies() {
+    setRating(1);
+  }
 
   if (isLoading)
     return (
@@ -106,7 +109,7 @@ function SingleMovie() {
       const personQuery = `*[_type == "person" && name == "${userName}"]`;
       const [existingPerson] = await client.fetch(personQuery);
 
-      let person;
+      let person: any;
 
       if (!existingPerson) {
         // Create a new person if not found
@@ -136,9 +139,26 @@ function SingleMovie() {
 
       // Check if the movie already has a rating
       const movieQuery = `*[_type == "movie" && _id == "${movieId}" && !defined(ratings)]`;
-      const [movieWithoutRating] = await client.fetch(movieQuery);
+      const movieQueryWithRating = `*[_type == "movie" && _id == "${movieId}" && defined(ratings)]`;
 
-      if (movieWithoutRating) {
+      const [movieWithtRating] = await client.fetch(movieQueryWithRating);
+
+      if (movieWithtRating) {
+        // Update the existing rating
+        const existingRatingIndex = movieWithtRating.ratings.findIndex(
+          (rating: any) => rating.person._ref === person._id
+        );
+
+        const updatedRatings = [...movieWithtRating.ratings];
+        updatedRatings[existingRatingIndex].rating = rating;
+
+        const updatedMovie = await client
+          .patch(movieId)
+          .set({ ratings: updatedRatings }) // Set the updated ratings array
+          .commit();
+
+        console.log("Movie rating updated:", updatedMovie);
+      } else {
         // Create a new rating
         const newRating = {
           _key: uuidv4(),
@@ -154,9 +174,8 @@ function SingleMovie() {
           .commit();
 
         console.log("Movie rating updated:", updatedMovie);
-      } else {
-        console.log("Movie already has a rating.");
       }
+      refetchMovies();
     } catch (error) {
       console.error("Error updating movie rating:", error);
     }
@@ -229,7 +248,12 @@ function SingleMovie() {
           />
 
           <div className=" z-50 flex flex-col items-center lg:items-start justify-center">
-            <RatingModal open={open} setOpen={setOpen} />
+            <RatingModal
+              open={open}
+              setOpen={setOpen}
+              rateMovie={rateMovie}
+              movieId={movie._id}
+            />
             <div
               className="
               flex 
@@ -276,17 +300,15 @@ function SingleMovie() {
                 </p>
               )}
               <div className="flex flex-col items-center justify-center w-full sm:flex-row">
-                {/* <a
-                  draggable={false}
-                  href={`https://filmogtekken.sanity.studio/desk/movie;${movie._id}`}
-                  target="_blank"
-                  className="bg-gray-800 rounded-xl w-full text-center text-white text-lg font-semibold p-2
-                  hover:bg-gray-700
+                <button
+                  className="bg-yellow-700 rounded-xl w-full text-center text-white text-lg font-semibold py-2 px-4
+                  hover:bg-yellow-600 flex items-center justify-center gap-1
+
                 "
+                  onClick={() => setOpen(!open)}
                 >
-                  Rate it!
-                </a> */}
-                <button onClick={() => setOpen(!open)}>RATEIT</button>
+                  <AiFillStar /> Rate
+                </button>
               </div>
             </div>
             <div
