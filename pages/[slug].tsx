@@ -1,8 +1,12 @@
+import { uploadExternalImage } from "@/components/Movies";
+import RatingModal from "@/components/modal/RatingModal";
 import { client, urlFor } from "@/config/client";
 import { useQuery } from "@tanstack/react-query";
+import { useSession, signIn } from "next-auth/react";
 import Head from "next/head";
 import Image from "next/image";
 import { useRouter } from "next/router";
+import { useState } from "react";
 import { AiFillStar } from "react-icons/ai";
 import { ColorRing } from "react-loader-spinner";
 
@@ -34,17 +38,31 @@ const movieQuery = `*[_type == "movie" && _id == $movieId] {
 
 function SingleMovie() {
   const router = useRouter();
+  const { data: session, status } = useSession();
+  const [open, setOpen] = useState(false);
+  const [rating, setRating] = useState(0);
 
   const {
     isLoading,
     error,
     data: movie,
+    refetch,
   } = useQuery({
     queryKey: ["movie"],
+    onError: (error) => {
+      //retry
+      refetch();
+      console.log(error);
+    },
+
     queryFn: () => client.fetch(movieQuery, { movieId: router.query.slug }),
   });
 
-  if (isLoading)
+  async function refetchMovies() {
+    setRating(1);
+  }
+
+  if (isLoading || status === "loading")
     return (
       <div style={centerStyle}>
         <ColorRing
@@ -60,6 +78,115 @@ function SingleMovie() {
     );
 
   if (error) return "An error has occurred: ";
+
+  function uuidv4() {
+    // Public Domain/MIT
+    var d = new Date().getTime(); //Timestamp
+    var d2 =
+      (typeof performance !== "undefined" &&
+        performance.now &&
+        performance.now() * 1000) ||
+      0; //Time in microseconds since page-load or 0 if unsupported
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+      /[xy]/g,
+      function (c) {
+        var r = Math.random() * 16; //random number between 0 and 16
+        if (d > 0) {
+          //Use timestamp until depleted
+          r = (d + r) % 16 | 0;
+          d = Math.floor(d / 16);
+        } else {
+          //Use microseconds since page-load if supported
+          r = (d2 + r) % 16 | 0;
+          d2 = Math.floor(d2 / 16);
+        }
+        return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+      }
+    );
+  }
+
+  async function rateMovie(movieId: string, rating: number) {
+    try {
+      if (session == null || session == undefined) {
+        return;
+      } else {
+        if (session.user == null || session.user == undefined) return;
+      }
+      const userName = session.user.name;
+      const personQuery = `*[_type == "person" && name == "${userName}"]`;
+      const [existingPerson] = await client.fetch(personQuery);
+
+      let person: any;
+
+      if (!existingPerson) {
+        // Create a new person if not found
+        const imageAsset = await uploadExternalImage(session.user.image ?? "");
+        const imageAssetId = imageAsset._id;
+
+        const newPerson = {
+          _type: "person",
+          _id: uuidv4(),
+          name: userName,
+          image: {
+            _type: "image",
+            asset: {
+              _ref: imageAssetId,
+            },
+          },
+          slug: {
+            _type: "slug",
+            current: userName?.toLowerCase().replace(/\s+/g, "-"),
+          },
+        };
+
+        person = await client.create(newPerson);
+      } else {
+        person = existingPerson;
+      }
+
+      // Check if the movie already has a rating
+      const movieQuery = `*[_type == "movie" && _id == "${movieId}" && !defined(ratings)]`;
+      const movieQueryWithRating = `*[_type == "movie" && _id == "${movieId}" && defined(ratings)]`;
+
+      const [movieWithtRating] = await client.fetch(movieQueryWithRating);
+
+      if (movieWithtRating) {
+        // Update the existing rating
+        const existingRatingIndex = movieWithtRating.ratings.findIndex(
+          (rating: any) => rating.person._ref === person._id
+        );
+
+        const updatedRatings = [...movieWithtRating.ratings];
+        updatedRatings[existingRatingIndex].rating = rating;
+
+        const updatedMovie = await client
+          .patch(movieId)
+          .set({ ratings: updatedRatings }) // Set the updated ratings array
+          .commit();
+
+        console.log("Movie rating updated:", updatedMovie);
+      } else {
+        // Create a new rating
+        const newRating = {
+          _key: uuidv4(),
+          person: { _type: "reference", _ref: person._id },
+          rating: rating,
+        };
+
+        // Add the new rating to the movie ratings array
+        const updatedMovie = await client
+          .patch(movieId)
+          .setIfMissing({ ratings: [] }) // Create the ratings array if it doesn't exist
+          .append("ratings", [newRating]) // Wrap the new rating inside an array
+          .commit();
+
+        console.log("Movie rating updated:", updatedMovie);
+      }
+      refetch();
+    } catch (error) {
+      console.error("Error updating movie rating:", error);
+    }
+  }
 
   return (
     <>
@@ -128,6 +255,12 @@ function SingleMovie() {
           />
 
           <div className=" z-50 flex flex-col items-center lg:items-start justify-center">
+            <RatingModal
+              open={open}
+              setOpen={setOpen}
+              rateMovie={rateMovie}
+              movieId={movie._id}
+            />
             <div
               className="
               flex 
@@ -174,16 +307,28 @@ function SingleMovie() {
                 </p>
               )}
               <div className="flex flex-col items-center justify-center w-full sm:flex-row">
-                <a
-                  draggable={false}
-                  href={`https://filmogtekken.sanity.studio/desk/movie;${movie._id}`}
-                  target="_blank"
-                  className="bg-gray-800 rounded-xl w-full text-center text-white text-lg font-semibold p-2
-                  hover:bg-gray-700
+                {session ? (
+                  <button
+                    className="bg-yellow-700 rounded-xl w-full text-center text-white text-lg font-semibold py-2 px-4
+                  hover:bg-yellow-600 flex items-center justify-center gap-1
+
                 "
-                >
-                  Rate it!
-                </a>
+                    onClick={() => setOpen(!open)}
+                  >
+                    <AiFillStar /> Rate
+                  </button>
+                ) : (
+                  <button
+                    className="bg-yellow-700 rounded-xl w-full text-center text-white text-lg font-semibold py-2 px-4
+              hover:bg-yellow-600 flex items-center justify-center gap-1
+            "
+                    onClick={() => {
+                      signIn();
+                    }}
+                  >
+                    <AiFillStar /> Logg inn for å rate
+                  </button>
+                )}
               </div>
             </div>
             <div
