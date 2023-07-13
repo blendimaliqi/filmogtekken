@@ -1,4 +1,5 @@
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
@@ -7,10 +8,16 @@ function Error() {
   return (
     <>
       {!session ? (
-        <div className="flex flex-col gap-16 justify-center items-center h-screen">
-          <h1 className="font-bold text-5xl">
-            Innlogging er kun for medlemmer av discord serveren
+        <div className="flex flex-col justify-center items-center mt-60">
+          <h1 className="font-bold text-5xl p-10">
+            Oops, innlogging er kun for medlemmer av discord serveren
           </h1>
+          <Image
+            src={"/scream.png"}
+            height={400}
+            width={400}
+            alt="scream from scream movies"
+          />
 
           <Link
             className="
@@ -20,6 +27,8 @@ function Error() {
         hover:text-yellow-700
         font-bold
         items-center
+        p-4
+        my-10
       "
             href="/"
           >
