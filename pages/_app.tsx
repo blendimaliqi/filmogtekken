@@ -34,8 +34,7 @@ export default function App({
               className="flex md:hidden 
             mx-auto
             mt-64
-            z-50
-            "
+            z-50"
               src="/ft.png"
               alt="Film og Tekken logo"
               width={200}
@@ -43,7 +42,6 @@ export default function App({
             />
             <MiniNav />
           </div>
-
           <Component {...pageProps} />
         </Provider>
       </QueryClientProvider>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import React from "react";
 
 function Error() {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   return (
     <>
       {!session ? (

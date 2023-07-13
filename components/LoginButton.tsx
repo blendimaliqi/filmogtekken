@@ -1,11 +1,8 @@
-import { GetServerSidePropsContext } from "next";
-import { getServerSession } from "next-auth";
-import { useSession, signIn, signOut, getSession } from "next-auth/react";
+import { useSession, signIn, signOut } from "next-auth/react";
 import Image from "next/image";
-import { useEffect } from "react";
 
 export default function LoginButton() {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
 
   if (session) {
     return (

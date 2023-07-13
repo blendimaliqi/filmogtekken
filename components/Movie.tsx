@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { urlFor } from "../config/client";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,7 +11,7 @@ export interface MovieProps {
   movie: any;
 }
 
-function Movie({ title, year, poster, movie }: MovieProps) {
+function Movie({ title, poster, movie }: MovieProps) {
   return (
     <Link
       href={`/${movie._id}`}

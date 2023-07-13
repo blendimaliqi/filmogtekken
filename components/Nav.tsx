@@ -2,21 +2,13 @@ import Link from "next/link";
 import React from "react";
 import LoginButton from "./LoginButton";
 
-type Props = {};
-
-function Nav({}: Props) {
+function Nav() {
   return (
-    <div
-      className="hidden md:flex items-center p-24 w-screen 
- "
-    >
+    <div className="hidden md:flex items-center p-24 w-screen ">
       <Link
         draggable="false"
         href="/"
-        className="text-3xl font-bold md:text-5xl text-yellow-400 hover:text-yellow-700 transition duration-300 ease-in-out cursor-pointer whitespace-nowrap
-    
-
-        "
+        className="text-3xl font-bold md:text-5xl text-yellow-400 hover:text-yellow-700 transition duration-300 ease-in-out cursor-pointer whitespace-nowrap"
       >
         Film og Tekken
       </Link>

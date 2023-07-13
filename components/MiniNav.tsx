@@ -2,9 +2,7 @@ import Link from "next/link";
 import React from "react";
 import LoginButton from "./LoginButton";
 
-type Props = {};
-
-function MiniNav({}: Props) {
+function MiniNav() {
   return (
     <nav className="flex flex-row w-full justify-center md:hidden mt-10 z-[90000000]">
       <div className="flex flex-col items-center justify-center gap-16">

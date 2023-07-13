@@ -23,7 +23,7 @@ export const moviesAtom = atom<Movie[]>([]);
 export default function Home() {
   const [movies, setMovies] = useAtom(moviesAtom);
 
-  const { isLoading, error, data } = useQuery<Movie[]>({
+  const { isLoading, error } = useQuery<Movie[]>({
     queryKey: ["movies"],
     queryFn: () => client.fetch(moviesQuery),
     onSuccess: (data) => setMovies(data),
@@ -67,13 +67,11 @@ export default function Home() {
           <HomepageImage
             key={movie._id}
             url={urlFor(movie.poster_backdrop.asset).url() ?? ""}
-            movie={movie}
           >
             <MovieTitle movie={movie} />
           </HomepageImage>
         ))}
       </Carousel>
-
       <Movies />
     </main>
   );

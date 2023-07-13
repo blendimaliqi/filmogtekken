@@ -1,15 +1,12 @@
 import React from "react";
-import { Carousel } from "react-responsive-carousel";
-import MovieTitle from "./MovieTitle";
 import Image from "next/image";
 
-type Props = {
+type HomepageImageProps = {
   children: React.ReactNode;
   url: string;
-  movie: any;
 };
 
-function HomepageImage({ children, url, movie }: Props) {
+function HomepageImage({ children, url }: HomepageImageProps) {
   return (
     <div
       className="relative bg-cover bg-center bg-no-repeat
@@ -31,12 +28,7 @@ function HomepageImage({ children, url, movie }: Props) {
           background: "linear-gradient(to bottom, transparent 40%, #000000)",
         }}
       />
-      <div
-        className="absolute inset-0 
-      "
-      >
-        {children}
-      </div>
+      <div className="absolute inset-0">{children}</div>
     </div>
   );
 }
