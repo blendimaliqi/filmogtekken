@@ -146,7 +146,7 @@ function SingleMovie() {
         className="
         flex flex-col items-center
         lg:items-start
-        mt-64
+        mt-60
         p-24
         no-drag
     "

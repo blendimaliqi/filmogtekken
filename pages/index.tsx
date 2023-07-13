@@ -1,10 +1,10 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import HomepageImage from "@/components/HomepageImage";
 import MovieTitle from "@/components/MovieTitle";
 import { client, urlFor } from "../config/client";
-import { ColorRing, Puff } from "react-loader-spinner";
+import { ColorRing } from "react-loader-spinner";
 import { useQuery } from "@tanstack/react-query";
 import { atom, useAtom } from "jotai";
 import Movies from "@/components/Movies";

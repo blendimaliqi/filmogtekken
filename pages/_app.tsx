@@ -1,8 +1,6 @@
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import Image from "next/image";
-import { client } from "../config/client";
-import { ToastContainer } from "react-toastify";
 import Head from "next/head";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Provider } from "jotai";
