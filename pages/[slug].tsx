@@ -182,7 +182,7 @@ function SingleMovie() {
 
         console.log("Movie rating updated:", updatedMovie);
       }
-      refetchMovies();
+      refetch();
     } catch (error) {
       console.error("Error updating movie rating:", error);
     }
@@ -321,7 +321,6 @@ function SingleMovie() {
                   <button
                     className="bg-yellow-700 rounded-xl w-full text-center text-white text-lg font-semibold py-2 px-4
               hover:bg-yellow-600 flex items-center justify-center gap-1
-
             "
                     onClick={() => {
                       signIn();
