@@ -10,7 +10,7 @@ export default function LoginButton() {
   if (session) {
     return (
       <div className="flex flex-col md:flex-row items-center gap-5">
-        <div>
+        <div className="flex flex-col items-center justify-center  md:items-end md:justify-end">
           <Image
             draggable={false}
             src={
@@ -20,6 +20,7 @@ export default function LoginButton() {
             width={50}
             height={50}
             alt="discord profile picture"
+            className="rounded-lg"
           />
           <p>{session?.user?.name}</p>
         </div>
