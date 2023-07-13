@@ -1,7 +1,4 @@
-import HamburgerMenu from "@/components/HamburgerMenu";
 import { Html, Head, Main, NextScript } from "next/document";
-import Image from "next/image";
-import MiniNav from "@/components/MiniNav";
 
 export default function Document() {
   return (
