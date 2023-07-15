@@ -98,20 +98,32 @@ function SingleMovie() {
 
       const movieQueryWithRating = `*[_type == "movie" && _id == "${movieId}" && defined(ratings)]`;
 
-      const [movieWithtRating] = await client.fetch(movieQueryWithRating);
+      const [movieWithRating] = await client.fetch(movieQueryWithRating);
 
-      if (movieWithtRating) {
-        // Update the existing rating
-        const existingRatingIndex = movieWithtRating.ratings.findIndex(
+      if (movieWithRating) {
+        // Update the existing rating or add a new rating
+        const existingRatingIndex = movieWithRating.ratings.findIndex(
           (rating: any) => rating.person._ref === person._id
         );
 
-        const updatedRatings = [...movieWithtRating.ratings];
-        updatedRatings[existingRatingIndex].rating = rating;
+        if (existingRatingIndex > -1) {
+          // Update the existing rating
+          const updatedRatings = [...movieWithRating.ratings];
+          updatedRatings[existingRatingIndex].rating = rating;
+          movieWithRating.ratings = updatedRatings;
+        } else {
+          // Create a new rating
+          const newRating = {
+            _key: uuidv4(),
+            person: { _type: "reference", _ref: person._id },
+            rating: rating,
+          };
+          movieWithRating.ratings.push(newRating);
+        }
 
         const updatedMovie = await client
           .patch(movieId)
-          .set({ ratings: updatedRatings }) // Set the updated ratings array
+          .set({ ratings: movieWithRating.ratings })
           .commit();
 
         console.log("Movie rating updated:", updatedMovie);
