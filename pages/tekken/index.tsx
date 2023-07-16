@@ -30,12 +30,12 @@ const Tekken: React.FC = () => {
   }, []);
 
   return (
-    <main className="h-screen">
-      <div className="flex flex-col justify-center items-center m-56">
+    <main className=" flex justify-center items-center">
+      <div className="flex flex-col items-center mt-64 w-[80%] md:w-[60%] lg:w-[50%]">
         {Array.from({ length: numberOfVideos }, (_, i) => (
           <iframe
             key={i}
-            className={`w-3/5 h-[500px] mb-28 mt-10 rounded-3xl video-frame ${
+            className={`w-full h-[500px] mb-28 mt-10 rounded-3xl video-frame ${
               hoveredVideoIndex === i ? "scale-110" : ""
             } transition-transform`}
             src={`https://www.youtube.com/embed?list=UULFwjlbRtoNraIuDGQIfg-WBw&index=${
