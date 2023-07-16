@@ -14,7 +14,7 @@ function Nav() {
       </Link>
 
       <nav className="md:flex md:flex-row md:w-screen md:justify-between hidden items-center">
-        <ul className="flex flex-row w-full text-gray-400 font-semibold space-x-4 text-2xl cursor-pointer">
+        <ul className="flex flex-row w-full text-gray-400 font-semibold space-x-4 text-2xl">
           <li className="ml-10 border-b-2 border-transparent hover:text-gray-200 transition duration-300 ease-in-out p-2">
             <Link draggable={false} href="/">
               Film
