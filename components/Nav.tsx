@@ -4,7 +4,7 @@ import LoginButton from "./LoginButton";
 
 function Nav() {
   return (
-    <div className="hidden md:flex items-center p-24 w-screen ">
+    <div className="hidden md:flex items-center p-24 w-[99.6vw] ">
       <Link
         draggable="false"
         href="/"
