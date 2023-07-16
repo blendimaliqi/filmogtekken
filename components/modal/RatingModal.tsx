@@ -2,14 +2,14 @@ import React, { useState } from "react";
 import { Modal } from "@mui/material";
 import { Rating } from "@mui/material";
 
-type Props = {
+type RatingModalProps = {
   open: boolean;
   setOpen: (open: boolean) => void;
   movieId: string;
   rateMovie: (movieId: string, rating: number) => Promise<void>;
 };
 
-function RatingModal({ open, setOpen, rateMovie, movieId }: Props) {
+function RatingModal({ open, setOpen, rateMovie, movieId }: RatingModalProps) {
   function handleRating(value: number) {
     console.log(value);
     setOpen(false);
@@ -17,17 +17,13 @@ function RatingModal({ open, setOpen, rateMovie, movieId }: Props) {
   }
 
   return (
-    <div
-      className="
-
-    "
-    >
+    <div>
       <Modal
-        className="    flex
-    flex-col
-    justify-center
-    items-center
-    "
+        className="flex
+        flex-col
+        justify-center
+        items-center
+        "
         open={open}
         onClose={() => setOpen(false)}
       >

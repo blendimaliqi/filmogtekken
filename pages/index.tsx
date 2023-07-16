@@ -8,7 +8,6 @@ import { ColorRing } from "react-loader-spinner";
 import { useQuery } from "@tanstack/react-query";
 import { atom, useAtom } from "jotai";
 import Movies from "@/components/Movies";
-import { Movie } from "../components/Movies";
 import { moviesQuery } from "@/utils/groqQueries";
 
 export const centerStyle = {
@@ -47,7 +46,7 @@ export default function Home() {
 
   if (error) return "An error has occurred: ";
 
-  const sortedMovies = movies.sort((a: any, b: any) => {
+  const sortedMovies = movies.sort((a: Movie, b: Movie) => {
     return new Date(b._createdAt).getTime() - new Date(a._createdAt).getTime();
   });
 
@@ -64,7 +63,7 @@ export default function Home() {
         showThumbs={false}
         showStatus={false}
       >
-        {moviesToDisplay.map((movie: any) => (
+        {moviesToDisplay.map((movie: Movie) => (
           <HomepageImage
             key={movie._id}
             url={urlFor(movie.poster_backdrop.asset).url() ?? ""}

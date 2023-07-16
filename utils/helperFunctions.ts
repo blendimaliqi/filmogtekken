@@ -1,3 +1,4 @@
+import { client } from "@/config/client";
 import { SanityClient } from "@sanity/cli";
 
 export async function deletePersonByName(
@@ -51,4 +52,13 @@ export function uuidv4() {
     }
     return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
   });
+}
+
+export async function uploadExternalImage(url: string) {
+  const response = await fetch(url);
+  const blob = await response.blob();
+  const contentType = response.headers.get("content-type") || "image/jpeg"; // Provide a default value
+
+  const asset = await client.assets.upload("image", blob, { contentType });
+  return asset;
 }

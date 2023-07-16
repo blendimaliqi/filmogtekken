@@ -11,42 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { signIn, useSession } from "next-auth/react";
 import { moviesQuery } from "@/utils/groqQueries";
-
-export type Movie = {
-  _type: string;
-  title: string;
-  releaseDate: string;
-  slug: {
-    _type: string;
-    current: string;
-  };
-  genres: string[];
-  length: number;
-  plot: string;
-  poster: {
-    _type: string;
-    asset: {
-      _ref: string;
-      _type: string;
-    };
-  };
-  poster_backdrop: {
-    _type: string;
-    asset: {
-      _ref: string;
-      _type: string;
-    };
-  };
-};
-
-export async function uploadExternalImage(url: string) {
-  const response = await fetch(url);
-  const blob = await response.blob();
-  const contentType = response.headers.get("content-type") || "image/jpeg"; // Provide a default value
-
-  const asset = await client.assets.upload("image", blob, { contentType });
-  return asset;
-}
+import { uploadExternalImage } from "@/utils/helperFunctions";
 
 function Movies() {
   const [movies, setMovies] = useAtom(moviesAtom);

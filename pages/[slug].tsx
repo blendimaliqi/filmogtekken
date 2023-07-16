@@ -1,8 +1,7 @@
-import { uploadExternalImage } from "@/components/Movies";
 import RatingModal from "@/components/modal/RatingModal";
 import { client, urlFor } from "@/config/client";
 import { movieQuery } from "@/utils/groqQueries";
-import { uuidv4 } from "@/utils/helperFunctions";
+import { uploadExternalImage, uuidv4 } from "@/utils/helperFunctions";
 import { useQuery } from "@tanstack/react-query";
 import { useSession, signIn } from "next-auth/react";
 import Head from "next/head";
