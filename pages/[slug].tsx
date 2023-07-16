@@ -153,15 +153,7 @@ function SingleMovie() {
       <Head>
         <title>{movie.title}</title>
       </Head>
-      <div
-        className="
-        flex flex-col items-center
-        lg:items-start
-        mt-60
-        p-24
-        no-drag
-    "
-      >
+      <div className="flex flex-col items-center lg:items-start mt-60 p-24 no-drag">
         <Image
           src={urlFor(movie.poster_backdrop.asset).url()}
           height={0}
@@ -186,64 +178,32 @@ function SingleMovie() {
         />
         <h1
           style={{ zIndex: 90 }}
-          className="
-          text-5xl
-          lg:text-7xl
-          font-bold
-          text-center
-          lg:text-start
-  "
+          className="text-5xl lg:text-7xl font-bold text-center lg:text-start"
         >
           {movie.title}
         </h1>
-
-        <div
-          className="flex flex-col  lg:flex-row items-center lg:items-start sm:space-x-5
-      "
-        >
+        <div className="flex flex-col lg:flex-row items-center lg:items-start sm:space-x-5">
           <Image
             width={240}
             height={240}
             src={urlFor(movie.poster).url()}
             alt={movie.title}
             style={{ zIndex: 90 }}
-            className="
-        mt-10
-        rounded-3xl
-        no-drag
-        "
+            className="mt-10 rounded-3xl no-drag"
           />
-
-          <div className=" z-50 flex flex-col items-center lg:items-start justify-center">
+          <div className="z-50 flex flex-col items-center lg:items-start justify-center">
             <RatingModal
               open={open}
               setOpen={setOpen}
               rateMovie={rateMovie}
               movieId={movie._id}
             />
-            <div
-              className="
-              flex 
-              flex-col 
-              sm:flex-col 
-              md:flex-row 
-              items-center 
-              justify-center 
-              lg:justify-normal 
-              mt-10
-              text-gray-400
-              md:space-x-5
-              space-y-5
-              md:space-y-0
-              text-3xl
-              my-5
-        "
-            >
+            <div className="flex flex-col sm:flex-col md:flex-row items-center justify-center lg:justify-normal mt-10 text-gray-400 md:space-x-5 space-y-5 md:space-y-0 text-3xl my-5">
               <p>{new Date(movie.releaseDate).getFullYear()}</p>
               <p className="my-5">{movie.length}min</p>
               {movie.ratings && (
-                <div className="flex flex-col sm:flex-row items-center justify-center ">
-                  <div className="flex flex-row items-center justify-center ">
+                <div className="flex flex-col sm:flex-row items-center justify-center">
+                  <div className="flex flex-row items-center justify-center">
                     <p>
                       {(
                         movie.ratings.reduce(
@@ -254,7 +214,6 @@ function SingleMovie() {
                     </p>
                     <AiFillStar />
                     <p className="ml-2 whitespace-nowrap">
-                      {" "}
                       ({movie.ratings.length}{" "}
                       {movie.ratings.length === 1 ? "rating" : "ratings"})
                     </p>
@@ -269,19 +228,14 @@ function SingleMovie() {
               <div className="flex flex-col items-center justify-center w-full sm:flex-row">
                 {session ? (
                   <button
-                    className="bg-yellow-700 rounded-xl w-full text-center text-white text-lg font-semibold py-2 px-4
-                  hover:bg-yellow-600 flex items-center justify-center gap-1
-
-                "
+                    className="bg-yellow-700 rounded-xl w-full text-center text-white text-lg font-semibold py-2 px-4 hover:bg-yellow-600 flex items-center justify-center gap-1"
                     onClick={() => setOpen(!open)}
                   >
                     <AiFillStar /> Rate
                   </button>
                 ) : (
                   <button
-                    className="bg-yellow-700 rounded-xl w-full text-center text-white text-lg font-semibold py-2 px-4
-              hover:bg-yellow-600 flex items-center justify-center gap-1
-            "
+                    className="bg-yellow-700 rounded-xl w-full text-center text-white text-lg font-semibold py-2 px-4 hover:bg-yellow-600 flex items-center justify-center gap-1"
                     onClick={() => {
                       signIn();
                     }}
@@ -291,20 +245,12 @@ function SingleMovie() {
                 )}
               </div>
             </div>
-            <div
-              className="flex flex-col  items-center justify-center lg:justify-center lg:items-start 
-        
-          "
-            >
-              <div className="flex flex-col  md:flex-row text-center ">
+            <div className="flex flex-col items-center justify-center lg:justify-center lg:items-start">
+              <div className="flex flex-col md:flex-row text-center">
                 {movie.genres &&
                   movie.genres.map((genre: string) => (
                     <p
-                      className="md:mr-4 text-2xl font-light border 
-                  rounded-lg p-2 
-                  mt-2
-                  mb-2
-                "
+                      className="md:mr-4 text-2xl font-light border rounded-lg p-2 mt-2 mb-2"
                       style={{ zIndex: 90 }}
                       key={genre}
                     >
@@ -312,18 +258,13 @@ function SingleMovie() {
                     </p>
                   ))}
               </div>
-
-              <div className=" mt-4 sm:w-3/4 ">
+              <div className="mt-4 sm:w-3/4">
                 <p>{movie.plot}</p>
               </div>
             </div>
-            <div className="mt-10 text-3xl text-center lg:text-start flex flex-col ">
+            <div className="mt-10 text-3xl text-center lg:text-start flex flex-col">
               {movie.ratings && <h1>Individuell rating</h1>}
-              <div
-                className="flex flex-row justify-center lg:justify-start
-            flex-wrap md:flex-nowrap
-            "
-              >
+              <div className="flex flex-row justify-center lg:justify-start flex-wrap md:flex-nowrap">
                 {movie.ratings &&
                   movie.ratings.map((rating: any) => (
                     <div
@@ -337,14 +278,10 @@ function SingleMovie() {
                           src={urlFor(rating.person.image.asset).url()}
                           alt={rating.person.name ?? "Ukjent"}
                           className="rounded-full w-30 h-30 object-cover"
-                          style={{
-                            width: "70px",
-                            height: "70px",
-                          }}
+                          style={{ width: "70px", height: "70px" }}
                         />
                       )}
-
-                      <div className="flex flex-col mr-10 ml-5 ">
+                      <div className="flex flex-col mr-10 ml-5">
                         <p>{rating.person.name}</p>
                         <div className="flex flex-row items-center">
                           <p>{rating.rating}</p>
