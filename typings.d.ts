@@ -1,28 +1,66 @@
-type Movie = {
+export interface Movie {
+  _type: "movie";
   _id: string;
+  _rev: string;
   _createdAt: string;
-  _type: string;
+  _updatedAt: string;
   title: string;
-  releaseDate: string;
-  slug: {
-    _type: string;
-    current: string;
-  };
-  genres: string[];
+  ratings: {
+    person: {
+      _type: "reference";
+      _ref: string; // Reference to the "person" type
+    };
+    rating: number;
+  }[];
   length: number;
   plot: string;
+  slug: {
+    _type: "slug";
+    current: string;
+  };
+  overview: BlockContent;
+  releaseDate: string;
   poster: {
-    _type: string;
+    _type: "image";
     asset: {
-      _ref: string;
-      _type: string;
+      _type: "reference";
+      _ref: string; // Reference to the actual image asset
     };
   };
+  genres: string[];
   poster_backdrop: {
-    _type: string;
+    _type: "image";
     asset: {
-      _ref: string;
-      _type: string;
+      _type: "reference";
+      _ref: string; // Reference to the actual image asset
     };
   };
-};
+  externalId: number;
+  popularity: number;
+}
+
+// Assuming you have a BlockContent interface defined, you can define it like this:
+interface BlockContent {
+  _type: "block";
+  children: Block[];
+}
+
+interface Block {
+  _type: "span" | "strong" | "em" | "code" | "link";
+  _key: string;
+  text: string;
+}
+
+export interface Comment {
+  comment: string;
+  person: any;
+  movie: {
+    _ref: string;
+    _type: string;
+  };
+  _createdAt: string;
+  _id: string;
+  _rev: string;
+  _type: string;
+  _updatedAt: string;
+}

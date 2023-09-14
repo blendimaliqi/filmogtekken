@@ -7,6 +7,7 @@ import plotSummary from './plotSummary'
 import plotSummaries from './plotSummaries'
 
 import youtube from './youtube'
+import comment from './comment'
 
 export const schemaTypes = [
   // Document types
@@ -20,4 +21,5 @@ export const schemaTypes = [
   plotSummaries,
   castMember,
   crewMember,
+  comment,
 ]

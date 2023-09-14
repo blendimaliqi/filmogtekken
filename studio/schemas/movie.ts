@@ -11,7 +11,7 @@ export default defineType({
       name: 'title',
       title: 'Title',
       type: 'string',
-      validation: (Rule:any) => Rule.required().error('Title is required'),
+      validation: (Rule: any) => Rule.required().error('Title is required'),
     }),
     defineField({
       name: 'ratings',
@@ -25,7 +25,7 @@ export default defineType({
               name: 'person',
               title: 'Person',
               type: 'reference',
-              to: [{ type: 'person' }],
+              to: [{type: 'person'}],
             },
             {
               name: 'rating',
@@ -36,8 +36,7 @@ export default defineType({
         },
       ],
     }),
-    
-    
+
     defineField({
       name: 'length',
       title: 'Length',
@@ -94,6 +93,31 @@ export default defineType({
         hotspot: true,
       },
       validation: (Rule: any) => Rule.required().error('Poster Backdrop Image is required'),
+    }),
+
+    // Add a comments field
+    defineField({
+      name: 'comments',
+      title: 'Comments',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            {
+              name: 'person',
+              title: 'Person',
+              type: 'reference',
+              to: [{type: 'person'}],
+            },
+            {
+              name: 'comment',
+              title: 'Comment',
+              type: 'text',
+            },
+          ],
+        },
+      ],
     }),
 
     defineField({

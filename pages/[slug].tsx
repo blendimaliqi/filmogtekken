@@ -3,13 +3,16 @@ import { client, urlFor } from "@/config/client";
 import { movieQuery } from "@/utils/groqQueries";
 import { uploadExternalImage, uuidv4 } from "@/utils/helperFunctions";
 import { useQuery } from "@tanstack/react-query";
+import { GetStaticProps } from "next";
 import { useSession, signIn } from "next-auth/react";
 import Head from "next/head";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AiFillStar } from "react-icons/ai";
 import { ColorRing } from "react-loader-spinner";
+import { Movie } from "../typings";
+import CommentForm from "@/components/CommentForm";
 
 const centerStyle = {
   display: "flex",
@@ -28,7 +31,7 @@ function SingleMovie() {
     error,
     data: movie,
     refetch,
-  } = useQuery({
+  } = useQuery<Movie>({
     queryKey: ["movie"],
     onError: (error) => {
       //retry
@@ -38,6 +41,40 @@ function SingleMovie() {
 
     queryFn: () => client.fetch(movieQuery, { movieId: router.query.slug }),
   });
+
+  if (!movie) return <div>loading</div>;
+  const movieData: Movie = movie;
+
+  async function createComment(movieId: string, session: any) {
+    if (!session || !session.user) {
+      return;
+    }
+
+    const userName = session.user.name;
+
+    // Assuming you have a client object for fetching data
+    const personQuery = `*[_type == "person" && name == "${userName}"]`;
+    const [existingPerson] = await client.fetch(personQuery);
+
+    console.log("Existing person:", existingPerson);
+    console.log("movieid", movieId);
+    // Assuming you have a server endpoint for creating comments
+    fetch("/api/createComment", {
+      method: "POST",
+      body: JSON.stringify({
+        movieId,
+        comment: "Your comment here", // Add the comment text
+        person: existingPerson,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  }
 
   if (isLoading || status === "loading")
     return (
@@ -147,15 +184,15 @@ function SingleMovie() {
       console.error("Error updating movie rating:", error);
     }
   }
-
+  console.log("movie", movieData);
   return (
     <>
       <Head>
-        <title>{movie.title}</title>
+        <title>{movieData.title ?? ""}</title>
       </Head>
       <div className="flex flex-col items-center lg:items-start mt-60 p-24 no-drag">
         <Image
-          src={urlFor(movie.poster_backdrop.asset).url()}
+          src={urlFor(movieData.poster_backdrop.asset).url()}
           height={0}
           width={0}
           sizes="100vh"
@@ -180,14 +217,14 @@ function SingleMovie() {
           style={{ zIndex: 90 }}
           className="text-5xl lg:text-7xl font-bold text-center lg:text-start"
         >
-          {movie.title}
+          {movieData.title}
         </h1>
         <div className="flex flex-col lg:flex-row items-center lg:items-start sm:space-x-5">
           <Image
             width={240}
             height={240}
-            src={urlFor(movie.poster).url()}
-            alt={movie.title}
+            src={urlFor(movieData.poster).url()}
+            alt={movieData.title}
             style={{ zIndex: 90 }}
             className="mt-10 rounded-3xl no-drag"
           />
@@ -196,31 +233,31 @@ function SingleMovie() {
               open={open}
               setOpen={setOpen}
               rateMovie={rateMovie}
-              movieId={movie._id}
+              movieId={movieData._id ?? ""}
             />
             <div className="flex flex-col sm:flex-col md:flex-row items-center justify-center lg:justify-normal mt-10 text-gray-400 md:space-x-5 space-y-5 md:space-y-0 text-3xl my-5">
-              <p>{new Date(movie.releaseDate).getFullYear()}</p>
-              <p className="my-5">{movie.length}min</p>
-              {movie.ratings && (
+              <p>{new Date(movieData.releaseDate ?? "").getFullYear()}</p>
+              <p className="my-5">{movieData.length}min</p>
+              {movieData.ratings && (
                 <div className="flex flex-col sm:flex-row items-center justify-center">
                   <div className="flex flex-row items-center justify-center">
                     <p>
                       {(
-                        movie.ratings.reduce(
+                        movieData.ratings.reduce(
                           (acc: number, curr: any) => acc + curr.rating,
                           0
-                        ) / movie.ratings.length
+                        ) / movieData.ratings.length
                       ).toFixed(2)}
                     </p>
                     <AiFillStar />
                     <p className="ml-2 whitespace-nowrap">
-                      ({movie.ratings.length}{" "}
-                      {movie.ratings.length === 1 ? "rating" : "ratings"})
+                      ({movieData.ratings.length}{" "}
+                      {movieData.ratings.length === 1 ? "rating" : "ratings"})
                     </p>
                   </div>
                 </div>
               )}
-              {!movie.ratings && (
+              {!movieData.ratings && (
                 <p className="text-3xl text-center whitespace-nowrap">
                   Ingen rating enda
                 </p>
@@ -247,8 +284,8 @@ function SingleMovie() {
             </div>
             <div className="flex flex-col items-center justify-center lg:justify-center lg:items-start">
               <div className="flex flex-col md:flex-row text-center">
-                {movie.genres &&
-                  movie.genres.map((genre: string) => (
+                {movieData.genres &&
+                  movieData.genres.map((genre: string) => (
                     <p
                       className="md:mr-4 text-2xl font-light border rounded-lg p-2 mt-2 mb-2"
                       style={{ zIndex: 90 }}
@@ -259,14 +296,14 @@ function SingleMovie() {
                   ))}
               </div>
               <div className="mt-4 sm:w-3/4">
-                <p>{movie.plot}</p>
+                <p>{movieData.plot}</p>
               </div>
             </div>
             <div className="mt-10 text-3xl text-center lg:text-start flex flex-col">
-              {movie.ratings && <h1>Individuell rating</h1>}
+              {movieData.ratings && <h1>Individuell rating</h1>}
               <div className="flex flex-row justify-center lg:justify-start flex-wrap md:flex-nowrap">
-                {movie.ratings &&
-                  movie.ratings.map((rating: any) => (
+                {movieData.ratings &&
+                  movieData.ratings.map((rating: any) => (
                     <div
                       key={rating}
                       className="flex flex-row items-center mt-5"
@@ -290,6 +327,7 @@ function SingleMovie() {
                       </div>
                     </div>
                   ))}
+                <CommentForm movieId={movieData._id} session={session} />
               </div>
             </div>
           </div>
@@ -300,3 +338,39 @@ function SingleMovie() {
 }
 
 export default SingleMovie;
+
+// // Uses the slugs from "getStaticPaths" to fetch the information for each page
+// export const getStaticProps: GetStaticProps = async ({ params }) => {
+//   const query = `*[_type == "movie" && slug.current == $slug][0]{
+//   _id,
+//   _createdAt,
+//   title,
+//   person -> {
+//   name,
+//   image
+// },
+// 'comments': *[
+//   _type == "comment" &&
+//   movie._ref == ^._id &&
+//   approved == true],
+// Description,
+// mainImage,
+// slug,
+// body
+// }
+// `;
+//   const movie = await client.fetch(query, { slug: params?.slug });
+
+//   if (!movie) {
+//     return {
+//       notFound: true,
+//     };
+//   }
+
+//   return {
+//     props: {
+//       movie,
+//     },
+//     revalidate: 60, // after 1000 seconds it will update the old cached version
+//   };
+// };

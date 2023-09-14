@@ -7,6 +7,9 @@ export const movieQuery = `*[_type == "movie" && _id == $movieId] {
     plot,
     genres,
     castMembers,
+    'comments': *[
+      _type == "comment" && 
+      movie._ref == ^._id ],
     ratings[] {
       person-> {
         name,

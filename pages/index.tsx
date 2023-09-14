@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { atom, useAtom } from "jotai";
 import Movies from "@/components/Movies";
 import { moviesQuery } from "@/utils/groqQueries";
+import { Movie } from "@/typings";
 
 export const centerStyle = {
   display: "flex",
