@@ -2,6 +2,7 @@ import Link from "next/link";
 import React from "react";
 import { FaInfoCircle } from "react-icons/fa";
 import { AiFillStar } from "react-icons/ai";
+import { uuidv4 } from "@/utils/helperFunctions";
 
 function MovieTitle(movie: any) {
   return (
@@ -30,7 +31,7 @@ function MovieTitle(movie: any) {
           movie.movie.genres.map((genre: string) => (
             <div
               className="flex flex-wrap text-lg md:text-2xl font-light"
-              key={genre}
+              key={uuidv4()}
             >
               <p className="mr-4">{genre}</p>
             </div>

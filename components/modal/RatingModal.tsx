@@ -11,7 +11,6 @@ type RatingModalProps = {
 
 function RatingModal({ open, setOpen, rateMovie, movieId }: RatingModalProps) {
   function handleRating(value: number) {
-    console.log(value);
     setOpen(false);
     rateMovie(movieId, value);
   }

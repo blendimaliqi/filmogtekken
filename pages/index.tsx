@@ -10,6 +10,7 @@ import { atom, useAtom } from "jotai";
 import Movies from "@/components/Movies";
 import { moviesQuery } from "@/utils/groqQueries";
 import { Movie } from "@/typings";
+import { uuidv4 } from "@/utils/helperFunctions";
 
 export const centerStyle = {
   display: "flex",
@@ -66,7 +67,7 @@ export default function Home() {
       >
         {moviesToDisplay.map((movie: Movie) => (
           <HomepageImage
-            key={movie._id}
+            key={uuidv4()}
             url={urlFor(movie.poster_backdrop.asset).url() ?? ""}
           >
             <MovieTitle movie={movie} />

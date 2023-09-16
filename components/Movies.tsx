@@ -11,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { signIn, useSession } from "next-auth/react";
 import { moviesQuery } from "@/utils/groqQueries";
-import { uploadExternalImage } from "@/utils/helperFunctions";
+import { uploadExternalImage, uuidv4 } from "@/utils/helperFunctions";
 
 function Movies() {
   const [movies, setMovies] = useAtom(moviesAtom);
@@ -197,9 +197,9 @@ function Movies() {
             ) : (
               tmdbMovies &&
               tmdbMovies.map((movie: any, index) => (
-                <div key={index} onClick={() => addMovie(movie)}>
+                <div key={uuidv4()} onClick={() => addMovie(movie)}>
                   <ModalMovie
-                    key={movie.id + index}
+                    key={uuidv4()}
                     title={movie.title}
                     year={movie.release_date}
                     id={movie.id}
@@ -214,7 +214,7 @@ function Movies() {
 
         {movies.map((movie: any, index: number) => (
           <Movie
-            key={movie._id + index}
+            key={uuidv4()}
             title={movie.title}
             year={movie.year}
             poster={movie.poster.asset}

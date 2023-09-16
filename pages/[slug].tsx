@@ -34,47 +34,27 @@ function SingleMovie() {
   } = useQuery<Movie>({
     queryKey: ["movie"],
     onError: (error) => {
-      //retry
       refetch();
       console.log(error);
     },
-
     queryFn: () => client.fetch(movieQuery, { movieId: router.query.slug }),
   });
 
-  if (!movie) return <div>loading</div>;
+  if (!movie)
+    return (
+      <div style={centerStyle}>
+        <ColorRing
+          visible={true}
+          height="80"
+          width="80"
+          ariaLabel="blocks-loading"
+          wrapperStyle={{}}
+          wrapperClass="blocks-wrapper"
+          colors={["#cacaca", "#cacaca", "#cacaca", "#cacaca", "#cacaca"]}
+        />
+      </div>
+    );
   const movieData: Movie = movie;
-
-  async function createComment(movieId: string, session: any) {
-    if (!session || !session.user) {
-      return;
-    }
-
-    const userName = session.user.name;
-
-    // Assuming you have a client object for fetching data
-    const personQuery = `*[_type == "person" && name == "${userName}"]`;
-    const [existingPerson] = await client.fetch(personQuery);
-
-    console.log("Existing person:", existingPerson);
-    console.log("movieid", movieId);
-    // Assuming you have a server endpoint for creating comments
-    fetch("/api/createComment", {
-      method: "POST",
-      body: JSON.stringify({
-        movieId,
-        comment: "Your comment here", // Add the comment text
-        person: existingPerson,
-      }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data);
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  }
 
   if (isLoading || status === "loading")
     return (
@@ -161,8 +141,6 @@ function SingleMovie() {
           .patch(movieId)
           .set({ ratings: movieWithRating.ratings })
           .commit();
-
-        console.log("Movie rating updated:", updatedMovie);
       } else {
         const newRating = {
           _key: uuidv4(),
@@ -176,15 +154,13 @@ function SingleMovie() {
           .setIfMissing({ ratings: [] }) // Create the ratings array if it doesn't exist
           .append("ratings", [newRating]) // Wrap the new rating inside an array
           .commit();
-
-        console.log("Movie rating updated:", updatedMovie);
       }
       refetch();
     } catch (error) {
       console.error("Error updating movie rating:", error);
     }
   }
-  console.log("movie", movieData);
+
   return (
     <main className="    ">
       <Head>
@@ -285,11 +261,11 @@ function SingleMovie() {
             <div className="flex flex-col items-center justify-center lg:justify-center lg:items-start">
               <div className="flex flex-col md:flex-row text-center">
                 {movieData.genres &&
-                  movieData.genres.map((genre: string) => (
+                  movieData.genres.map((genre: string, index) => (
                     <p
                       className="md:mr-4 text-2xl font-light border rounded-lg p-2 mt-2 mb-2"
                       style={{ zIndex: 90 }}
-                      key={genre}
+                      key={uuidv4()}
                     >
                       <p>{genre}</p>
                     </p>
@@ -305,7 +281,7 @@ function SingleMovie() {
                 {movieData.ratings &&
                   movieData.ratings.map((rating: any) => (
                     <div
-                      key={rating}
+                      key={uuidv4()}
                       className="flex flex-row items-center mt-5"
                     >
                       {rating.person.image.asset && (

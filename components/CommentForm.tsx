@@ -29,7 +29,6 @@ function CommentForm({
     const personQuery = `*[_type == "person" && name == "${userName}"]`;
     const existingPerson = await client.fetch(personQuery);
 
-    console.log("existingPerson", existingPerson[0]._id);
     return existingPerson;
   }
 
@@ -68,14 +67,10 @@ function CommentForm({
   });
 
   if (!movie) return null;
+
   return (
     <form
-      className="z-50 flex flex-col 
-    items-start
-    justify-center
-    w-full
-    
-    "
+      className="z-50 flex flex-col items-start justify-center w-full"
       onSubmit={handleSubmit}
     >
       <h1 className="mt-20 py-4">Kommentarer</h1>
@@ -94,21 +89,16 @@ function CommentForm({
         </button>
       </div>
 
-      <div className="flex flex-col items-start justify-start w-full">
-        {sortedComments.map((comment: any) => (
+      <div className="flex flex-col items-start justify-start text-xl w-3/4">
+        {sortedComments.map((comment, index) => (
           <div
-            key={comment._key}
+            key={uuidv4()} // Use a unique identifier if available, or index as a fallback
             className="
-            flex flex-row items-center justify-start w-full
-            
-            p-4
-            mt-4
-
-            "
+            flex flex-row items-center justify-start w-full p-4 mt-4"
           >
-            <div className="flex flex-col ">
-              <div className="flex gap-2  text-2xl">
-                <div className="flex  gap-2 pb-4">
+            <div className="flex flex-col" key={uuidv4()}>
+              <div className="flex gap-2 text-2xl">
+                <div className="flex gap-2 pb-4">
                   <Image
                     src={urlFor(comment.person.image).url() || ""}
                     width={50}
