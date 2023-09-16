@@ -78,7 +78,7 @@ function CommentForm({
     "
       onSubmit={handleSubmit}
     >
-      <h1 className="mt-32 py-4">Kommentarer</h1>
+      <h1 className="mt-20 py-4">Kommentarer</h1>
       <div className="flex flex-col items-end w-3/4">
         <textarea
           className="w-full p-2 mt-2 rounded-md h-20 text-xl focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:focus:ring-gray-600 dark:focus:border-transparent"
