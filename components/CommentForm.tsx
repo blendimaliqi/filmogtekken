@@ -97,6 +97,7 @@ function CommentForm({
       <div className="flex flex-col items-start justify-start w-full">
         {sortedComments.map((comment: any) => (
           <div
+            key={comment._key}
             className="
             flex flex-row items-center justify-start w-full
             
