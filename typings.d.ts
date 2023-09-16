@@ -5,6 +5,7 @@ export interface Movie {
   _createdAt: string;
   _updatedAt: string;
   title: string;
+  comments: Comment[];
   ratings: {
     person: {
       _type: "reference";
