@@ -20,11 +20,6 @@ function CommentForm({
   const [movie, setMovie] = useState<any | null>(null); // Use `any` temporarily
 
   async function getPerson() {
-    if (session == null || session == undefined) {
-      return null;
-    } else {
-      if (session.user == null || session.user == undefined) return null;
-    }
     const userName = session.user.name;
     const personQuery = `*[_type == "person" && name == "${userName}"]`;
     const existingPerson = await client.fetch(personQuery);
@@ -34,13 +29,17 @@ function CommentForm({
 
   useEffect(() => {
     async function fetchData() {
-      const personData = await getPerson();
-      setPerson(personData[0]);
-      const movie = await client.getDocument(movieId);
-      setMovie(movie);
+      try {
+        const personData = await getPerson();
+        setPerson(personData[0]);
+        const movie = await client.getDocument(movieId);
+        setMovie(movie);
+      } catch (error) {
+        console.log(error);
+      }
     }
 
-    fetchData();
+    session != null && fetchData();
   }, [session]);
 
   async function handleSubmit(e: any) {
@@ -49,7 +48,7 @@ function CommentForm({
       const newComment = {
         person: { _type: "reference", _ref: person._id },
         comment: commentText,
-        _key: uuidv4(),
+        _key: uuidv4() + commentText,
         _createdAt: new Date().toISOString(),
       };
 
@@ -66,28 +65,28 @@ function CommentForm({
     return new Date(b._createdAt).getTime() - new Date(a._createdAt).getTime();
   });
 
-  if (!movie) return null;
-
   return (
     <form
       className="z-50 flex flex-col items-start justify-center w-full"
       onSubmit={handleSubmit}
     >
       <h1 className="mt-20 py-4">Kommentarer</h1>
-      <div className="flex flex-col items-end w-3/4">
-        <textarea
-          className="w-full p-2 mt-2 rounded-md h-20 text-xl focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:focus:ring-gray-600 dark:focus:border-transparent"
-          value={commentText}
-          onChange={(e) => setCommentText(e.target.value)}
-          placeholder="Legg til en kommentar"
-        />
-        <button
-          className="bg-gray-800 text-xl text-gray-400 rounded-md p-2 mt-2 w-36 hover:bg-gray-700 hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:focus:ring-gray-600 dark:focus:border-transparent"
-          type="submit"
-        >
-          Kommenter
-        </button>
-      </div>
+      {session != null && (
+        <div className="flex flex-col items-end w-3/4">
+          <textarea
+            className="w-full p-2 mt-2 rounded-md h-20 text-xl focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:focus:ring-gray-600 dark:focus:border-transparent"
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            placeholder="Legg til en kommentar"
+          />
+          <button
+            className="bg-gray-800 text-xl text-gray-400 rounded-md p-2 mt-2 w-36 hover:bg-gray-700 hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:focus:ring-gray-600 dark:focus:border-transparent"
+            type="submit"
+          >
+            Kommenter
+          </button>
+        </div>
+      )}
 
       <div className="flex flex-col items-start justify-start text-xl w-3/4">
         {sortedComments.map((comment, index) => (
@@ -115,10 +114,17 @@ function CommentForm({
                       date={comment._createdAt}
                       formatter={(value, unit, suffix) => {
                         if (unit === "second") {
-                          return `${value} sekunder ${suffix.replace(
-                            "ago",
-                            "siden"
-                          )}`;
+                          if (value === 1) {
+                            return `${value} sekund ${suffix.replace(
+                              "ago",
+                              "siden"
+                            )}`;
+                          } else {
+                            return `${value} sekunder ${suffix.replace(
+                              "ago",
+                              "siden"
+                            )}`;
+                          }
                         } else if (unit === "minute") {
                           if (value === 1) {
                             return `${value} minutt ${suffix.replace(
