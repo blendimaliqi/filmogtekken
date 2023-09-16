@@ -114,25 +114,36 @@ function CommentForm({
                   <span className="text-gray-400">
                     <TimeAgo
                       date={comment._createdAt}
-                      // refresh rate
-
-                      formatter={(value: any, unit: any, suffix: any) => {
-                        // Customize the formatting for Norwegian here
+                      formatter={(value, unit, suffix) => {
                         if (unit === "second") {
                           return `${value} sekunder ${suffix.replace(
                             "ago",
                             "siden"
                           )}`;
                         } else if (unit === "minute") {
-                          return `${value} minutter ${suffix.replace(
-                            "ago",
-                            "siden"
-                          )}`;
+                          if (value === 1) {
+                            return `${value} minutt ${suffix.replace(
+                              "ago",
+                              "siden"
+                            )}`;
+                          } else {
+                            return `${value} minutter ${suffix.replace(
+                              "ago",
+                              "siden"
+                            )}`;
+                          }
                         } else if (unit === "hour") {
-                          return `${value} timer ${suffix.replace(
-                            "ago",
-                            "siden"
-                          )}`;
+                          if (value === 1) {
+                            return `${value} time ${suffix.replace(
+                              "ago",
+                              "siden"
+                            )}`;
+                          } else {
+                            return `${value} timer ${suffix.replace(
+                              "ago",
+                              "siden"
+                            )}`;
+                          }
                         } else if (unit === "day") {
                           return `${value} dager ${suffix.replace(
                             "ago",
