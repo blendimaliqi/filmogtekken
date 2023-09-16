@@ -50,7 +50,7 @@ function CommentForm({
         comment: commentText,
         _key: uuidv4() + commentText,
         _createdAt: new Date().toISOString(),
-        ref: { _type: "reference", _ref: movie._id },
+        ref: { _type: "reference", _ref: movieId },
       };
 
       const updatedComments = [...(movie.comments || []), newComment];
