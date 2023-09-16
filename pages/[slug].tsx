@@ -186,7 +186,7 @@ function SingleMovie() {
   }
   console.log("movie", movieData);
   return (
-    <>
+    <main className="    ">
       <Head>
         <title>{movieData.title ?? ""}</title>
       </Head>
@@ -299,7 +299,7 @@ function SingleMovie() {
                 <p>{movieData.plot}</p>
               </div>
             </div>
-            <div className="mt-10 text-3xl text-center lg:text-start flex flex-col">
+            <div className="mt-10 text-3xl text-center lg:text-start flex flex-col w-full">
               {movieData.ratings && <h1>Individuell rating</h1>}
               <div className="flex flex-row justify-center lg:justify-start flex-wrap md:flex-nowrap">
                 {movieData.ratings &&
@@ -328,55 +328,20 @@ function SingleMovie() {
                     </div>
                   ))}
               </div>
-              <div></div>
-              <CommentForm
-                refetch={refetch}
-                movieData={movieData}
-                movieId={movieData._id}
-                session={session}
-              />
+              <div className="">
+                <CommentForm
+                  refetch={refetch}
+                  movieData={movieData}
+                  movieId={movieData._id}
+                  session={session}
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </>
+    </main>
   );
 }
 
 export default SingleMovie;
-
-// // Uses the slugs from "getStaticPaths" to fetch the information for each page
-// export const getStaticProps: GetStaticProps = async ({ params }) => {
-//   const query = `*[_type == "movie" && slug.current == $slug][0]{
-//   _id,
-//   _createdAt,
-//   title,
-//   person -> {
-//   name,
-//   image
-// },
-// 'comments': *[
-//   _type == "comment" &&
-//   movie._ref == ^._id &&
-//   approved == true],
-// Description,
-// mainImage,
-// slug,
-// body
-// }
-// `;
-//   const movie = await client.fetch(query, { slug: params?.slug });
-
-//   if (!movie) {
-//     return {
-//       notFound: true,
-//     };
-//   }
-
-//   return {
-//     props: {
-//       movie,
-//     },
-//     revalidate: 60, // after 1000 seconds it will update the old cached version
-//   };
-// };

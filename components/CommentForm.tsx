@@ -69,7 +69,15 @@ function CommentForm({
 
   if (!movie) return null;
   return (
-    <form className="z-50" onSubmit={handleSubmit}>
+    <form
+      className="z-50 flex flex-col 
+    items-start
+    justify-center
+    w-full
+    
+    "
+      onSubmit={handleSubmit}
+    >
       <h1 className="mt-32 py-4">Kommentarer</h1>
       <div className="flex flex-col items-end w-3/4">
         <textarea
