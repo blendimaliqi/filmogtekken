@@ -21,20 +21,14 @@ function CommentForm({
 
   const { data } = useQuery({
     queryKey: ["person"],
-    queryFn: () => getPerson(),
+    queryFn: () => GetPerson(),
     onError: (error) => refetch(),
   });
 
-  async function getPerson() {
+  async function GetPerson() {
     const userName = session.user.name;
-    console.log("username", userName);
     const personQuery = `*[_type == "person" && name == "${userName}"]`;
     const existingPerson = await client.fetch(personQuery);
-
-    const [searchTerm, setSearchTerm] = useState("");
-
-    console.log("existingPerson", existingPerson);
-
     return existingPerson[0];
   }
 
@@ -78,7 +72,6 @@ function CommentForm({
     }
   }
   const sortedComments = [...(movieData.comments || [])].sort((a, b) => {
-    console.log("data", data);
     return new Date(b._createdAt).getTime() - new Date(a._createdAt).getTime();
   });
 
@@ -87,7 +80,6 @@ function CommentForm({
       className="z-50 flex flex-col items-center md:items-start justify-start w-full"
       onSubmit={(e) => postCommentToMovie(movieId, data._id, commentText, e)}
     >
-      
       <h1 className="mt-20 py-4">Kommentarer</h1>
       {session != null && (
         <div className="flex flex-col items-end w-3/4">
