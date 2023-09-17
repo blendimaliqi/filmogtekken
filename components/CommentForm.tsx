@@ -199,8 +199,8 @@ function CommentForm({
                     </span>
                   </div>
                 </div>
-                <div className="flex flex-row items-center justify-center md:justify-start md:items-start max-w-3/4">
-                  <p className="break-all flex flex-wrap text-gray-400 w-3/4">
+                <div className="flex flex-row items-center justify-center md:justify-start md:items-center max-w-3/4">
+                  <p className=" overflow-wrap break-word flex flex-wrap text-gray-400 w-3/4">
                     {comment.comment}
                   </p>
 
@@ -208,7 +208,7 @@ function CommentForm({
                     data != null &&
                     comment.person._id == data._id && (
                       <FaTrashAlt
-                        className="ml-2 text-gray-400 cursor-pointer 
+                        className="ml-3 text-gray-400 cursor-pointer 
                       hover:text-gray-300
                       "
                         title="Slett kommentar"

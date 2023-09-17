@@ -167,11 +167,9 @@ function Movies() {
       <div
         draggable={false}
         className="
-        //center div
         flex flex-col justify-center items-center h-screen w-screen
       "
       >
-        {/* show no movie message */}
         <div>
           <h2 className="text-2xl font-bold mb-6 sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl">
             Ingen filmer
