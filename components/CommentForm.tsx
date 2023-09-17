@@ -31,6 +31,8 @@ function CommentForm({
     const personQuery = `*[_type == "person" && name == "${userName}"]`;
     const existingPerson = await client.fetch(personQuery);
 
+    const [searchTerm, setSearchTerm] = useState("");
+
     console.log("existingPerson", existingPerson);
 
     return existingPerson[0];
@@ -85,6 +87,7 @@ function CommentForm({
       className="z-50 flex flex-col items-center md:items-start justify-start w-full"
       onSubmit={(e) => postCommentToMovie(movieId, data._id, commentText, e)}
     >
+      
       <h1 className="mt-20 py-4">Kommentarer</h1>
       {session != null && (
         <div className="flex flex-col items-end w-3/4">

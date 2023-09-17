@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Movie from "./Movie";
 import { client, createPost } from "@/config/client";
 import { Modal } from "./modal/Modal";
@@ -8,22 +8,34 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { centerStyle, moviesAtom } from "@/pages";
 import { useQuery } from "@tanstack/react-query";
-import { useAtom } from "jotai";
+import { atom, useAtom } from "jotai";
 import { signIn, useSession } from "next-auth/react";
 import { moviesQuery } from "@/utils/groqQueries";
 import { uploadExternalImage, uuidv4 } from "@/utils/helperFunctions";
 
+export const searchTermJotai = atom("");
 function Movies() {
   const [movies, setMovies] = useAtom(moviesAtom);
+
+  const [allMovies, setAllMovies] = useState<any[]>([]);
+
   const { isLoading, error, data } = useQuery({
     queryKey: ["movies"],
     queryFn: () => client.fetch(moviesQuery),
-    onSuccess: (data: any) => setMovies(data),
+    onSuccess: (data: any) => {
+      setMovies(data);
+      setAllMovies(data);
+    },
   });
   const { data: session, status } = useSession();
 
   const [tmdbMovies, setTmdbMovies] = useState<any[]>([]);
   const [input, setInput] = useState("");
+
+  //jotai atom for search term
+  const [searchTerm, setSearchTerm] = useAtom(searchTermJotai);
+
+  //value that stores all movies even if the current movie field gets changed
 
   const getMovieRequest = async () => {
     try {
@@ -136,6 +148,19 @@ function Movies() {
       console.log("error", error);
     }
   }
+
+  useEffect(() => {
+    if (searchTerm === "") {
+      // If the search bar is empty, show all movies
+      setMovies(allMovies);
+    } else {
+      // If there's a search term, filter movies based on it
+      const results = movies.filter((movie: any) =>
+        movie.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setMovies(results);
+    }
+  }, [searchTerm, movies]);
 
   return (
     <div draggable={false} className="mt-52 md:mt-auto">
