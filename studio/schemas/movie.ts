@@ -8,6 +8,12 @@ export default defineType({
   icon,
   fields: [
     defineField({
+      name: 'comments',
+      title: 'Comments',
+      type: 'array',
+      of: [{type: 'reference', to: [{type: 'comment'}]}],
+    }),
+    defineField({
       name: 'title',
       title: 'Title',
       type: 'string',
@@ -93,31 +99,6 @@ export default defineType({
         hotspot: true,
       },
       validation: (Rule: any) => Rule.required().error('Poster Backdrop Image is required'),
-    }),
-
-    // Add a comments field
-    defineField({
-      name: 'comments',
-      title: 'Comments',
-      type: 'array',
-      of: [
-        {
-          type: 'object',
-          fields: [
-            {
-              name: 'person',
-              title: 'Person',
-              type: 'reference',
-              to: [{type: 'person'}],
-            },
-            {
-              name: 'comment',
-              title: 'Comment',
-              type: 'text',
-            },
-          ],
-        },
-      ],
     }),
 
     defineField({
