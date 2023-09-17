@@ -212,6 +212,7 @@ function CommentForm({
                         className="ml-2 text-gray-400 cursor-pointer 
                       hover:text-gray-300
                       "
+                        title="Slett kommentar"
                         onClick={async () => {
                           const confirmDelete = window.confirm(
                             "Er du sikker på at du vil slette denne kommentaren?"
