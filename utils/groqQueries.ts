@@ -10,15 +10,19 @@ export const movieQuery = `*[_type == "movie" && _id == $movieId] {
   comments[] {
     person-> {
       name,
-      image
+      image,
+      _id,
+      _key,
     },
     comment,
+    _key,
     _createdAt
   },
   ratings[] {
     person-> {
       name,
-      image
+      image,
+      _id,
     },
     rating
   },
@@ -41,15 +45,19 @@ export const moviesQuery = `*[_type == "movie"] {
   comments[] {
     person-> {
       name,
-      image
+      image,
+      _key,
+      _id,
     },
     comment,
+    _key,
     _createdAt
   },
   ratings[] {
     person-> {
       name,
-      image
+      image,
+      _id,
     },
     rating
   }

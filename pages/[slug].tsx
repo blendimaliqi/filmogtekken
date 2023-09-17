@@ -299,14 +299,12 @@ function SingleMovie() {
                     </div>
                   ))}
               </div>
-              <div className="">
-                <CommentForm
-                  refetch={refetch}
-                  movieData={movieData}
-                  movieId={movieData._id}
-                  session={session}
-                />
-              </div>
+              <CommentForm
+                refetch={refetch}
+                movieData={movieData}
+                movieId={movieData._id}
+                session={session}
+              />
             </div>
           </div>
         </div>

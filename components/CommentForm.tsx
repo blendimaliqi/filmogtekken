@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import TimeAgo from "react-timeago";
 import { useQuery } from "@tanstack/react-query";
-import { FaRegCommentDots } from "react-icons/fa";
+import { FaRegCommentDots, FaTrashAlt } from "react-icons/fa";
 
 function CommentForm({
   movieId,
@@ -18,24 +18,22 @@ function CommentForm({
   refetch: any;
 }) {
   const [commentText, setCommentText] = useState("");
-  const [person, setPerson] = useState<any | null>(null);
 
-  const {} = useQuery({
+  const { data } = useQuery({
     queryKey: ["person"],
     queryFn: () => getPerson(),
-    onSuccess: (data) => {
-      console.log("asd", data[0]._id);
-      setPerson(data[0]);
-    },
     onError: (error) => refetch(),
   });
 
   async function getPerson() {
     const userName = session.user.name;
+    console.log("username", userName);
     const personQuery = `*[_type == "person" && name == "${userName}"]`;
     const existingPerson = await client.fetch(personQuery);
 
-    return existingPerson;
+    console.log("existingPerson", existingPerson);
+
+    return existingPerson[0];
   }
 
   async function postCommentToMovie(
@@ -78,13 +76,14 @@ function CommentForm({
     }
   }
   const sortedComments = [...(movieData.comments || [])].sort((a, b) => {
+    console.log("data", data);
     return new Date(b._createdAt).getTime() - new Date(a._createdAt).getTime();
   });
 
   return (
     <form
       className="z-50 flex flex-col items-start justify-center w-full"
-      onSubmit={(e) => postCommentToMovie(movieId, person._id, commentText, e)}
+      onSubmit={(e) => postCommentToMovie(movieId, data._id, commentText, e)}
     >
       <h1 className="mt-20 py-4">Kommentarer</h1>
       {session != null && (
@@ -105,19 +104,23 @@ function CommentForm({
       )}
 
       {sortedComments.length === 0 ? (
-        <div className="flex flex-col items-center justify-center w-3/4 py-8 gap-2">
+        <div
+          className="flex flex-col items-center justify-center w-3/4 py-8 gap-2
+         
+        "
+        >
           <FaRegCommentDots className="text-7xl text-gray-400 " />
           <p className="text-xl text-gray-400">Ingen kommentarer enda</p>
         </div>
       ) : (
-        <div className="flex flex-col items-start justify-start text-xl w-3/4">
+        <div className="flex flex-col text-xl">
           {sortedComments.map((comment, index) => (
             <div
               key={uuidv4()}
               className="
             flex flex-row items-center justify-start w-full p-4 mt-4"
             >
-              <div className="flex flex-col" key={uuidv4()}>
+              <div className="flex flex-col w-full" key={uuidv4()}>
                 <div className="flex gap-2 text-2xl">
                   <div className="flex gap-2 pb-4">
                     <Image
@@ -197,7 +200,50 @@ function CommentForm({
                     </span>
                   </div>
                 </div>
-                <p className="ml-2 ">{comment.comment}</p>
+                <div className="flex flex-row items-center ">
+                  <p className="break-all flex flex-wrap text-gray-400 w-3/4">
+                    {comment.comment}
+                  </p>
+
+                  {session != null &&
+                    data != null &&
+                    comment.person._id == data._id && (
+                      <FaTrashAlt
+                        className="ml-2 text-gray-400 cursor-pointer 
+                      hover:text-gray-300
+                      "
+                        onClick={async () => {
+                          const confirmDelete = window.confirm(
+                            "Er du sikker på at du vil slette denne kommentaren?"
+                          );
+
+                          if (confirmDelete) {
+                            const movieWithCommentToBeDeleted =
+                              await client.getDocument(movieId);
+
+                            if (!movieWithCommentToBeDeleted) {
+                              console.error("Movie not found.");
+                              return;
+                            }
+
+                            const updatedComments = [
+                              ...(movieWithCommentToBeDeleted.comments || []),
+                            ].filter((commentToBeDeleted) => {
+                              return commentToBeDeleted._key !== comment._key;
+                            });
+
+                            movieWithCommentToBeDeleted.comments =
+                              updatedComments;
+
+                            await client.createOrReplace(
+                              movieWithCommentToBeDeleted
+                            );
+                            refetch();
+                          }
+                        }}
+                      />
+                    )}
+                </div>
               </div>
             </div>
           ))}
