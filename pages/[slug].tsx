@@ -272,12 +272,12 @@ function SingleMovie() {
             </div>
             <div className="mt-10 text-3xl text-center lg:text-start flex flex-col w-full">
               {movieData.ratings && <h1>Individuell rating</h1>}
-              <div className="flex flex-row justify-center lg:justify-start flex-wrap md:flex-nowrap">
+              <div className="flex flex-row justify-center lg:justify-start flex-wrap md:flex-nowrap w-full">
                 {movieData.ratings &&
                   movieData.ratings.map((rating: any) => (
                     <div
                       key={uuidv4()}
-                      className="flex flex-row items-center mt-5"
+                      className="flex flex-row items-center justify-center md:justify-start mt-5 w-full md:w-2/4"
                     >
                       {rating.person.image.asset && (
                         <Image
@@ -286,10 +286,9 @@ function SingleMovie() {
                           src={urlFor(rating.person.image.asset).url()}
                           alt={rating.person.name ?? "Ukjent"}
                           className="rounded-full w-30 h-30 object-cover"
-                          style={{ width: "70px", height: "70px" }}
                         />
                       )}
-                      <div className="flex flex-col mr-10 ml-5">
+                      <div className="flex flex-col mr-10 ml-5 w-full md:w-max-2/4 justify-center items-center md:items-start md:justify-start">
                         <p>{rating.person.name}</p>
                         <div className="flex flex-row items-center">
                           <p>{rating.rating}</p>

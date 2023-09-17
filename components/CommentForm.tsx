@@ -109,14 +109,14 @@ function CommentForm({
           <p className="text-xl text-gray-400">Ingen kommentarer enda</p>
         </div>
       ) : (
-        <div className="flex flex-col text-lg md:text-xl">
+        <div className="flex flex-col text-lg md:text-xl max-w-3/4">
           {sortedComments.map((comment, index) => (
             <div
               key={uuidv4()}
               className="flex flex-row items-center justify-center md:justify-start w-full p-4 mt-4"
             >
               <div
-                className="flex flex-col w-full justify-center items-center md:justify-start md:items-start"
+                className="flex flex-col w-full justify-center items-center md:justify-start md:items-start max-w-3/4"
                 key={uuidv4()}
               >
                 <div className="flex gap-2 text-lg md:text-2xl justify-center md:justify-start">
@@ -204,7 +204,7 @@ function CommentForm({
                     </span>
                   </div>
                 </div>
-                <div className="flex flex-row items-center justify-center md:justify-start md:items-start">
+                <div className="flex flex-row items-center justify-center md:justify-start md:items-start max-w-3/4">
                   <p className="break-all flex flex-wrap text-gray-400 w-3/4">
                     {comment.comment}
                   </p>
