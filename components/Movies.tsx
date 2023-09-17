@@ -160,7 +160,7 @@ function Movies() {
       );
       setMovies(results);
     }
-  }, [searchTerm, movies]);
+  }, [searchTerm, allMovies]);
 
   if (movies.length === 0)
     return (

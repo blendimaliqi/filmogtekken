@@ -1,6 +1,6 @@
 import Link from "next/link";
-import React from "react";
-import { useAtom, atom } from "jotai"; // Import jotai
+import { useRouter } from "next/router"; // Import useRouter
+import { useAtom, atom } from "jotai";
 import LoginButton from "./LoginButton";
 import {
   AiOutlineSearch as SearchIcon,
@@ -13,6 +13,7 @@ const isSearchOpenAtom = atom(false);
 function Nav() {
   const [isSearchOpen, setIsSearchOpen] = useAtom(isSearchOpenAtom);
   const [searchTerm, setSearchTerm] = useAtom(searchTermJotai);
+  const router = useRouter(); // Access the router
 
   const toggleSearch = () => {
     setIsSearchOpen((prev) => !prev);
@@ -21,6 +22,19 @@ function Nav() {
   const clearSearch = () => {
     setSearchTerm("");
   };
+
+  // Conditionally render the search input based on the route
+  const isHomePage = router.pathname === "/";
+  const searchInputClassName = `
+    bg-gray-800 text-gray-300 px-2 py-2 pr-10 rounded-lg
+    focus:outline-none
+    transition-all duration-300 ease-in-out
+    ${
+      isSearchOpen
+        ? "scale-100 opacity-100"
+        : "scale-0 opacity-0 pointer-events-none"
+    }
+  `;
 
   return (
     <div className="hidden md:flex items-center p-24 w-[99.6vw] ">
@@ -46,38 +60,33 @@ function Nav() {
           </li>
         </ul>
         <div className="flex flex-row pr-4">
-          <div className="relative">
-            <input
-              onChange={(e) => setSearchTerm(e.target.value)}
-              value={searchTerm}
-              type="text"
-              placeholder="Search"
-              className={`
-                bg-gray-800 text-gray-300 px-2 py-2 pr-10 rounded-lg
-                focus:outline-none
-                transition-all duration-300 ease-in-out
-                ${
-                  isSearchOpen
-                    ? "scale-100 opacity-100"
-                    : "scale-0 opacity-0 pointer-events-none"
-                }
-              `}
-            />
-            {searchTerm && (
-              <AiFillCloseCircle
-                className="absolute top-0 right-0 mt-3 mr-2 cursor-pointer text-gray-400 hover:text-gray-200 transition duration-300 ease-in-out"
-                onClick={() => {
-                  clearSearch();
-                }}
+          {isHomePage && ( // Render the search input only on the homepage
+            <div className="relative">
+              <input
+                onChange={(e) => setSearchTerm(e.target.value)}
+                value={searchTerm}
+                type="text"
+                placeholder="Søk"
+                className={searchInputClassName}
               />
-            )}
-          </div>
-          <button
-            className="p-2 text-gray-400 hover:text-gray-200 transition duration-300 ease-in-out"
-            onClick={toggleSearch}
-          >
-            <SearchIcon className="w-6 h-6" />
-          </button>
+              {searchTerm && (
+                <AiFillCloseCircle
+                  className="absolute top-0 right-0 mt-3 mr-2 cursor-pointer text-gray-400 hover:text-gray-200 transition duration-300 ease-in-out"
+                  onClick={() => {
+                    clearSearch();
+                  }}
+                />
+              )}
+            </div>
+          )}
+          {isHomePage && (
+            <button
+              className="p-2 text-gray-400 hover:text-gray-200 transition duration-300 ease-in-out"
+              onClick={toggleSearch}
+            >
+              <SearchIcon className="w-6 h-6" />
+            </button>
+          )}
         </div>
         <LoginButton />
       </nav>
