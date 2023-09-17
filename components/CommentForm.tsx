@@ -10,16 +10,18 @@ function CommentForm({
   movieId,
   session,
   movieData,
+  refetch,
 }: {
   movieId: string;
   session: any;
   movieData: any;
+  refetch: any;
 }) {
   const [commentText, setCommentText] = useState("");
   const [person, setPerson] = useState<any | null>(null); // Use `any` temporarily
   const [movie, setMovie] = useState<any | null>(null); // Use `any` temporarily
 
-  const { isLoading, error, refetch } = useQuery<Movie>({
+  const { isLoading, error } = useQuery<Movie>({
     queryKey: ["commentMovie"],
     queryFn: () => client.fetch(`*[_id == "${movieId}"]`),
     onSuccess: (data) => setMovie(data),
