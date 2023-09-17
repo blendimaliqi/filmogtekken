@@ -5,6 +5,11 @@ import Image from "next/image";
 import TimeAgo from "react-timeago";
 import { useQuery } from "@tanstack/react-query";
 import { Movie } from "@/typings";
+import { ColorRing } from "react-loader-spinner";
+import {
+  //icon that fits no comments
+  FaRegCommentDots,
+} from "react-icons/fa";
 
 function CommentForm({
   movieId,
@@ -19,14 +24,14 @@ function CommentForm({
 }) {
   const [commentText, setCommentText] = useState("");
   const [person, setPerson] = useState<any | null>(null); // Use `any` temporarily
-  const [movie, setMovie] = useState<any | null>(null); // Use `any` temporarily
+  // const [movie, setMovie] = useState<any | null>(null); // Use `any` temporarily
 
-  const { isLoading, error } = useQuery<Movie>({
-    queryKey: ["commentMovie"],
-    queryFn: () => client.fetch(`*[_id == "${movieId}"]`),
-    onSuccess: (data) => setMovie(data),
-    onError: (error) => refetch(),
-  });
+  // const { isLoading, error } = useQuery<Movie>({
+  //   queryKey: ["commentMovie"],
+  //   queryFn: () => client.fetch(`*[_id == "${movieId}"]`),
+  //   onSuccess: (data) => setMovie(data),
+  //   onError: (error) => refetch(),
+  // });
 
   const {} = useQuery({
     queryKey: ["person"],
@@ -149,98 +154,106 @@ function CommentForm({
         </div>
       )}
 
-      <div className="flex flex-col items-start justify-start text-xl w-3/4">
-        {sortedComments.map((comment, index) => (
-          <div
-            key={uuidv4()} // Use a unique identifier if available, or index as a fallback
-            className="
+      {sortedComments.length === 0 ? (
+        // icon for empty comments
+        <div className="flex flex-col items-center justify-center w-3/4">
+          <FaRegCommentDots className="text-7xl text-gray-400" />
+          <p className="text-xl text-gray-400">Ingen kommentarer enda</p>
+        </div>
+      ) : (
+        <div className="flex flex-col items-start justify-start text-xl w-3/4">
+          {sortedComments.map((comment, index) => (
+            <div
+              key={uuidv4()} // Use a unique identifier if available, or index as a fallback
+              className="
             flex flex-row items-center justify-start w-full p-4 mt-4"
-          >
-            <div className="flex flex-col" key={uuidv4()}>
-              <div className="flex gap-2 text-2xl">
-                <div className="flex gap-2 pb-4">
-                  <Image
-                    src={urlFor(comment.person.image).url() || ""}
-                    width={50}
-                    height={50}
-                    className="rounded-full"
-                    alt="Profile picture"
-                  />
-                  <p className="ml-2 mb-2 text-gray-400 font-bold ">
-                    {comment.person.name}
-                  </p>
-                  <p className="text-gray-400">for</p>
-                  <span className="text-gray-400">
-                    <TimeAgo
-                      date={comment._createdAt}
-                      formatter={(value, unit, suffix) => {
-                        if (unit === "second") {
-                          if (value === 1) {
-                            return `${value} sekund ${suffix.replace(
-                              "ago",
-                              "siden"
-                            )}`;
-                          } else {
-                            return `${value} sekunder ${suffix.replace(
-                              "ago",
-                              "siden"
-                            )}`;
-                          }
-                        } else if (unit === "minute") {
-                          if (value === 1) {
-                            return `${value} minutt ${suffix.replace(
-                              "ago",
-                              "siden"
-                            )}`;
-                          } else {
-                            return `${value} minutter ${suffix.replace(
-                              "ago",
-                              "siden"
-                            )}`;
-                          }
-                        } else if (unit === "hour") {
-                          if (value === 1) {
-                            return `${value} time ${suffix.replace(
-                              "ago",
-                              "siden"
-                            )}`;
-                          } else {
-                            return `${value} timer ${suffix.replace(
-                              "ago",
-                              "siden"
-                            )}`;
-                          }
-                        } else if (unit === "day") {
-                          return `${value} dager ${suffix.replace(
-                            "ago",
-                            "siden"
-                          )}`;
-                        } else if (unit === "week") {
-                          return `${value} uker ${suffix.replace(
-                            "ago",
-                            "siden"
-                          )}`;
-                        } else if (unit === "month") {
-                          return `${value} måneder ${suffix.replace(
-                            "ago",
-                            "siden"
-                          )}`;
-                        } else if (unit === "year") {
-                          return `${value} år ${suffix.replace(
-                            "ago",
-                            "siden"
-                          )}`;
-                        }
-                      }}
+            >
+              <div className="flex flex-col" key={uuidv4()}>
+                <div className="flex gap-2 text-2xl">
+                  <div className="flex gap-2 pb-4">
+                    <Image
+                      src={urlFor(comment.person.image).url() || ""}
+                      width={50}
+                      height={50}
+                      className="rounded-full"
+                      alt="Profile picture"
                     />
-                  </span>
+                    <p className="ml-2 mb-2 text-gray-400 font-bold ">
+                      {comment.person.name}
+                    </p>
+                    <p className="text-gray-400">for</p>
+                    <span className="text-gray-400">
+                      <TimeAgo
+                        date={comment._createdAt}
+                        formatter={(value, unit, suffix) => {
+                          if (unit === "second") {
+                            if (value === 1) {
+                              return `${value} sekund ${suffix.replace(
+                                "ago",
+                                "siden"
+                              )}`;
+                            } else {
+                              return `${value} sekunder ${suffix.replace(
+                                "ago",
+                                "siden"
+                              )}`;
+                            }
+                          } else if (unit === "minute") {
+                            if (value === 1) {
+                              return `${value} minutt ${suffix.replace(
+                                "ago",
+                                "siden"
+                              )}`;
+                            } else {
+                              return `${value} minutter ${suffix.replace(
+                                "ago",
+                                "siden"
+                              )}`;
+                            }
+                          } else if (unit === "hour") {
+                            if (value === 1) {
+                              return `${value} time ${suffix.replace(
+                                "ago",
+                                "siden"
+                              )}`;
+                            } else {
+                              return `${value} timer ${suffix.replace(
+                                "ago",
+                                "siden"
+                              )}`;
+                            }
+                          } else if (unit === "day") {
+                            return `${value} dager ${suffix.replace(
+                              "ago",
+                              "siden"
+                            )}`;
+                          } else if (unit === "week") {
+                            return `${value} uker ${suffix.replace(
+                              "ago",
+                              "siden"
+                            )}`;
+                          } else if (unit === "month") {
+                            return `${value} måneder ${suffix.replace(
+                              "ago",
+                              "siden"
+                            )}`;
+                          } else if (unit === "year") {
+                            return `${value} år ${suffix.replace(
+                              "ago",
+                              "siden"
+                            )}`;
+                          }
+                        }}
+                      />
+                    </span>
+                  </div>
                 </div>
+                <p className="ml-2 ">{comment.comment}</p>
               </div>
-              <p className="ml-2 ">{comment.comment}</p>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </form>
   );
 }
