@@ -162,6 +162,24 @@ function Movies() {
     }
   }, [searchTerm, movies]);
 
+  if (movies.length === 0)
+    return (
+      <div
+        draggable={false}
+        className="
+        //center div
+        flex flex-col justify-center items-center h-screen w-screen
+      "
+      >
+        {/* show no movie message */}
+        <div>
+          <h2 className="text-2xl font-bold mb-6 sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl">
+            Ingen filmer
+          </h2>
+        </div>
+      </div>
+    );
+
   return (
     <div draggable={false} className="mt-52 md:mt-auto">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-8 p-10 sm:px-8 md:px-16 lg:px-20 xl:px-32 2xl:px-40 justify-center sm:justify-items-stretch items-center text-gray-800 text-xl">
