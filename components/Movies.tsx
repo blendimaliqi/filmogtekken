@@ -22,7 +22,7 @@ function Movies() {
   const { isLoading, error, data } = useQuery({
     queryKey: ["movies"],
     queryFn: () => client.fetch(moviesQuery),
-    onSuccess: (data: any) => {
+    onSuccess: () => {
       setMovies(data);
       setAllMovies(data);
     },
@@ -162,13 +162,11 @@ function Movies() {
     }
   }, [searchTerm, allMovies]);
 
-  if (movies.length === 0)
+  if (movies.length === 0 && !isLoading && searchTerm !== "")
     return (
       <div
         draggable={false}
-        className="
-        flex flex-col justify-center items-center h-screen w-screen
-      "
+        className="flex flex-col justify-center items-center h-screen w-screen"
       >
         <div>
           <h2 className="text-2xl font-bold mb-6 sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl">
