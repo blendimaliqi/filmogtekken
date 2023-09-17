@@ -105,8 +105,8 @@ function CommentForm({
       )}
 
       {sortedComments.length === 0 ? (
-        <div className="flex flex-col items-center justify-center w-3/4">
-          <FaRegCommentDots className="text-7xl text-gray-400" />
+        <div className="flex flex-col items-center justify-center w-3/4 py-8 gap-2">
+          <FaRegCommentDots className="text-7xl text-gray-400 " />
           <p className="text-xl text-gray-400">Ingen kommentarer enda</p>
         </div>
       ) : (
