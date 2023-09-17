@@ -1,15 +1,10 @@
 import { client, urlFor } from "@/config/client";
 import { uuidv4 } from "@/utils/helperFunctions";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import TimeAgo from "react-timeago";
 import { useQuery } from "@tanstack/react-query";
-import { Movie } from "@/typings";
-import { ColorRing } from "react-loader-spinner";
-import {
-  //icon that fits no comments
-  FaRegCommentDots,
-} from "react-icons/fa";
+import { FaRegCommentDots } from "react-icons/fa";
 
 function CommentForm({
   movieId,
@@ -23,15 +18,7 @@ function CommentForm({
   refetch: any;
 }) {
   const [commentText, setCommentText] = useState("");
-  const [person, setPerson] = useState<any | null>(null); // Use `any` temporarily
-  // const [movie, setMovie] = useState<any | null>(null); // Use `any` temporarily
-
-  // const { isLoading, error } = useQuery<Movie>({
-  //   queryKey: ["commentMovie"],
-  //   queryFn: () => client.fetch(`*[_id == "${movieId}"]`),
-  //   onSuccess: (data) => setMovie(data),
-  //   onError: (error) => refetch(),
-  // });
+  const [person, setPerson] = useState<any | null>(null);
 
   const {} = useQuery({
     queryKey: ["person"],
@@ -51,39 +38,6 @@ function CommentForm({
     return existingPerson;
   }
 
-  // async function fetchData() {
-  //   try {
-  //     const personData = await getPerson();
-  //     setPerson(personData[0]);
-  //     const movie = await client.getDocument(movieId);
-  //     setMovie(movie);
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // }
-  // useEffect(() => {
-  //   session != null && fetchData();
-  // }, [session]);
-
-  // async function handleSubmit(e: any) {
-  //   e.preventDefault();
-  //   if (movie) {
-  //     const newComment = {
-  //       person: { _type: "reference", _ref: person._id },
-  //       comment: commentText,
-  //       _key: uuidv4(),
-  //       _createdAt: new Date().toISOString(),
-  //     };
-
-  //     const updatedComments = [...(movie.comments || []), newComment];
-
-  //     await client.patch(movieId).set({ comments: updatedComments }).commit();
-
-  //     refetch();
-  //     setCommentText("");
-  //   }
-  // }
-
   async function postCommentToMovie(
     movieId: any,
     personId: any,
@@ -91,7 +45,6 @@ function CommentForm({
     e: any
   ) {
     try {
-      // Check if the movie exists and retrieve it
       e.preventDefault();
       const movie = await client.getDocument(movieId);
 
@@ -101,26 +54,23 @@ function CommentForm({
       }
 
       const newComment = {
-        _type: "comment", // Use the correct Sanity type name
+        _type: "comment",
         person: {
           _type: "reference",
-          _ref: personId, // Reference to the person who is posting the comment
+          _ref: personId,
         },
         comment: commentText,
         _createdAt: new Date().toISOString(),
-        _key: uuidv4(), // Generate a unique key
+        _key: uuidv4(),
       };
 
-      // Update the movie's comments array with the new comment reference
       const updatedComments = [...(movie.comments || []), newComment];
       movie.comments = updatedComments;
 
-      // Update the movie document in the Sanity dataset
       await client.createOrReplace(movie);
 
       console.log("Comment posted successfully.");
 
-      // Clear the comment field
       setCommentText("");
       refetch();
     } catch (error) {
@@ -155,7 +105,6 @@ function CommentForm({
       )}
 
       {sortedComments.length === 0 ? (
-        // icon for empty comments
         <div className="flex flex-col items-center justify-center w-3/4">
           <FaRegCommentDots className="text-7xl text-gray-400" />
           <p className="text-xl text-gray-400">Ingen kommentarer enda</p>
@@ -164,7 +113,7 @@ function CommentForm({
         <div className="flex flex-col items-start justify-start text-xl w-3/4">
           {sortedComments.map((comment, index) => (
             <div
-              key={uuidv4()} // Use a unique identifier if available, or index as a fallback
+              key={uuidv4()}
               className="
             flex flex-row items-center justify-start w-full p-4 mt-4"
             >

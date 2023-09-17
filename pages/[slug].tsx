@@ -3,12 +3,11 @@ import { client, urlFor } from "@/config/client";
 import { movieQuery } from "@/utils/groqQueries";
 import { uploadExternalImage, uuidv4 } from "@/utils/helperFunctions";
 import { useQuery } from "@tanstack/react-query";
-import { GetStaticProps } from "next";
 import { useSession, signIn } from "next-auth/react";
 import Head from "next/head";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AiFillStar } from "react-icons/ai";
 import { ColorRing } from "react-loader-spinner";
 import { Movie } from "../typings";
@@ -117,18 +116,15 @@ function SingleMovie() {
       const [movieWithRating] = await client.fetch(movieQueryWithRating);
 
       if (movieWithRating) {
-        // Update the existing rating or add a new rating
         const existingRatingIndex = movieWithRating.ratings.findIndex(
           (rating: any) => rating.person._ref === person._id
         );
 
         if (existingRatingIndex > -1) {
-          // Update the existing rating
           const updatedRatings = [...movieWithRating.ratings];
           updatedRatings[existingRatingIndex].rating = rating;
           movieWithRating.ratings = updatedRatings;
         } else {
-          // Create a new rating
           const newRating = {
             _key: uuidv4(),
             person: { _type: "reference", _ref: person._id },
@@ -148,11 +144,10 @@ function SingleMovie() {
           rating: rating,
         };
 
-        // Add the new rating to the movie ratings array
         const updatedMovie = await client
           .patch(movieId)
-          .setIfMissing({ ratings: [] }) // Create the ratings array if it doesn't exist
-          .append("ratings", [newRating]) // Wrap the new rating inside an array
+          .setIfMissing({ ratings: [] })
+          .append("ratings", [newRating])
           .commit();
       }
       refetch();
@@ -162,7 +157,7 @@ function SingleMovie() {
   }
 
   return (
-    <main className="    ">
+    <main className="">
       <Head>
         <title>{movieData.title ?? ""}</title>
       </Head>
