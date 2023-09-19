@@ -32,7 +32,7 @@ function Movies() {
 
   const [tmdbMovies, setTmdbMovies] = useState<any[]>([]);
   const [input, setInput] = useState("");
-
+  const [selectValue, setSelectValue] = useState("default" as string);
   //jotai atom for search term
   const [searchTerm, setSearchTerm] = useAtom(searchTermJotai);
 
@@ -154,54 +154,47 @@ function Movies() {
     if (searchTerm === "") {
       // If the search bar is empty, show all movies
       setMovies(allMovies);
-
-      console.log("movies", movies);
     } else {
       // If there's a search term, filter movies based on it
       const results = movies.filter((movie: any) =>
         movie.title.toLowerCase().includes(searchTerm.toLowerCase())
       );
+      setSortedMovies([]);
       setMovies(results);
     }
   }, [searchTerm, allMovies]);
 
-  function filterMoviesByHighestAverageRating(movies) {
-    const moviesWithAverageRating = movies.map((movie) => {
+  function filterMoviesByHighestAverageRating(movies: any) {
+    const moviesWithAverageRating = movies.map((movie: any) => {
       const ratings = movie.ratings;
 
       const averageRating = ratings
-        ? ratings.reduce((a, b) => a + b.rating, 0) / ratings.length
+        ? ratings.reduce((a: any, b: any) => a + b.rating, 0) / ratings.length
         : 0;
       return { ...movie, averageRating };
     });
 
-    console.log("moviesWithAverageRating", moviesWithAverageRating);
-
-    const sortedMovies = moviesWithAverageRating.sort((a, b) => {
+    const sortedMovies = moviesWithAverageRating.sort((a: any, b: any) => {
       return b.averageRating - a.averageRating;
     });
 
-    console.log("sortedMovies", sortedMovies);
     return sortedMovies;
   }
 
-  function filterMoviesByLowestAverageRating(movies) {
-    const moviesWithAverageRating = movies.map((movie) => {
+  function filterMoviesByLowestAverageRating(movies: any) {
+    const moviesWithAverageRating = movies.map((movie: any) => {
       const ratings = movie.ratings;
 
       const averageRating = ratings
-        ? ratings.reduce((a, b) => a + b.rating, 0) / ratings.length
+        ? ratings.reduce((a: any, b: any) => a + b.rating, 0) / ratings.length
         : 0;
       return { ...movie, averageRating };
     });
 
-    console.log("moviesWithAverageRating", moviesWithAverageRating);
-
-    const sortedMovies = moviesWithAverageRating.sort((a, b) => {
-      return a.averageRating - b.averageRating; // Sort in ascending order
+    const sortedMovies = moviesWithAverageRating.sort((a: any, b: any) => {
+      return a.averageRating - b.averageRating; 
     });
 
-    console.log("sortedMovies", sortedMovies);
     return sortedMovies;
   }
 
@@ -220,6 +213,7 @@ function Movies() {
     );
 
   const handleSortByAverageRating = (filter: string) => {
+    setSelectValue(filter);
     if (filter == "highestRating") {
       const sorted = filterMoviesByHighestAverageRating(movies);
       setSortedMovies(sorted);
@@ -237,12 +231,14 @@ function Movies() {
         <div className="flex flex-col justify-end items-end">
           {/* Select element for sorting options */}
           <select
+            value={selectValue}
             onChange={(e) => {
               const selectedOption = e.target.value;
               handleSortByAverageRating(selectedOption);
             }}
-            className="text-gray-400 hover:text-gray-300 cursor-pointer bg-gray-800 rounded-2xl p-2 h-full w-full
-              focus:outline-none            
+            className="text-gray-400 hover:text-gray-300 cursor-pointer bg-gray-800 rounded-xl p-3 h-full w-full
+              focus:outline-none     
+                  
             "
           >
             <option value="default">Nyeste</option>
