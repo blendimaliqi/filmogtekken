@@ -6,7 +6,7 @@ import ModalMovie from "./modal/ModalMovie";
 import { ColorRing } from "react-loader-spinner";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { centerStyle, moviesAtom } from "@/pages";
+import { centerStyle, moviesAtom, moviesSortedAtom } from "@/pages";
 import { useQuery } from "@tanstack/react-query";
 import { atom, useAtom } from "jotai";
 import { signIn, useSession } from "next-auth/react";
@@ -16,6 +16,7 @@ import { uploadExternalImage, uuidv4 } from "@/utils/helperFunctions";
 export const searchTermJotai = atom("");
 function Movies() {
   const [movies, setMovies] = useAtom(moviesAtom);
+  const [sortMovies, setSortedMovies] = useAtom(moviesSortedAtom);
 
   const [allMovies, setAllMovies] = useState<any[]>([]);
 
@@ -153,6 +154,8 @@ function Movies() {
     if (searchTerm === "") {
       // If the search bar is empty, show all movies
       setMovies(allMovies);
+
+      console.log("movies", movies);
     } else {
       // If there's a search term, filter movies based on it
       const results = movies.filter((movie: any) =>
@@ -161,6 +164,46 @@ function Movies() {
       setMovies(results);
     }
   }, [searchTerm, allMovies]);
+
+  function filterMoviesByHighestAverageRating(movies) {
+    const moviesWithAverageRating = movies.map((movie) => {
+      const ratings = movie.ratings;
+
+      const averageRating = ratings
+        ? ratings.reduce((a, b) => a + b.rating, 0) / ratings.length
+        : 0;
+      return { ...movie, averageRating };
+    });
+
+    console.log("moviesWithAverageRating", moviesWithAverageRating);
+
+    const sortedMovies = moviesWithAverageRating.sort((a, b) => {
+      return b.averageRating - a.averageRating;
+    });
+
+    console.log("sortedMovies", sortedMovies);
+    return sortedMovies;
+  }
+
+  function filterMoviesByLowestAverageRating(movies) {
+    const moviesWithAverageRating = movies.map((movie) => {
+      const ratings = movie.ratings;
+
+      const averageRating = ratings
+        ? ratings.reduce((a, b) => a + b.rating, 0) / ratings.length
+        : 0;
+      return { ...movie, averageRating };
+    });
+
+    console.log("moviesWithAverageRating", moviesWithAverageRating);
+
+    const sortedMovies = moviesWithAverageRating.sort((a, b) => {
+      return a.averageRating - b.averageRating; // Sort in ascending order
+    });
+
+    console.log("sortedMovies", sortedMovies);
+    return sortedMovies;
+  }
 
   if (movies.length === 0 && !isLoading && searchTerm !== "")
     return (
@@ -176,8 +219,40 @@ function Movies() {
       </div>
     );
 
+  const handleSortByAverageRating = (filter: string) => {
+    if (filter == "highestRating") {
+      const sorted = filterMoviesByHighestAverageRating(movies);
+      setSortedMovies(sorted);
+    } else if (filter == "lowestRating") {
+      const sorted = filterMoviesByLowestAverageRating(movies);
+      setSortedMovies(sorted);
+    } else {
+      setSortedMovies([]);
+    }
+  };
+
   return (
     <div draggable={false} className="mt-52 md:mt-auto">
+      <div className="flex flex-col max-w-[90%] justify-end items-end z-50">
+        <div className="flex flex-col justify-end items-end">
+          {/* Select element for sorting options */}
+          <select
+            onChange={(e) => {
+              const selectedOption = e.target.value;
+              handleSortByAverageRating(selectedOption);
+            }}
+            className="text-gray-400 hover:text-gray-300 cursor-pointer bg-gray-800 rounded-2xl p-2 h-full w-full
+              focus:outline-none            
+            "
+          >
+            <option value="default">Nyeste</option>
+            <option value="highestRating">Høyest vurdering</option>
+            <option value="lowestRating">Lavest vurdering</option>
+            {/* Add more sorting options as needed */}
+          </select>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-8 p-10 sm:px-8 md:px-16 lg:px-20 xl:px-32 2xl:px-40 justify-center sm:justify-items-stretch items-center text-gray-800 text-xl">
         {session && status === "authenticated" ? (
           <button
@@ -251,15 +326,28 @@ function Movies() {
           </div>
         </Modal>
 
-        {movies.map((movie: any, index: number) => (
-          <Movie
-            key={uuidv4()}
-            title={movie.title}
-            year={movie.year}
-            poster={movie.poster.asset}
-            movie={movie}
-          />
-        ))}
+        {
+          //if sortMovies is not empty, map over sortMovies, else map over movies
+          sortMovies.length > 0
+            ? sortMovies.map((movie: any, index: number) => (
+                <Movie
+                  key={uuidv4()}
+                  title={movie.title}
+                  year={movie.year}
+                  poster={movie.poster.asset}
+                  movie={movie}
+                />
+              ))
+            : movies.map((movie: any, index: number) => (
+                <Movie
+                  key={uuidv4()}
+                  title={movie.title}
+                  year={movie.year}
+                  poster={movie.poster.asset}
+                  movie={movie}
+                />
+              ))
+        }
         <ToastContainer />
       </div>
     </div>
