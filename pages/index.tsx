@@ -21,6 +21,7 @@ export const centerStyle = {
 
 export const moviesAtom = atom<Movie[]>([]);
 export const moviesSortedAtom = atom<Movie[]>([]);
+export const moviesFilteredAtom = atom("default");
 
 export default function Home() {
   const [movies, setMovies] = useAtom(moviesAtom);

@@ -6,7 +6,12 @@ import ModalMovie from "./modal/ModalMovie";
 import { ColorRing } from "react-loader-spinner";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { centerStyle, moviesAtom, moviesSortedAtom } from "@/pages";
+import {
+  centerStyle,
+  moviesAtom,
+  moviesSortedAtom,
+  moviesFilteredAtom,
+} from "@/pages";
 import { useQuery } from "@tanstack/react-query";
 import { atom, useAtom } from "jotai";
 import { signIn, useSession } from "next-auth/react";
@@ -32,11 +37,10 @@ function Movies() {
 
   const [tmdbMovies, setTmdbMovies] = useState<any[]>([]);
   const [input, setInput] = useState("");
-  const [selectValue, setSelectValue] = useState("default" as string);
-  //jotai atom for search term
-  const [searchTerm, setSearchTerm] = useAtom(searchTermJotai);
 
-  //value that stores all movies even if the current movie field gets changed
+  const [selectValue, setSelectValue] = useAtom(moviesFilteredAtom);
+
+  const [searchTerm, setSearchTerm] = useAtom(searchTermJotai);
 
   const getMovieRequest = async () => {
     try {
@@ -51,7 +55,6 @@ function Movies() {
   };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
