@@ -192,7 +192,7 @@ function Movies() {
     });
 
     const sortedMovies = moviesWithAverageRating.sort((a: any, b: any) => {
-      return a.averageRating - b.averageRating; 
+      return a.averageRating - b.averageRating;
     });
 
     return sortedMovies;
@@ -241,7 +241,7 @@ function Movies() {
                   
             "
           >
-            <option value="default">Nyeste</option>
+            <option value="default">Sist lagt til</option>
             <option value="highestRating">Høyest vurdering</option>
             <option value="lowestRating">Lavest vurdering</option>
             {/* Add more sorting options as needed */}

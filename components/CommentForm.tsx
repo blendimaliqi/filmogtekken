@@ -90,6 +90,7 @@ function CommentForm({
             placeholder="Legg til en kommentar"
           />
           <button
+            disabled={!commentText}
             className="bg-gray-800 text-lg md:text-xl text-gray-400 rounded-md p-2 mt-2 w-36 hover:bg-gray-700 hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:focus:ring-gray-600 dark:focus:border-transparent"
             type="submit"
           >
