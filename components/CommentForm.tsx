@@ -40,6 +40,7 @@ function CommentForm({
   ) {
     try {
       e.preventDefault();
+      if (!commentText) return;
       const movie = await client.getDocument(movieId);
 
       if (!movie) {
@@ -82,7 +83,7 @@ function CommentForm({
     >
       <h1 className="mt-20 py-4">Kommentarer</h1>
       {session != null && (
-        <div className="flex flex-col items-end w-3/4">
+        <div className="flex flex-col items-stretch md:items-end w-full">
           <textarea
             className="w-full p-2 mt-2 rounded-md h-20 text-lg md:text-xl focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:focus:ring-gray-600 dark:focus:border-transparent"
             value={commentText}
@@ -90,8 +91,7 @@ function CommentForm({
             placeholder="Legg til en kommentar"
           />
           <button
-            disabled={!commentText}
-            className="bg-gray-800 text-lg md:text-xl text-gray-400 rounded-md p-2 mt-2 w-36 hover:bg-gray-700 hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:focus:ring-gray-600 dark:focus:border-transparent"
+            className="bg-gray-800 text-lg md:text-xl text-gray-400 rounded-md p-2 mt-2 w-full md:w-36 hover:bg-gray-700 hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:focus:ring-gray-600 dark:focus:border-transparent"
             type="submit"
           >
             Kommenter
@@ -100,7 +100,7 @@ function CommentForm({
       )}
 
       {sortedComments.length === 0 ? (
-        <div className="flex flex-col items-center justify-start w-3/4 py-8 gap-2">
+        <div className="flex flex-col items-center justify-start w-full py-8 gap-2">
           <FaRegCommentDots className="text-7xl text-gray-400 " />
           <p className="text-xl text-gray-400">Ingen kommentarer enda</p>
         </div>
@@ -175,10 +175,17 @@ function CommentForm({
                               )}`;
                             }
                           } else if (unit === "day") {
-                            return `${value} dager ${suffix.replace(
-                              "ago",
-                              "siden"
-                            )}`;
+                            if (value === 1) {
+                              return `${value} dag ${suffix.replace(
+                                "ago",
+                                "siden"
+                              )}`;
+                            } else {
+                              return `${value} dager ${suffix.replace(
+                                "ago",
+                                "siden"
+                              )}`;
+                            }
                           } else if (unit === "week") {
                             return `${value} uker ${suffix.replace(
                               "ago",
@@ -201,10 +208,9 @@ function CommentForm({
                   </div>
                 </div>
                 <div className="flex flex-row items-center justify-center md:justify-start md:items-center max-w-3/4">
-                  <p className=" overflow-wrap break-word flex flex-wrap text-gray-400 w-3/4">
+                  <p className="overflow-wrap break-word text-left text-gray-400 w-full">
                     {comment.comment}
                   </p>
-
                   {session != null &&
                     data != null &&
                     comment.person._id == data._id && (
