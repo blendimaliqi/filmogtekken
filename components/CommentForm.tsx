@@ -187,20 +187,41 @@ function CommentForm({
                               )}`;
                             }
                           } else if (unit === "week") {
-                            return `${value} uker ${suffix.replace(
-                              "ago",
-                              "siden"
-                            )}`;
+                            if (value === 1) {
+                              return `${value} uke ${suffix.replace(
+                                "ago",
+                                "siden"
+                              )}`;
+                            } else {
+                              return `${value} uker ${suffix.replace(
+                                "ago",
+                                "siden"
+                              )}`;
+                            }
                           } else if (unit === "month") {
-                            return `${value} måneder ${suffix.replace(
-                              "ago",
-                              "siden"
-                            )}`;
+                            if (value === 1) {
+                              return `${value} måned ${suffix.replace(
+                                "ago",
+                                "siden"
+                              )}`;
+                            } else {
+                              return `${value} måneder ${suffix.replace(
+                                "ago",
+                                "siden"
+                              )}`;
+                            }
                           } else if (unit === "year") {
-                            return `${value} år ${suffix.replace(
-                              "ago",
-                              "siden"
-                            )}`;
+                            if (value === 1) {
+                              return `${value} år ${suffix.replace(
+                                "ago",
+                                "siden"
+                              )}`;
+                            } else {
+                              return `${value} år ${suffix.replace(
+                                "ago",
+                                "siden"
+                              )}`;
+                            }
                           }
                         }}
                       />
