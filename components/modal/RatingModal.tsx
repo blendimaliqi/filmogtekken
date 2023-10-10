@@ -15,6 +15,8 @@ function RatingModal({ open, setOpen, rateMovie, movieId }: RatingModalProps) {
     rateMovie(movieId, value);
   }
 
+  const [ratingStar, setRatingStar] = useState(0);
+
   return (
     <div>
       <Modal
@@ -30,6 +32,9 @@ function RatingModal({ open, setOpen, rateMovie, movieId }: RatingModalProps) {
           <h1 className="text-xl">Ranger film</h1>
           <h3 className="font-semibold pt-4 ">Brutal ærlighet</h3>
           <Rating
+            onChangeActive={(event, newHover) => {
+              newHover > 0 ? setRatingStar(newHover) : setRatingStar(0);
+            }}
             onChange={(event, newValue) => {
               handleRating(newValue ?? 0);
             }}
@@ -40,6 +45,12 @@ function RatingModal({ open, setOpen, rateMovie, movieId }: RatingModalProps) {
             color="#fff"
             className="bg-gray-800 p-2 mt-5"
           />
+          <p
+            className="
+          text-white font-semibold text-xl mt-5"
+          >
+            {ratingStar}
+          </p>
         </div>
       </Modal>
     </div>
