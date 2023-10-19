@@ -190,6 +190,19 @@ function SingleMovie() {
         >
           {movieData.title}
         </h1>
+        <p
+          className="text-lg text-center ml-2 mt-5
+  
+        "
+        >
+          {"Lagt til:" +
+            " " +
+            new Date(movieData._createdAt).toLocaleDateString("no-NO", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+        </p>
         <div className="flex flex-col lg:flex-row items-center lg:items-start sm:space-x-5">
           <Image
             width={240}
