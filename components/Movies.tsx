@@ -201,6 +201,21 @@ function Movies() {
     return sortedMovies;
   }
 
+  function fulterMoviesByHighestTotalComments(movies: any) {
+    const moviesWithTotalComments = movies.map((movie: any) => {
+      const comments = movie.comments;
+
+      const totalComments = comments ? comments.length : 0;
+      return { ...movie, totalComments };
+    });
+
+    const sortedMovies = moviesWithTotalComments.sort((a: any, b: any) => {
+      return b.totalComments - a.totalComments;
+    });
+
+    return sortedMovies;
+  }
+
   if (movies.length === 0 && !isLoading && searchTerm !== "")
     return (
       <div
@@ -222,6 +237,9 @@ function Movies() {
       setSortedMovies(sorted);
     } else if (filter == "lowestRating") {
       const sorted = filterMoviesByLowestAverageRating(movies);
+      setSortedMovies(sorted);
+    } else if (filter == "highestComments") {
+      const sorted = fulterMoviesByHighestTotalComments(movies);
       setSortedMovies(sorted);
     } else {
       setSortedMovies([]);
@@ -247,6 +265,7 @@ function Movies() {
             <option value="default">Sist lagt til</option>
             <option value="highestRating">Høyest vurdering</option>
             <option value="lowestRating">Lavest vurdering</option>
+            <option value="highestComments">Flest kommentarer</option>
             {/* Add more sorting options as needed */}
           </select>
         </div>
