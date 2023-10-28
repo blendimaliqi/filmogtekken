@@ -2,7 +2,7 @@ import React from "react";
 import { urlFor } from "../config/client";
 import Image from "next/image";
 import Link from "next/link";
-import { AiFillStar } from "react-icons/ai";
+import { AiFillStar, AiOutlineComment } from "react-icons/ai";
 
 export interface MovieProps {
   title: string;
@@ -56,6 +56,14 @@ function Movie({ title, poster, movie }: MovieProps) {
                 </div>
               ) : (
                 "Ingen rating"
+              )}
+              {movie.comments != null && (
+                <div className="flex items-center justify-center">
+                  <AiOutlineComment
+                    style={{ marginTop: "8px", marginRight: "6px" }}
+                    size={30}
+                  />
+                </div>
               )}
             </h3>
           </div>
