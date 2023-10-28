@@ -7,6 +7,7 @@ import {
   AiFillCloseCircle,
 } from "react-icons/ai";
 import { searchTermJotai } from "./Movies";
+import { useEffect, useRef } from "react";
 
 const isSearchOpenAtom = atom(false);
 
@@ -36,6 +37,16 @@ function Nav() {
     }
   `;
 
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // Add an effect to focus the input when isSearchOpen becomes true
+  useEffect(() => {
+    if (isSearchOpen && inputRef.current) {
+      // Check if inputRef.current exists
+      inputRef.current.focus();
+    }
+  }, [isSearchOpen]);
+
   return (
     <div className="hidden md:flex items-center p-24 w-[99.6vw] ">
       <Link
@@ -60,7 +71,7 @@ function Nav() {
           </li>
         </ul>
         <div className="flex flex-row pr-4">
-          {isHomePage && ( // Render the search input only on the homepage
+          {isHomePage && (
             <div className="relative">
               <input
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -68,6 +79,7 @@ function Nav() {
                 type="text"
                 placeholder="Søk"
                 className={searchInputClassName}
+                ref={inputRef}
               />
               {searchTerm && (
                 <AiFillCloseCircle
