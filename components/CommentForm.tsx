@@ -76,6 +76,25 @@ function CommentForm({
     return new Date(b._createdAt).getTime() - new Date(a._createdAt).getTime();
   });
 
+  const textareaStyle = {
+    width: "100%",
+    padding: "0.5rem",
+    marginTop: "0.5rem",
+    borderRadius: "0.375rem",
+    height: "5rem",
+    fontSize: "1.125rem",
+    backgroundColor: "#1f2937", // dark gray background
+    color: "#ffffff", // white text
+    border: "1px solid #4b5563", // gray border
+    outline: "none",
+    transition: "all 0.3s ease",
+  };
+
+  const textareaFocusStyle = {
+    boxShadow: "0 0 0 2px rgba(156, 163, 175, 0.5)", // focus ring
+    borderColor: "transparent",
+  };
+
   return (
     <form
       className="z-50 flex flex-col items-center md:items-start justify-start w-full"
@@ -85,10 +104,17 @@ function CommentForm({
       {session != null && (
         <div className="flex flex-col items-stretch md:items-end w-full">
           <textarea
-            className="w-full p-2 mt-2 rounded-md h-20 text-lg md:text-xl focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:focus:ring-gray-600 dark:focus:border-transparent"
+            style={textareaStyle}
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
             placeholder="Legg til en kommentar"
+            onFocus={(e) => {
+              Object.assign(e.target.style, textareaFocusStyle);
+            }}
+            onBlur={(e) => {
+              e.target.style.boxShadow = "none";
+              e.target.style.borderColor = "#4b5563";
+            }}
           />
           <button
             className="bg-gray-800 text-lg md:text-xl text-gray-400 rounded-md p-2 mt-2 w-full md:w-36 hover:bg-gray-700 hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:focus:ring-gray-600 dark:focus:border-transparent"
