@@ -19,7 +19,7 @@ export default function App({
       <QueryClientProvider client={queryClient}>
         <Provider>
           <Head>
-            <title>Film og Tekken</title>
+            <title>Film med Gutta</title>
           </Head>
           <div
             style={{ position: "absolute", top: "0", left: "0", zIndex: "2" }}
@@ -35,8 +35,8 @@ export default function App({
             mx-auto
             mt-64
             z-50"
-              src="/ft.png"
-              alt="Film og Tekken logo"
+              src="/fmg.png"
+              alt="Film med Gutta logo"
               width={200}
               height={300}
             />
