@@ -19,6 +19,8 @@ const authOptions: AuthOptions = {
       if (account?.provider === "discord") {
         const guildId = process.env.DISCORD_GUILD_ID;
 
+        const guildId2 = process.env.DISCORD_GUILD_ID2;
+
         const response = await fetch(
           "https://discord.com/api/v10/users/@me/guilds",
           {
@@ -31,7 +33,9 @@ const authOptions: AuthOptions = {
         if (response.ok) {
           const guilds = await response.json();
 
-          const isMember = guilds.some((guild: any) => guild.id === guildId);
+          const isMember = guilds.some(
+            (guild: any) => guild.id === guildId || guild.id === guildId2
+          );
 
           if (!isMember) {
             throw new Error("You are not a member of the desired guild");
