@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import HomepageImage from "@/components/HomepageImage";
@@ -25,15 +25,19 @@ export const moviesFilteredAtom = atom("default");
 
 export default function Home() {
   const [movies, setMovies] = useAtom(moviesAtom);
+  const [isMoviesLoaded, setIsMoviesLoaded] = useState(false);
 
   const { isLoading, error, refetch } = useQuery<Movie[]>({
     queryKey: ["movies"],
     queryFn: () => client.fetch(moviesQuery),
-    onSuccess: (data) => setMovies(data),
+    onSuccess: (data) => {
+      setMovies(data);
+      setIsMoviesLoaded(true);
+    },
     onError: (error) => refetch(),
   });
 
-  if (isLoading)
+  if (isLoading || !isMoviesLoaded)
     return (
       <div style={centerStyle}>
         <ColorRing
