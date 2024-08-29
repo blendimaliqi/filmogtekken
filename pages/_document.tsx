@@ -4,11 +4,6 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        <title>Film med Gutta</title>
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-        />
         {/* Favicon links */}
         <link rel="icon" href="/fmg.png" sizes="any" />
         <link rel="icon" href="/fmg.png" sizes="16x16" type="image/png" />
