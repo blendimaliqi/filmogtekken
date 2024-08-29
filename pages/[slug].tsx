@@ -2,7 +2,7 @@ import RatingModal from "@/components/modal/RatingModal";
 import { client, urlFor } from "@/config/client";
 import { movieQuery } from "@/utils/groqQueries";
 import { uploadExternalImage, uuidv4 } from "@/utils/helperFunctions";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { useSession, signIn } from "next-auth/react";
 import Head from "next/head";
 import Image from "next/image";
@@ -12,6 +12,7 @@ import { AiFillStar } from "react-icons/ai";
 import { ColorRing } from "react-loader-spinner";
 import { Movie } from "../typings";
 import CommentForm from "@/components/CommentForm";
+import { GetServerSideProps } from "next";
 
 const centerStyle = {
   display: "flex",
@@ -20,7 +21,18 @@ const centerStyle = {
   height: "100vh",
 };
 
-function SingleMovie() {
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const { slug } = context.params!;
+  const movie = await client.fetch(movieQuery, { movieId: slug });
+
+  return {
+    props: {
+      initialMovieData: movie || null,
+    },
+  };
+};
+
+function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [open, setOpen] = useState(false);
@@ -30,8 +42,9 @@ function SingleMovie() {
     error,
     data: movie,
     refetch,
-  } = useQuery<Movie>({
-    queryKey: ["movie"],
+  }: UseQueryResult<Movie, Error> = useQuery({
+    queryKey: ["movie", router.query.slug],
+    initialData: initialMovieData,
     onError: (error) => {
       refetch();
       console.log(error);
