@@ -80,7 +80,7 @@ export default function Home() {
           </HomepageImage>
         ))}
       </Carousel>
-      <Movies />
+      {isMoviesLoaded && <Movies />}
     </main>
   );
 }

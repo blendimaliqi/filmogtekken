@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
+import { useRouter } from "next/router";
 import { urlFor } from "../config/client";
 import Image from "next/image";
 import Link from "next/link";
 import { AiFillStar, AiOutlineComment } from "react-icons/ai";
+import { ColorRing } from "react-loader-spinner";
 
 export interface MovieProps {
   title: string;
@@ -12,11 +14,22 @@ export interface MovieProps {
 }
 
 function Movie({ title, poster, movie }: MovieProps) {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    await router.push(`/${movie._id}`);
+    setIsLoading(false);
+  };
+
   return (
     <Link
       href={`/${movie._id}`}
       draggable={false}
-      className="group hover:opacity-75 transition ease-in-out duration-150 transform hover:scale-105 rounded-xl cursor-pointer"
+      className="group hover:opacity-75 transition ease-in-out duration-150 transform hover:scale-105 rounded-xl cursor-pointer relative"
+      onClick={handleClick}
     >
       <div className="relative">
         <Image
@@ -69,6 +82,20 @@ function Movie({ title, poster, movie }: MovieProps) {
           </div>
         </div>
       </div>
+
+      {isLoading && (
+        <div className="absolute inset-0 flex justify-center items-center bg-black bg-opacity-50 rounded-3xl">
+          <ColorRing
+            visible={true}
+            height="80"
+            width="80"
+            ariaLabel="blocks-loading"
+            wrapperStyle={{}}
+            wrapperClass="blocks-wrapper"
+            colors={["#cacaca", "#cacaca", "#cacaca", "#cacaca", "#cacaca"]}
+          />
+        </div>
+      )}
     </Link>
   );
 }
