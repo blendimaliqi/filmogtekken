@@ -21,6 +21,8 @@ export default function App({
           <Head>
             <title>Film med Gutta</title>
           </Head>
+          <style>{`body { overflow-x: hidden; }`}</style>{" "}
+          {/* Prevent horizontal scroll */}
           <div
             style={{ position: "absolute", top: "0", left: "0", zIndex: "2" }}
           >
