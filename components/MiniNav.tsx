@@ -10,12 +10,7 @@ function MiniNav() {
           <li className="  border-transparent hover:text-gray-200 transition duration-300 ease-in-out p-2 z-50">
             <Link href="/">Film</Link>
           </li>
-
-          <li className="ml-10  border-transparent hover:text-gray-200 transition duration-300 ease-in-out p-2 z-50">
-            <Link href="/tekken">Tekken</Link>
-          </li>
         </ul>
-
         <LoginButton />
       </div>
     </nav>
