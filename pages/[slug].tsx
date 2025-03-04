@@ -236,7 +236,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
       </Head>
 
       {/* Hero section with backdrop */}
-      <div className="relative w-full h-[60vh] md:h-[70vh] pt-40">
+      <div className="relative w-full h-[75vh] md:h-[85vh] pt-40">
         {/* Movie backdrop */}
         <div className="absolute inset-0 w-full h-full">
           <Image
@@ -244,11 +244,11 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
             alt="Movie backdrop"
             fill
             priority
-            className="object-cover opacity-80"
+            className="object-cover opacity-90"
           />
-          {/* Subtle gradient overlays for better text readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent" />
+          {/* Enhanced gradient overlays for better text readability while showing more of the image */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
         </div>
 
         {/* Content container */}
@@ -337,7 +337,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
               <div className="mt-6 md:mt-8">
                 {session ? (
                   <button
-                    className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 text-white rounded-lg py-2 px-4 md:py-3 md:px-6 text-sm md:text-base font-medium flex items-center gap-2 transition-all duration-300 shadow-lg hover:shadow-yellow-500/20"
+                    className="bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-500 hover:to-yellow-600 text-white rounded-lg py-2 px-4 md:py-3 md:px-6 text-sm md:text-base font-medium flex items-center gap-2 transition-all duration-300 shadow-lg hover:shadow-yellow-600/20"
                     onClick={() => setOpen(!open)}
                   >
                     <AiFillStar size={18} />

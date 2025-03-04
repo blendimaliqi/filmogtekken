@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Movie from "./Movie";
+import MovieComponent from "./Movie";
 import { client, createPost } from "@/config/client";
 import { Modal } from "./modal/Modal";
 import ModalMovie from "./modal/ModalMovie";
@@ -17,13 +17,22 @@ import { atom, useAtom } from "jotai";
 import { signIn, useSession } from "next-auth/react";
 import { moviesQuery } from "@/utils/groqQueries";
 import { uploadExternalImage, uuidv4 } from "@/utils/helperFunctions";
+import type { Movie } from "@/typings";
+
+interface MovieWithAverageRating extends Movie {
+  averageRating: number;
+}
+
+interface MovieWithTotalComments extends Movie {
+  totalComments: number;
+}
 
 export const searchTermJotai = atom("");
 function Movies() {
   const [movies, setMovies] = useAtom(moviesAtom);
   const [sortMovies, setSortedMovies] = useAtom(moviesSortedAtom);
 
-  const [allMovies, setAllMovies] = useState<any[]>([]);
+  const [allMovies, setAllMovies] = useState<Movie[]>([]);
   const [isContentLoaded, setIsContentLoaded] = useState(false);
 
   const { isLoading, error, data } = useQuery({
@@ -159,92 +168,97 @@ function Movies() {
     if (searchTerm === "") {
       // If the search bar is empty, show all movies
       setMovies(allMovies);
+      setSortedMovies([]);
     } else {
       // If there's a search term, filter movies based on it
-      const results = movies.filter((movie: any) =>
+      const results = allMovies.filter((movie: any) =>
         movie.title.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      setSortedMovies([]);
-      setMovies(results);
+      setSortedMovies(results);
     }
   }, [searchTerm, allMovies]);
 
-  function filterMoviesByHighestAverageRating(movies: any) {
-    const moviesWithAverageRating = movies.map((movie: any) => {
-      const ratings = movie.ratings;
+  function filterMoviesByHighestAverageRating(movies: Movie[]): MovieWithAverageRating[] {
+    const moviesWithAverageRating = movies.map((movie) => {
+      const ratings = movie.ratings || [];
+      let totalRating = 0;
 
-      const averageRating = ratings
-        ? ratings.reduce((a: any, b: any) => a + b.rating, 0) / ratings.length
-        : 0;
+      ratings.forEach((rating) => {
+        totalRating += rating.rating;
+      });
+
+      const averageRating = ratings.length > 0 ? totalRating / ratings.length : 0;
       return { ...movie, averageRating };
     });
 
-    const sortedMovies = moviesWithAverageRating.sort((a: any, b: any) => {
+    const sortedMovies = moviesWithAverageRating.sort((a, b) => {
       return b.averageRating - a.averageRating;
     });
 
     return sortedMovies;
   }
 
-  function filterMoviesByLowestAverageRating(movies: any) {
-    const moviesWithAverageRating = movies.map((movie: any) => {
-      const ratings = movie.ratings;
+  function filterMoviesByLowestAverageRating(movies: Movie[]): MovieWithAverageRating[] {
+    const moviesWithAverageRating = movies.map((movie) => {
+      const ratings = movie.ratings || [];
+      let totalRating = 0;
 
-      const averageRating = ratings
-        ? ratings.reduce((a: any, b: any) => a + b.rating, 0) / ratings.length
-        : 0;
+      ratings.forEach((rating) => {
+        totalRating += rating.rating;
+      });
+
+      const averageRating = ratings.length > 0 ? totalRating / ratings.length : 0;
       return { ...movie, averageRating };
     });
 
-    const sortedMovies = moviesWithAverageRating.sort((a: any, b: any) => {
+    const sortedMovies = moviesWithAverageRating.sort((a, b) => {
       return a.averageRating - b.averageRating;
     });
 
     return sortedMovies;
   }
 
-  function fulterMoviesByHighestTotalComments(movies: any) {
-    const moviesWithTotalComments = movies.map((movie: any) => {
-      const comments = movie.comments;
-
-      const totalComments = comments ? comments.length : 0;
+  function filterMoviesByHighestTotalComments(movies: Movie[]): MovieWithTotalComments[] {
+    const moviesWithTotalComments = movies.map((movie) => {
+      const comments = movie.comments || [];
+      const totalComments = comments.length;
       return { ...movie, totalComments };
     });
 
-    const sortedMovies = moviesWithTotalComments.sort((a: any, b: any) => {
+    const sortedMovies = moviesWithTotalComments.sort((a, b) => {
       return b.totalComments - a.totalComments;
     });
 
     return sortedMovies;
   }
 
-  if (movies.length === 0 && !isLoading && searchTerm !== "")
-    return (
-      <div
-        draggable={false}
-        className="flex flex-col justify-center items-center h-screen w-screen"
-      >
-        <div>
-          <h2 className="text-2xl font-bold mb-6 sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl">
-            Ingen filmer
-          </h2>
-        </div>
-      </div>
-    );
-
   const handleSortByAverageRating = (filter: string) => {
     setSelectValue(filter);
-    if (filter == "highestRating") {
-      const sorted = filterMoviesByHighestAverageRating(movies);
+    
+    // Determine which movie list to sort (filtered by search or all movies)
+    const moviesToSort = searchTerm !== "" ? sortMovies : allMovies;
+    
+    if (filter === "highestRating") {
+      const sorted = filterMoviesByHighestAverageRating(moviesToSort);
       setSortedMovies(sorted);
-    } else if (filter == "lowestRating") {
-      const sorted = filterMoviesByLowestAverageRating(movies);
+    } else if (filter === "lowestRating") {
+      const sorted = filterMoviesByLowestAverageRating(moviesToSort);
       setSortedMovies(sorted);
-    } else if (filter == "highestComments") {
-      const sorted = fulterMoviesByHighestTotalComments(movies);
+    } else if (filter === "highestComments") {
+      const sorted = filterMoviesByHighestTotalComments(moviesToSort);
       setSortedMovies(sorted);
     } else {
-      setSortedMovies([]);
+      // For default sort (most recently added)
+      if (searchTerm !== "") {
+        // If there's a search term, maintain the search results but sort by date
+        const sorted = [...moviesToSort].sort((a, b) => {
+          return new Date(b._createdAt).getTime() - new Date(a._createdAt).getTime();
+        });
+        setSortedMovies(sorted);
+      } else {
+        // If no search term, just clear the sorted movies to show all in default order
+        setSortedMovies([]);
+      }
     }
   };
 
@@ -325,63 +339,62 @@ function Movies() {
 
       {/* Movie grid */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-20 mt-4">
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-10">
-          {/* Add movie button */}
-          <div className="flex items-stretch h-full">
-            {session && status === "authenticated" ? (
-              <button
-                className="w-full h-full aspect-[2/3] bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-white rounded-lg p-6 flex flex-col items-center justify-center space-y-4 transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-gray-800/30 group"
-                onClick={openModal}
-              >
-                <div className="w-16 h-16 rounded-full bg-blue-600/20 flex items-center justify-center group-hover:bg-blue-600/30 transition-all duration-300">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                </div>
-                <span className="font-medium text-lg text-center">Legg til film</span>
-                <p className="text-sm text-gray-400 text-center">Søk etter og legg til nye filmer i samlingen</p>
-              </button>
-            ) : (
-              <button
-                className="w-full h-full aspect-[2/3] bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-white rounded-lg p-6 flex flex-col items-center justify-center space-y-4 transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-gray-800/30 group"
-                onClick={() => signIn()}
-              >
-                <div className="w-16 h-16 rounded-full bg-blue-600/20 flex items-center justify-center group-hover:bg-blue-600/30 transition-all duration-300">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                  </svg>
-                </div>
-                <span className="font-medium text-lg text-center">Logg inn for å legge til filmer</span>
-                <p className="text-sm text-gray-400 text-center">Du må være logget inn for å legge til nye filmer</p>
-              </button>
-            )}
+        {searchTerm !== "" && sortMovies.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="text-gray-400 text-lg mb-2">Ingen filmer funnet for "{searchTerm}"</div>
+            <button 
+              onClick={() => setSearchTerm("")}
+              className="mt-4 px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg transition-colors duration-200"
+            >
+              Vis alle filmer
+            </button>
           </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-10">
+            {/* Add movie button */}
+            <div className="flex items-stretch h-full">
+              {session && status === "authenticated" ? (
+                <button
+                  className="w-full h-full aspect-[2/3] bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-white rounded-lg p-6 flex flex-col items-center justify-center space-y-4 transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-gray-800/30 group"
+                  onClick={openModal}
+                >
+                  <div className="w-16 h-16 rounded-full bg-blue-600/20 flex items-center justify-center group-hover:bg-blue-600/30 transition-all duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </div>
+                  <span className="font-medium text-lg text-center">Legg til film</span>
+                  <p className="text-sm text-gray-400 text-center">Søk etter og legg til nye filmer i samlingen</p>
+                </button>
+              ) : (
+                <button
+                  className="w-full h-full aspect-[2/3] bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-white rounded-lg p-6 flex flex-col items-center justify-center space-y-4 transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-gray-800/30 group"
+                  onClick={() => signIn()}
+                >
+                  <div className="w-16 h-16 rounded-full bg-blue-600/20 flex items-center justify-center group-hover:bg-blue-600/30 transition-all duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
+                  </div>
+                  <span className="font-medium text-lg text-center">Logg inn for å legge til filmer</span>
+                  <p className="text-sm text-gray-400 text-center">Du må være logget inn for å legge til nye filmer</p>
+                </button>
+              )}
+            </div>
 
-          {/* Movie cards */}
-          {(sortMovies.length > 0 ? sortMovies : movies).map((movie: any) => (
-            <Movie
-              key={uuidv4()}
-              title={movie.title}
-              year={movie.year}
-              poster={movie.poster.asset}
-              movie={movie}
-            />
-          ))}
-        </div>
+            {/* Movie cards */}
+            {(sortMovies.length > 0 ? sortMovies : movies).map((movie: any) => (
+              <MovieComponent
+                key={uuidv4()}
+                title={movie.title}
+                year={movie.year}
+                poster={movie.poster.asset}
+                movie={movie}
+              />
+            ))}
+          </div>
+        )}
       </div>
-
-      {/* No results message */}
-      {movies.length === 0 && !isLoading && searchTerm !== "" && (
-        <div className="flex flex-col justify-center items-center py-16">
-          <div className="w-24 h-24 rounded-full bg-gray-800 flex items-center justify-center mb-6">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-white">Ingen filmer</h2>
-          <p className="text-gray-400 mt-2">Prøv å søke etter noe annet</p>
-        </div>
-      )}
 
       {/* Modal for adding movies */}
       <Modal isOpen={isModalOpen} onClose={closeModal}>
@@ -389,7 +402,7 @@ function Movies() {
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h18M3 16h18" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16m8-8H4" />
               </svg>
             </div>
             <h2 className="text-3xl font-bold text-white">Legg til film</h2>

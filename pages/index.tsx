@@ -80,8 +80,8 @@ export default function Home() {
           dynamicHeight={false}
           renderIndicator={(onClickHandler, isSelected, index, label) => {
             const indicatorClasses = isSelected
-              ? "w-12 bg-blue-500"
-              : "w-8 bg-gray-400 hover:bg-gray-300";
+              ? "w-12 bg-yellow-600"
+              : "w-8 bg-gray-700 hover:bg-gray-600";
             
             return (
               <button

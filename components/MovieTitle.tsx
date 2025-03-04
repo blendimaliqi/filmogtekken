@@ -16,7 +16,7 @@ function MovieTitle(movie: any) {
         {/* Metadata row */}
         <div className="flex flex-wrap items-center gap-3 mb-5">
           {movie.movie.ratings && movie.movie.ratings.length > 0 && (
-            <div className="flex items-center bg-yellow-500 bg-opacity-90 backdrop-blur-sm px-3 py-1.5 rounded-md shadow-lg group relative">
+            <div className="flex items-center bg-yellow-600 bg-opacity-90 backdrop-blur-sm px-3 py-1.5 rounded-md shadow-lg group relative">
               <span className="text-lg font-semibold text-white mr-1">
                 {(
                   movie.movie.ratings.reduce(
