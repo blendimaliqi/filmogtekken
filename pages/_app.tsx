@@ -134,30 +134,18 @@ export default function App({
           <Head>
             <title>Film med Gutta</title>
           </Head>
-          <style>{`body { overflow-x: hidden; }`}</style>{" "}
-          {/* Prevent horizontal scroll */}
-          <div
-            style={{ position: "absolute", top: "0", left: "0", zIndex: "2" }}
-          >
+          <style>{`body { overflow-x: hidden; }`}</style>
+          
+          <div style={{ position: "absolute", top: "0", left: "0", zIndex: "20", width: "100%" }}>
             <Nav />
           </div>
           <div className="flex flex-col justify-center items-center">
-            <Image
-              style={{
-                zIndex: "9000000",
-              }}
-              className="flex md:hidden 
-            mx-auto
-            mt-64
-            z-50"
-              src="/fmg.png"
-              alt="Film med Gutta logo"
-              width={200}
-              height={300}
-            />
             <MiniNav />
           </div>
-          <Component {...pageProps} />
+          <div className="pt-0 md:pt-0">
+            <Component {...pageProps} />
+          </div>
+          
           <ToastContainer />
         </Provider>
       </QueryClientProvider>

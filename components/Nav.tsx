@@ -1,54 +1,14 @@
 import Link from "next/link";
-import { useRouter } from "next/router"; // Import useRouter
-import { useAtom, atom } from "jotai";
-import LoginButton from "./LoginButton";
-import {
-  AiOutlineSearch as SearchIcon,
-  AiFillCloseCircle,
-} from "react-icons/ai";
-import { searchTermJotai } from "./Movies";
-import { useEffect, useRef } from "react";
-
-const isSearchOpenAtom = atom(false);
+import { useRouter } from "next/router";
+import { useSession, signIn, signOut } from "next-auth/react";
+import Image from "next/image";
 
 function Nav() {
-  const [isSearchOpen, setIsSearchOpen] = useAtom(isSearchOpenAtom);
-  const [searchTerm, setSearchTerm] = useAtom(searchTermJotai);
-  const router = useRouter(); // Access the router
-
-  const toggleSearch = () => {
-    setIsSearchOpen((prev) => !prev);
-  };
-
-  const clearSearch = () => {
-    setSearchTerm("");
-  };
-
-  // Conditionally render the search input based on the route
-  const isHomePage = router.pathname === "/";
-  const searchInputClassName = `
-    bg-gray-800 text-gray-300 px-2 py-2 pr-10 rounded-lg
-    focus:outline-none
-    transition-all duration-300 ease-in-out
-    ${
-      isSearchOpen
-        ? "scale-100 opacity-100"
-        : "scale-0 opacity-0 pointer-events-none"
-    }
-  `;
-
-  const inputRef = useRef<HTMLInputElement | null>(null);
-
-  // Add an effect to focus the input when isSearchOpen becomes true
-  useEffect(() => {
-    if (isSearchOpen && inputRef.current) {
-      // Check if inputRef.current exists
-      inputRef.current.focus();
-    }
-  }, [isSearchOpen]);
+  const router = useRouter();
+  const { data: session } = useSession();
 
   return (
-    <div className="hidden md:flex items-center p-24 w-[99.6vw] ">
+    <div className="hidden md:flex items-center p-24 w-full bg-transparent z-20">
       <Link
         draggable="false"
         href="/"
@@ -57,51 +17,46 @@ function Nav() {
         Film med Gutta
       </Link>
 
-      <nav className="md:flex md:flex-row md:w-screen md:justify-between hidden items-center">
-        <ul className="flex flex-row w-full text-gray-400 font-semibold space-x-4 text-2xl">
-          {/* <li className="ml-10 border-b-2 border-transparent hover:text-gray-200 transition duration-300 ease-in-out p-2">
-            <Link draggable={false} href="/">
-              Film
-            </Link>
-          </li>
-          <li className="ml-10 border-b-2 border-transparent hover:text-gray-200 transition duration-300 ease-in-out p-2">
-            <Link draggable={false} href="/tekken">
-              Tekken
-            </Link>
-          </li> */}
-        </ul>
-        <div className="flex flex-row pr-4">
-          {isHomePage && (
-            <div className="relative">
-              <input
-                onChange={(e) => setSearchTerm(e.target.value)}
-                value={searchTerm}
-                type="text"
-                placeholder="Søk"
-                className={searchInputClassName}
-                ref={inputRef}
-              />
-              {searchTerm && (
-                <AiFillCloseCircle
-                  className="absolute top-0 right-0 mt-3 mr-2 cursor-pointer text-gray-400 hover:text-gray-200 transition duration-300 ease-in-out"
-                  onClick={() => {
-                    clearSearch();
-                  }}
+      <div className="flex flex-row w-screen justify-end items-center">
+        {session ? (
+          <div className="flex flex-row items-center gap-4 bg-black bg-opacity-50 backdrop-blur-sm p-2 rounded-lg border border-gray-800">
+            <div className="flex flex-row items-center gap-3">
+              <div className="relative group">
+                <Image
+                  draggable={false}
+                  src={
+                    session.user?.image ??
+                    "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Question_mark_%28black%29.svg/800px-Question_mark_%28black%29.svg.png"
+                  }
+                  width={45}
+                  height={45}
+                  alt="discord profile picture"
+                  className="rounded-full border-2 border-yellow-600"
                 />
-              )}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-gray-200 font-medium text-sm">{session.user?.name}</span>
+                <span className="text-yellow-500 text-xs">Logget inn</span>
+              </div>
             </div>
-          )}
-          {isHomePage && (
             <button
-              className="p-2 text-gray-400 hover:text-gray-200 transition duration-300 ease-in-out"
-              onClick={toggleSearch}
+              className="whitespace-nowrap bg-gradient-to-r from-yellow-700 to-yellow-600 px-4 py-2 rounded-lg text-white font-medium
+              hover:from-yellow-600 hover:to-yellow-500 transition duration-300 ease-in-out shadow-md"
+              onClick={() => signOut()}
             >
-              <SearchIcon className="w-6 h-6" />
+              Logg ut
             </button>
-          )}
-        </div>
-        <LoginButton />
-      </nav>
+          </div>
+        ) : (
+          <button
+            className="whitespace-nowrap bg-gradient-to-r from-yellow-700 to-yellow-600 px-4 py-2 rounded-lg text-white font-medium
+            hover:from-yellow-600 hover:to-yellow-500 transition duration-300 ease-in-out shadow-md"
+            onClick={() => signIn('discord')}
+          >
+            Logg inn
+          </button>
+        )}
+      </div>
     </div>
   );
 }

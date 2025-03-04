@@ -267,7 +267,7 @@ function Movies() {
   return (
     <div draggable={false} className="min-h-screen">
       {/* Search and filter section - redesigned to be more subtle */}
-      <div className="w-full bg-gradient-to-b from-black to-transparent py-6">
+      <div className="w-full bg-gradient-to-b from-black to-transparent pt-40 pb-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-end items-center space-y-6 md:space-y-0">
             <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
@@ -325,7 +325,7 @@ function Movies() {
 
       {/* Movie grid */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-20 mt-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-8 md:gap-10">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-10">
           {/* Add movie button */}
           <div className="flex items-stretch h-full">
             {session && status === "authenticated" ? (

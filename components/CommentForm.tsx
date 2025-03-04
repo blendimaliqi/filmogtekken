@@ -209,11 +209,11 @@ function CommentForm({
                   {/* User avatar */}
                   <div className="flex-shrink-0">
                     <Image
-                      src={urlFor(comment.person.image).width(100).height(100).url() || ""}
+                      src={comment.person && comment.person.image ? urlFor(comment.person.image).width(100).height(100).url() : "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Question_mark_%28black%29.svg/800px-Question_mark_%28black%29.svg.png"}
                       width={40}
                       height={40}
                       className="rounded-full border-2 border-gray-800"
-                      alt={comment.person.name || "User"}
+                      alt={comment.person && comment.person.name ? comment.person.name : "User"}
                     />
                   </div>
                   
@@ -221,7 +221,7 @@ function CommentForm({
                   <div className="flex-grow">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-white">{comment.person.name}</span>
+                        <span className="font-medium text-white">{comment.person && comment.person.name ? comment.person.name : "User"}</span>
                         <span className="text-sm text-gray-400">
                           <TimeAgo
                             date={comment.createdAt || comment._createdAt}
@@ -275,7 +275,7 @@ function CommentForm({
                       </div>
                       
                       {/* Delete button (only for own comments) */}
-                      {session && data && comment.person._id === data._id && (
+                      {session && data && comment.person && comment.person._id === data._id && (
                         <button
                           className="text-gray-400 hover:text-red-500 transition-colors duration-200"
                           title="Slett kommentar"
@@ -285,23 +285,27 @@ function CommentForm({
                             );
 
                             if (confirmDelete) {
-                              const movieWithCommentToBeDeleted = await client.getDocument(movieId);
+                              try {
+                                const movieWithCommentToBeDeleted = await clientWithToken.getDocument(movieId);
 
-                              if (!movieWithCommentToBeDeleted) {
-                                console.error("Movie not found.");
-                                return;
+                                if (!movieWithCommentToBeDeleted) {
+                                  console.error("Movie not found.");
+                                  return;
+                                }
+
+                                const updatedComments = [
+                                  ...(movieWithCommentToBeDeleted.comments || []),
+                                ].filter((commentToBeDeleted) => {
+                                  return commentToBeDeleted._key !== comment._key;
+                                });
+
+                                movieWithCommentToBeDeleted.comments = updatedComments;
+
+                                await clientWithToken.createOrReplace(movieWithCommentToBeDeleted);
+                                refetch();
+                              } catch (error) {
+                                console.error("Error deleting comment:", error);
                               }
-
-                              const updatedComments = [
-                                ...(movieWithCommentToBeDeleted.comments || []),
-                              ].filter((commentToBeDeleted) => {
-                                return commentToBeDeleted._key !== comment._key;
-                              });
-
-                              movieWithCommentToBeDeleted.comments = updatedComments;
-
-                              await client.createOrReplace(movieWithCommentToBeDeleted);
-                              refetch();
                             }
                           }}
                         >
