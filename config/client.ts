@@ -4,7 +4,20 @@ import imageUrlBuilder from "@sanity/image-url";
 // Determine which dataset to use based on environment
 const dataset = process.env.NODE_ENV === "development" ? "dev" : "production";
 
+// Check if code is running on server or client
+const isServer = typeof window === 'undefined';
+
+// Create a client for server-side operations
 export const client = createClient({
+  projectId: process.env.SANITY_PROJECT_ID,
+  dataset: dataset,
+  useCdn: false,
+  apiVersion: "2023-05-02",
+  token: process.env.SANITY_TOKEN,
+});
+
+// Create a separate client for browser operations that need write access
+export const clientWithToken = createClient({
   projectId: process.env.SANITY_PROJECT_ID,
   dataset: dataset,
   useCdn: false,
@@ -22,11 +35,11 @@ export async function getPosts() {
 }
 
 export async function createPost(post: any) {
-  const result = client.create(post);
+  const result = clientWithToken.create(post);
   return result;
 }
 
 export async function updateDocumentTitle(_id: string, title: string) {
-  const result = client.patch(_id).set({ title });
+  const result = clientWithToken.patch(_id).set({ title });
   return result;
 }

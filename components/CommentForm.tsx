@@ -1,4 +1,4 @@
-import { client, urlFor } from "@/config/client";
+import { client, clientWithToken, urlFor } from "@/config/client";
 import { uuidv4 } from "@/utils/helperFunctions";
 import React, { useState } from "react";
 import Image from "next/image";
@@ -43,7 +43,7 @@ function CommentForm({
     try {
       e.preventDefault();
       if (!commentText) return;
-      const movie = await client.getDocument(movieId);
+      const movie = await clientWithToken.getDocument(movieId);
 
       if (!movie) {
         console.error("Movie not found.");
@@ -64,7 +64,7 @@ function CommentForm({
       const updatedComments = [...(movie.comments || []), newComment];
       movie.comments = updatedComments;
 
-      await client.createOrReplace(movie);
+      await clientWithToken.createOrReplace(movie);
 
       console.log("Comment posted successfully.");
 

@@ -14,13 +14,14 @@ function HomepageImage({ children, url }: HomepageImageProps) {
       style={{ height: "88vh" }}
     >
       <Image
-        style={{}}
+        style={{ width: "100%", height: "auto" }}
         className="z-0 opacity-50 "
         src={url}
         alt="Homepage background"
         width={0}
         height={0}
         sizes="100vh"
+        priority
       />
       <div
         className="absolute top-0 left-0 w-full h-full"

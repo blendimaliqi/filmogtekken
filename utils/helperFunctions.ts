@@ -1,11 +1,11 @@
-import { client } from "@/config/client";
+import { client, clientWithToken } from "@/config/client";
 import { SanityClient } from "@sanity/cli";
 
 export async function deletePersonByName(
   personNameToDelete: string,
-  client: SanityClient
+  sanityClient: SanityClient = clientWithToken
 ) {
-  client
+  sanityClient
     .fetch(`*[_type == 'person' && name == $name]{_id}`, {
       name: personNameToDelete,
     })
@@ -14,7 +14,7 @@ export async function deletePersonByName(
         const personId = result[0]._id;
 
         // Step 2: Delete the person document using the obtained _id
-        client
+        sanityClient
           .delete(personId)
           .then(() => {
             console.log(`Successfully deleted ${personNameToDelete}`);
@@ -59,6 +59,6 @@ export async function uploadExternalImage(url: string) {
   const blob = await response.blob();
   const contentType = response.headers.get("content-type") || "image/jpeg"; // Provide a default value
 
-  const asset = await client.assets.upload("image", blob, { contentType });
+  const asset = await clientWithToken.assets.upload("image", blob, { contentType });
   return asset;
 }

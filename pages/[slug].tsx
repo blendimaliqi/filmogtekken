@@ -1,5 +1,5 @@
 import RatingModal from "@/components/modal/RatingModal";
-import { client, urlFor } from "@/config/client";
+import { client, clientWithToken, urlFor } from "@/config/client";
 import { movieQuery } from "@/utils/groqQueries";
 import { uploadExternalImage, uuidv4 } from "@/utils/helperFunctions";
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
@@ -119,7 +119,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
           },
         };
 
-        person = await client.create(newPerson);
+        person = await clientWithToken.create(newPerson);
       } else {
         person = existingPerson;
       }
@@ -146,7 +146,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
           movieWithRating.ratings.push(newRating);
         }
 
-        const updatedMovie = await client
+        const updatedMovie = await clientWithToken
           .patch(movieId)
           .set({ ratings: movieWithRating.ratings })
           .commit();
@@ -157,7 +157,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
           rating: rating,
         };
 
-        const updatedMovie = await client
+        const updatedMovie = await clientWithToken
           .patch(movieId)
           .setIfMissing({ ratings: [] })
           .append("ratings", [newRating])
@@ -222,7 +222,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
             height={240}
             src={urlFor(movieData.poster).url()}
             alt={movieData.title}
-            style={{ zIndex: 90 }}
+            style={{ zIndex: 90, width: "auto", height: "auto" }}
             className="mt-10 rounded-3xl no-drag"
           />
           <div className="z-50 flex flex-col items-center lg:items-start justify-center">
@@ -288,7 +288,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
                       style={{ zIndex: 90 }}
                       key={uuidv4()}
                     >
-                      <p>{genre}</p>
+                      {genre}
                     </p>
                   ))}
               </div>
