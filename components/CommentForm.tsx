@@ -51,13 +51,13 @@ function CommentForm({
       }
 
       const newComment = {
-        _type: "comment",
+        _type: "inlineComment",
         person: {
           _type: "reference",
           _ref: personId,
         },
         comment: commentText,
-        _createdAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
         _key: uuidv4(),
       };
 
@@ -75,7 +75,9 @@ function CommentForm({
     }
   }
   const sortedComments = [...(movieData.comments || [])].sort((a, b) => {
-    return new Date(b._createdAt).getTime() - new Date(a._createdAt).getTime();
+    const dateA = a.createdAt || a._createdAt;
+    const dateB = b.createdAt || b._createdAt;
+    return new Date(dateB).getTime() - new Date(dateA).getTime();
   });
 
   const textareaStyle = {
@@ -178,7 +180,7 @@ function CommentForm({
                       <p className="text-gray-400">for</p>
                       <span className="text-gray-400">
                         <TimeAgo
-                          date={comment._createdAt}
+                          date={comment.createdAt || comment._createdAt}
                           formatter={(value, unit, suffix) => {
                             if (unit === "second") {
                               if (value === 1) {

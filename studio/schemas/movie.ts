@@ -11,7 +11,31 @@ export default defineType({
       name: 'comments',
       title: 'Comments',
       type: 'array',
-      of: [{type: 'reference', to: [{type: 'comment'}]}],
+      of: [
+        {type: 'reference', to: [{type: 'comment'}]},
+        {
+          type: 'object',
+          name: 'inlineComment',
+          fields: [
+            {
+              name: 'person',
+              title: 'Person',
+              type: 'reference',
+              to: [{type: 'person'}],
+            },
+            {
+              name: 'comment',
+              title: 'Comment',
+              type: 'text',
+            },
+            {
+              name: 'createdAt',
+              title: 'Created At',
+              type: 'datetime',
+            },
+          ],
+        },
+      ],
     }),
     defineField({
       name: 'title',

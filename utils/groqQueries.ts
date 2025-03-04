@@ -16,7 +16,8 @@ export const movieQuery = `*[_type == "movie" && _id == $movieId] {
     },
     comment,
     _key,
-    _createdAt
+    _createdAt,
+    createdAt
   },
   ratings[] {
     person-> {
@@ -51,7 +52,8 @@ export const moviesQuery = `*[_type == "movie"] {
     },
     comment,
     _key,
-    _createdAt
+    _createdAt,
+    createdAt
   },
   ratings[] {
     person-> {

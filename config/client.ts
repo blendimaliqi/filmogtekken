@@ -1,9 +1,12 @@
 import { createClient } from "@sanity/client";
 import imageUrlBuilder from "@sanity/image-url";
 
+// Determine which dataset to use based on environment
+const dataset = process.env.NODE_ENV === "development" ? "dev" : "production";
+
 export const client = createClient({
   projectId: process.env.SANITY_PROJECT_ID,
-  dataset: "production",
+  dataset: dataset,
   useCdn: false,
   apiVersion: "2023-05-02",
   token: process.env.SANITY_TOKEN,
