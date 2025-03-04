@@ -121,55 +121,55 @@ function CommentForm({
 
   return (
     <div className="w-full">
-      <h2 className="text-2xl font-bold text-white mb-6 border-b border-gray-800 pb-2">Kommentarer</h2>
-      
       {session ? (
-        <form
-          className="mb-12"
-          onSubmit={(e) => postCommentToMovie(movieId, data?._id, commentText, e)}
-        >
-          <div className="flex items-start gap-4">
-            {session.user.image && (
-              <div className="flex-shrink-0">
-                <Image
-                  src={session.user.image}
-                  width={40}
-                  height={40}
-                  alt={session.user.name || "User"}
-                  className="rounded-full border-2 border-gray-700"
-                />
-              </div>
-            )}
-            
-            <div className="flex-grow">
-              <textarea
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                placeholder="Legg til en kommentar..."
-                className="w-full px-4 py-3 bg-gray-800/60 backdrop-blur-sm text-white rounded-xl border border-gray-700/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 min-h-[100px] resize-y"
-              />
+        <div className="bg-black rounded-lg p-6 shadow-lg">
+          <form
+            className="mb-12"
+            onSubmit={(e) => postCommentToMovie(movieId, data?._id, commentText, e)}
+          >
+            <div className="flex items-start gap-4">
+              {session.user.image && (
+                <div className="flex-shrink-0">
+                  <Image
+                    src={session.user.image}
+                    width={40}
+                    height={40}
+                    alt={session.user.name || "User"}
+                    className="rounded-full border-2 border-gray-800 shadow-md"
+                  />
+                </div>
+              )}
               
-              <div className="flex justify-end mt-2">
-                <button
-                  type="submit"
-                  disabled={!commentText.trim()}
-                  className="bg-blue-600 hover:bg-blue-500 text-white rounded-lg py-2 px-6 font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Kommenter
-                </button>
+              <div className="flex-grow">
+                <textarea
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder="Legg til en kommentar..."
+                  className="w-full px-4 py-3 bg-gray-900 text-white rounded-xl border border-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200 min-h-[100px] resize-y"
+                />
+                
+                <div className="flex justify-end mt-2">
+                  <button
+                    type="submit"
+                    disabled={!commentText.trim()}
+                    className="bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg py-2 px-6 font-medium transition-all duration-300 shadow-lg hover:shadow-yellow-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Kommenter
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       ) : (
-        <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-8 flex flex-col items-center justify-center mb-12">
+        <div className="bg-black rounded-lg p-8 flex flex-col items-center justify-center mb-12 border border-gray-800">
           <FaRegCommentDots className="text-5xl text-gray-500 mb-4" />
           <p className="text-xl text-gray-400 text-center mb-6">
             Du må være logget inn for å se og legge til kommentarer
           </p>
           <button
             onClick={() => signIn()}
-            className="bg-gray-700 hover:bg-gray-600 text-white rounded-lg py-3 px-6 font-medium transition-all duration-300 shadow-lg flex items-center gap-2"
+            className="bg-gray-800 hover:bg-gray-700 text-white rounded-lg py-3 px-6 font-medium transition-all duration-300 shadow-lg flex items-center gap-2"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
@@ -183,7 +183,7 @@ function CommentForm({
       {session && (
         <div className="space-y-6">
           {sortedComments.length === 0 ? (
-            <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-8 flex flex-col items-center justify-center">
+            <div className="bg-black rounded-lg p-8 flex flex-col items-center justify-center border border-gray-800">
               <FaRegCommentDots className="text-5xl text-gray-500 mb-4" />
               <p className="text-xl text-gray-400">Ingen kommentarer enda</p>
               <p className="text-gray-500 mt-2">Vær den første til å kommentere!</p>
@@ -192,7 +192,7 @@ function CommentForm({
             sortedComments.map((comment) => (
               <div
                 key={uuidv4()}
-                className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-5 transition-all duration-300 hover:bg-gray-800/60"
+                className="bg-gray-900 rounded-lg p-5 transition-all duration-300 hover:bg-gray-800 border border-gray-800"
               >
                 <div className="flex items-start gap-4">
                   {/* User avatar */}
@@ -201,7 +201,7 @@ function CommentForm({
                       src={urlFor(comment.person.image).width(100).height(100).url() || ""}
                       width={40}
                       height={40}
-                      className="rounded-full border-2 border-gray-700"
+                      className="rounded-full border-2 border-gray-800"
                       alt={comment.person.name || "User"}
                     />
                   </div>

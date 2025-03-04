@@ -219,7 +219,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
   }
 
   return (
-    <main className="min-h-screen bg-gray-900">
+    <main className="min-h-screen bg-black">
       <Head>
         <title>{movieData.title ?? ""}</title>
       </Head>
@@ -236,15 +236,15 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
             className="object-cover opacity-80"
           />
           {/* Subtle gradient overlays for better text readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-gray-900/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent" />
         </div>
 
         {/* Content container */}
         <div className="relative h-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-end pb-16">
           <div className="flex flex-col md:flex-row items-start gap-8">
             {/* Movie poster */}
-            <div className="hidden md:block w-64 h-96 flex-shrink-0 -mb-32 shadow-2xl rounded-xl overflow-hidden border-4 border-gray-900">
+            <div className="hidden md:block w-64 h-96 flex-shrink-0 -mb-32 shadow-2xl rounded-xl overflow-hidden border-4 border-black">
               <Image
                 width={256}
                 height={384}
@@ -260,7 +260,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
               
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-gray-200 mt-4">
                 {movieData.releaseDate && (
-                  <div className="flex items-center bg-gray-900/70 px-3 py-1 rounded-full">
+                  <div className="flex items-center bg-black/80 px-3 py-1 rounded-full">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
@@ -269,7 +269,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
                 )}
                 
                 {movieData.length && (
-                  <div className="flex items-center bg-gray-900/70 px-3 py-1 rounded-full">
+                  <div className="flex items-center bg-black/80 px-3 py-1 rounded-full">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -278,7 +278,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
                 )}
                 
                 {movieData.ratings && movieData.ratings.length > 0 && (
-                  <div className="flex items-center bg-gray-900/70 px-3 py-1 rounded-full group relative">
+                  <div className="flex items-center bg-black/80 px-3 py-1 rounded-full group relative">
                     <AiFillStar className="text-yellow-500 mr-1" />
                     <span>
                       {(
@@ -289,14 +289,14 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
                       ).toFixed(1)}
                     </span>
                     {/* Tooltip */}
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
                       {movieData.ratings.length} {movieData.ratings.length === 1 ? "rating" : "ratings"}
                     </div>
                   </div>
                 )}
                 
                 {movieData.added && (
-                  <div className="flex items-center bg-gray-900/70 px-3 py-1 rounded-full">
+                  <div className="flex items-center bg-black/80 px-3 py-1 rounded-full">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
@@ -351,7 +351,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
 
       {/* Mobile poster (only visible on mobile) */}
       <div className="md:hidden -mt-20 px-4 mb-8">
-        <div className="w-32 h-48 mx-auto shadow-2xl rounded-xl overflow-hidden border-4 border-gray-900">
+        <div className="w-32 h-48 mx-auto shadow-2xl rounded-xl overflow-hidden border-4 border-black">
           <Image
             width={128}
             height={192}
@@ -363,7 +363,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
       </div>
 
       {/* Content section */}
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-20 bg-gray-900">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-20 bg-black">
         <RatingModal
           open={open}
           setOpen={setOpen}
@@ -374,7 +374,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
         {/* Individual ratings section */}
         {movieData.ratings && movieData.ratings.length > 0 && (
           <div className="mt-12 mb-16">
-            <h2 className="text-2xl font-bold text-white mb-6 border-b border-gray-900 pb-2">Individuelle vurderinger</h2>
+            <h2 className="text-2xl font-bold text-white mb-6 border-b border-gray-800 pb-2">Individuelle vurderinger</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-start">
               {movieData.ratings.map((rating: any) => (
                 <div
@@ -387,7 +387,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
                       height={80}
                       src={urlFor(rating.person.image.asset).url()}
                       alt={rating.person.name ?? "Ukjent"}
-                      className="rounded-full w-20 h-20 object-cover border-3 border-gray-700 shadow-md mb-3"
+                      className="rounded-full w-20 h-20 object-cover border-3 border-gray-800 shadow-md mb-3"
                     />
                   )}
                   <div className="text-center">
@@ -404,7 +404,8 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
         )}
 
         {/* Comments section */}
-        <div className="mt-8">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-black">
+          <h2 className="text-2xl font-bold text-white mb-6 border-b border-gray-800 pb-2">Kommentarer</h2>
           <CommentForm
             refetch={refetch}
             movieData={movieData}

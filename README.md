@@ -2,18 +2,19 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Development Environment Setup
 
-This project uses environment variables for configuration. To set up a development environment:
+This project uses environment variables for configuration. To set up your environment:
 
-1. Create a `.env.development` file in the root directory with your development environment variables
-2. Create a `.env.local` file in the root directory with your production environment variables
+1. Rename `env.example` to `.env.development` and `.env.production` for your development and production environments respectively
+2. Update the values in these files with your actual API keys and secrets
+3. The `.env.local` file will be automatically created when you run one of the environment switching scripts
 
 ### Switching Between Environments
 
 The project includes scripts to easily switch between development and production environments:
 
-- `npm run dev:local` - Run the development server with development environment variables
-- `npm run dev:prod` - Run the development server with production environment variables
-- `npm run dev` - Run the development server with the current environment variables
+- `npm run dev:local` - Run the development server with development environment variables (uses `.env.development`)
+- `npm run dev:prod` - Run the development server with production environment variables (uses `.env.production`)
+- `npm run dev` - Run the development server with the current environment variables in `.env.local`
 
 ### Environment Variables
 
@@ -33,6 +34,7 @@ The following environment variables are used in this project:
   - `SANITY_PROJECT_ID` - Sanity project ID
   - `SANITY_TOKEN` - Sanity API token
   - `SANITY_DATASET` - Sanity dataset to use ('dev' or 'production')
+  - `NEXT_PUBLIC_SANITY_DATASET` - Client-side accessible version of SANITY_DATASET
 
 - TMDB API:
   - `TMDB_API_KEY` - The Movie Database API key
