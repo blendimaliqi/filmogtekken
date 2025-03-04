@@ -1,6 +1,6 @@
 import { client, clientWithToken, urlFor } from "@/config/client";
 import { uuidv4, uploadExternalImage } from "@/utils/helperFunctions";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import TimeAgo from "react-timeago";
 import { useQuery } from "@tanstack/react-query";
@@ -27,20 +27,7 @@ function CommentForm({
     enabled: !!session,
   });
 
-  // Check if user's profile image has changed and update it
-  useEffect(() => {
-    if (session && data && session.user.image) {
-      const lastUpdateTime = localStorage.getItem(`profile_update_${data._id}`);
-      const currentTime = Date.now();
-      
-      // Only update if it's been more than 24 hours since the last update
-      if (!lastUpdateTime || (currentTime - parseInt(lastUpdateTime)) > 24 * 60 * 60 * 1000) {
-        updateProfileImageIfChanged(data, session.user.image);
-      }
-    }
-  }, [session, data]);
-
-  async function updateProfileImageIfChanged(person: any, currentImageUrl: string) {
+  const updateProfileImageIfChanged = useCallback(async (person: any, currentImageUrl: string) => {
     if (!person || !person.image || !person.image.asset) return;
     
     try {
@@ -75,7 +62,20 @@ function CommentForm({
     } catch (error) {
       console.error("Error updating profile image:", error);
     }
-  }
+  }, [refetch]);
+
+  // Check if user's profile image has changed and update it
+  useEffect(() => {
+    if (session && data && session.user.image) {
+      const lastUpdateTime = localStorage.getItem(`profile_update_${data._id}`);
+      const currentTime = Date.now();
+      
+      // Only update if it's been more than 24 hours since the last update
+      if (!lastUpdateTime || (currentTime - parseInt(lastUpdateTime)) > 24 * 60 * 60 * 1000) {
+        updateProfileImageIfChanged(data, session.user.image);
+      }
+    }
+  }, [session, data, updateProfileImageIfChanged]);
 
   async function GetPerson() {
     const userName = session.user.name;

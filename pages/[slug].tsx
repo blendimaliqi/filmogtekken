@@ -7,7 +7,7 @@ import { useSession, signIn } from "next-auth/react";
 import Head from "next/head";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AiFillStar } from "react-icons/ai";
 import { ColorRing } from "react-loader-spinner";
 import { Movie } from "../typings";
@@ -64,20 +64,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
     },
   });
 
-  // Check if user's profile image has changed and update it
-  useEffect(() => {
-    if (session && session.user && personData && session.user.image) {
-      const lastUpdateTime = localStorage.getItem(`profile_update_${personData._id}`);
-      const currentTime = Date.now();
-      
-      // Only update if it's been more than 24 hours since the last update
-      if (!lastUpdateTime || (currentTime - parseInt(lastUpdateTime)) > 24 * 60 * 60 * 1000) {
-        updateProfileImageIfChanged(personData, session.user.image);
-      }
-    }
-  }, [session, personData]);
-
-  async function updateProfileImageIfChanged(person: any, currentImageUrl: string) {
+  const updateProfileImageIfChanged = useCallback(async (person: any, currentImageUrl: string) => {
     if (!person || !person.image || !person.image.asset) return;
     
     try {
@@ -112,7 +99,19 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
     } catch (error) {
       console.error("Error updating profile image:", error);
     }
-  }
+  }, [refetchPerson]);
+
+  useEffect(() => {
+    if (session && session.user && personData && session.user.image) {
+      const lastUpdateTime = localStorage.getItem(`profile_update_${personData._id}`);
+      const currentTime = Date.now();
+      
+      // Only update if it's been more than 24 hours since the last update
+      if (!lastUpdateTime || (currentTime - parseInt(lastUpdateTime)) > 24 * 60 * 60 * 1000) {
+        updateProfileImageIfChanged(personData, session.user.image);
+      }
+    }
+  }, [session, personData, updateProfileImageIfChanged]);
 
   if (!movie)
     return (

@@ -166,7 +166,6 @@ function Movies() {
 
   useEffect(() => {
     if (searchTerm === "") {
-      // If the search bar is empty, show all movies
       setMovies(allMovies);
       setSortedMovies([]);
     } else {
@@ -176,7 +175,7 @@ function Movies() {
       );
       setSortedMovies(results);
     }
-  }, [searchTerm, allMovies]);
+  }, [searchTerm, allMovies, setMovies, setSortedMovies]);
 
   function filterMoviesByHighestAverageRating(movies: Movie[]): MovieWithAverageRating[] {
     const moviesWithAverageRating = movies.map((movie) => {
@@ -341,7 +340,7 @@ function Movies() {
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-20 mt-4">
         {searchTerm !== "" && sortMovies.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <div className="text-gray-400 text-lg mb-2">Ingen filmer funnet for "{searchTerm}"</div>
+            <div className="text-gray-400 text-lg mb-2">Ingen filmer funnet for &quot;{searchTerm}&quot;</div>
             <button 
               onClick={() => setSearchTerm("")}
               className="mt-4 px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg transition-colors duration-200"
@@ -358,7 +357,7 @@ function Movies() {
                   className="w-full h-full aspect-[2/3] bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-white rounded-lg p-6 flex flex-col items-center justify-center space-y-4 transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-gray-800/30 group"
                   onClick={openModal}
                 >
-                  <div className="w-16 h-16 rounded-full bg-blue-600/20 flex items-center justify-center group-hover:bg-blue-600/30 transition-all duration-300">
+                  <div className="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center group-hover:bg-blue-600/30 transition-all duration-300">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
@@ -371,7 +370,7 @@ function Movies() {
                   className="w-full h-full aspect-[2/3] bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-white rounded-lg p-6 flex flex-col items-center justify-center space-y-4 transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-gray-800/30 group"
                   onClick={() => signIn()}
                 >
-                  <div className="w-16 h-16 rounded-full bg-blue-600/20 flex items-center justify-center group-hover:bg-blue-600/30 transition-all duration-300">
+                  <div className="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center group-hover:bg-blue-600/30 transition-all duration-300">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                     </svg>

@@ -8,7 +8,7 @@ import { SessionProvider, useSession } from "next-auth/react";
 import Nav from "@/components/Nav";
 import MiniNav from "@/components/MiniNav";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ColorRing } from "react-loader-spinner";
@@ -31,20 +31,7 @@ function ProfileImageUpdater() {
     },
   });
 
-  // Check if user's profile image has changed and update it
-  useEffect(() => {
-    if (session && session.user && personData && session.user.image) {
-      const lastUpdateTime = localStorage.getItem(`profile_update_${personData._id}`);
-      const currentTime = Date.now();
-      
-      // Only update if it's been more than 24 hours since the last update
-      if (!lastUpdateTime || (currentTime - parseInt(lastUpdateTime)) > 24 * 60 * 60 * 1000) {
-        updateProfileImageIfChanged(personData, session.user.image);
-      }
-    }
-  }, [session, personData]);
-
-  async function updateProfileImageIfChanged(person: any, currentImageUrl: string) {
+  const updateProfileImageIfChanged = useCallback(async (person: any, currentImageUrl: string) => {
     if (!person || !person.image || !person.image.asset) return;
     
     try {
@@ -78,7 +65,19 @@ function ProfileImageUpdater() {
     } catch (error) {
       console.error("Error updating profile image globally:", error);
     }
-  }
+  }, [refetchPerson]);
+
+  useEffect(() => {
+    if (session && session.user && personData && session.user.image) {
+      const lastUpdateTime = localStorage.getItem(`profile_update_${personData._id}`);
+      const currentTime = Date.now();
+      
+      // Only update if it's been more than 24 hours since the last update
+      if (!lastUpdateTime || (currentTime - parseInt(lastUpdateTime)) > 24 * 60 * 60 * 1000) {
+        updateProfileImageIfChanged(personData, session.user.image);
+      }
+    }
+  }, [session, personData, updateProfileImageIfChanged]);
 
   return null; // This component doesn't render anything
 }
