@@ -16,7 +16,7 @@ function MovieTitle(movie: any) {
         {/* Metadata row */}
         <div className="flex flex-wrap items-center gap-3 mb-5">
           {movie.movie.ratings && movie.movie.ratings.length > 0 && (
-            <div className="flex items-center bg-yellow-500 bg-opacity-90 backdrop-blur-sm px-3 py-1.5 rounded-md shadow-lg">
+            <div className="flex items-center bg-yellow-500 bg-opacity-90 backdrop-blur-sm px-3 py-1.5 rounded-md shadow-lg group relative">
               <span className="text-lg font-semibold text-white mr-1">
                 {(
                   movie.movie.ratings.reduce(
@@ -26,6 +26,10 @@ function MovieTitle(movie: any) {
                 ).toFixed(1)}
               </span>
               <AiFillStar className="text-white" size={18} />
+              {/* Tooltip */}
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                {movie.movie.ratings.length} {movie.movie.ratings.length === 1 ? "rating" : "ratings"}
+              </div>
             </div>
           )}
           

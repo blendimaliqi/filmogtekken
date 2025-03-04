@@ -186,9 +186,9 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
             priority
             className="object-cover opacity-80"
           />
-          {/* Gradient overlays for better text readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-gray-900/60 via-gray-900/30 to-transparent" />
+          {/* Subtle gradient overlays for better text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-900/30 to-transparent" />
         </div>
 
         {/* Content container */}
@@ -209,10 +209,10 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
             <div className="flex-1">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2">{movieData.title}</h1>
               
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-gray-400 mt-4">
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-gray-200 mt-4">
                 {movieData.releaseDate && (
-                  <div className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="flex items-center bg-gray-900/70 px-3 py-1 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     <span>{new Date(movieData.releaseDate ?? "").getFullYear()}</span>
@@ -220,8 +220,8 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
                 )}
                 
                 {movieData.length && (
-                  <div className="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="flex items-center bg-gray-900/70 px-3 py-1 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span>{movieData.length} min</span>
@@ -229,7 +229,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
                 )}
                 
                 {movieData.ratings && movieData.ratings.length > 0 && (
-                  <div className="flex items-center">
+                  <div className="flex items-center bg-gray-900/70 px-3 py-1 rounded-full group relative">
                     <AiFillStar className="text-yellow-500 mr-1" />
                     <span>
                       {(
@@ -239,38 +239,33 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
                         ) / movieData.ratings.length
                       ).toFixed(1)}
                     </span>
-                    <span className="ml-1 text-sm">
-                      ({movieData.ratings.length} {movieData.ratings.length === 1 ? "rating" : "ratings"})
-                    </span>
+                    {/* Tooltip */}
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                      {movieData.ratings.length} {movieData.ratings.length === 1 ? "rating" : "ratings"}
+                    </div>
                   </div>
                 )}
                 
-                <div className="flex items-center text-gray-500 text-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <span>
-                    {"Lagt til: " +
-                      new Date(movieData._createdAt).toLocaleDateString("no-NO", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                  </span>
-                </div>
+                {movieData.added && (
+                  <div className="flex items-center bg-gray-900/70 px-3 py-1 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    <span>Lagt til: {new Date(movieData.added).toLocaleDateString("no-NO")}</span>
+                  </div>
+                )}
               </div>
-              
+
               {/* Genres */}
-              <div className="flex flex-wrap gap-2 mt-6">
-                {movieData.genres &&
-                  movieData.genres.map((genre: string) => (
-                    <span
-                      key={uuidv4()}
-                      className="px-3 py-1 bg-gray-900/70 backdrop-blur-sm text-gray-300 text-sm rounded-full"
-                    >
-                      {genre}
-                    </span>
-                  ))}
+              <div className="flex flex-wrap gap-2 mt-4">
+                {movieData.genres?.map((genre) => (
+                  <span
+                    key={genre}
+                    className="px-3 py-1 bg-yellow-600/80 text-white text-sm font-medium rounded-full"
+                  >
+                    {genre}
+                  </span>
+                ))}
               </div>
               
               {/* Plot */}
