@@ -7,47 +7,59 @@ import { uuidv4 } from "@/utils/helperFunctions";
 function MovieTitle(movie: any) {
   return (
     <div
-      className="flex flex-col items-start justify-center h-full mt-16 md:mt-52 p-24 z-10000"
-      style={{ zIndex: "100" }}
+      className="flex flex-col items-start justify-center h-full p-8 md:p-16 lg:p-24 z-10"
     >
-      <h1 className="text-2xl md:text-6xl lg:text-8xl text-left font-bold text-white py-8 z-9000">
+      <h1 className="text-3xl md:text-5xl lg:text-7xl text-left font-bold text-white pb-6 drop-shadow-lg">
         {movie.movie.title}
       </h1>
-      {movie.movie.ratings && (
-        <div className="flex items-center">
-          <p className="text-lg md:text-2xl font-light text-white mt-4 flex items-center flex-row gap-2">
-            {(
-              movie.movie.ratings.reduce(
-                (acc: any, curr: any) => acc + curr.rating,
-                0
-              ) / movie.movie.ratings.length
-            ).toFixed(2)}
-            <AiFillStar style={{ marginTop: "4px" }} size={25} />
-          </p>
-        </div>
-      )}
-      <div className="flex">
+      
+      <div className="flex items-center space-x-4 mb-4">
+        {movie.movie.ratings && movie.movie.ratings.length > 0 && (
+          <div className="flex items-center bg-yellow-500/80 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-lg">
+            <span className="text-lg md:text-xl font-semibold text-white mr-1.5">
+              {(
+                movie.movie.ratings.reduce(
+                  (acc: any, curr: any) => acc + curr.rating,
+                  0
+                ) / movie.movie.ratings.length
+              ).toFixed(1)}
+            </span>
+            <AiFillStar className="text-white" size={22} />
+          </div>
+        )}
+        
+        {movie.movie.releaseDate && (
+          <div className="text-lg md:text-xl font-medium text-white/90 bg-gray-800/50 backdrop-blur-sm px-3 py-1.5 rounded-lg">
+            {movie.movie.releaseDate.split("-")[0]}
+          </div>
+        )}
+      </div>
+      
+      <div className="flex flex-wrap gap-2 mb-6">
         {movie.movie.genres &&
           movie.movie.genres.map((genre: string) => (
             <div
-              className="flex flex-wrap text-lg md:text-2xl font-light"
               key={uuidv4()}
+              className="bg-gray-700/50 backdrop-blur-sm px-3 py-1 rounded-lg text-white/90 text-sm md:text-base"
             >
-              <p className="mr-4">{genre}</p>
+              {genre}
             </div>
           ))}
       </div>
+      
+      {movie.movie.plot && (
+        <p className="text-white/80 text-base md:text-lg max-w-2xl mb-6 line-clamp-3">
+          {movie.movie.plot}
+        </p>
+      )}
+      
       <Link
         draggable={false}
         href={`/${movie.movie._id}`}
-        className="flex flex-row items-center justify-center bg-gray-500 bg-opacity-30 hover:bg-opacity-20 transition duration-300 ease-in-out cursor-pointer rounded-2xl p-4 w-40 h-10 md:h-16 md:w-auto mt-4"
+        className="inline-flex items-center justify-center bg-gray-500 bg-opacity-30 hover:bg-opacity-20 text-white font-medium rounded-xl px-6 py-3 transition duration-300 ease-in-out"
       >
-        <div className="flex flex-row items-center justify-center gap-4 ">
-          <FaInfoCircle size={20} color="white" className="mt-1" />
-          <p className="text-base md:text-2xl text-white font-light">
-            Sjekk ut filmen
-          </p>
-        </div>
+        <FaInfoCircle size={18} className="mr-2" />
+        <span className="text-base md:text-lg">Se detaljer</span>
       </Link>
     </div>
   );

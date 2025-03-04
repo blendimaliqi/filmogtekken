@@ -80,209 +80,154 @@ function CommentForm({
     return new Date(dateB).getTime() - new Date(dateA).getTime();
   });
 
-  const textareaStyle = {
-    width: "100%",
-    padding: "0.5rem",
-    marginTop: "0.5rem",
-    borderRadius: "0.375rem",
-    height: "5rem",
-    fontSize: "1.125rem",
-    backgroundColor: "#1f2937", // dark gray background
-    color: "#ffffff", // white text
-    border: "1px solid #4b5563", // gray border
-    outline: "none",
-    transition: "all 0.3s ease",
-  };
-
-  const textareaFocusStyle = {
-    boxShadow: "0 0 0 2px rgba(156, 163, 175, 0.5)", // focus ring
-    borderColor: "transparent",
-  };
-
   return (
-    <form
-      className="z-50 flex flex-col items-center md:items-start justify-start w-full"
-      onSubmit={(e) => postCommentToMovie(movieId, data?._id, commentText, e)}
-    >
-      <h1 className="mt-20 py-4">Kommentarer</h1>
-      {session != null && (
-        <div className="flex flex-col items-stretch md:items-end w-full">
-          <textarea
-            style={textareaStyle}
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            placeholder="Legg til en kommentar"
-            onFocus={(e) => {
-              Object.assign(e.target.style, textareaFocusStyle);
-            }}
-            onBlur={(e) => {
-              e.target.style.boxShadow = "none";
-              e.target.style.borderColor = "#4b5563";
-            }}
-          />
-          <button
-            className="bg-gray-800 text-lg md:text-xl text-gray-400 rounded-md p-2 mt-2 w-full md:w-36 hover:bg-gray-700 hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:focus:ring-gray-600 dark:focus:border-transparent"
-            type="submit"
-          >
-            Kommenter
-          </button>
-        </div>
-      )}
-      {!session && (
-        <div className="flex flex-col items-center justify-center w-full py-8 gap-4">
-          <p className="text-xl text-gray-400 text-center">
+    <div className="w-full">
+      <h2 className="text-2xl font-bold text-white mb-6 border-b border-gray-800 pb-2">Kommentarer</h2>
+      
+      {session ? (
+        <form
+          className="mb-12"
+          onSubmit={(e) => postCommentToMovie(movieId, data?._id, commentText, e)}
+        >
+          <div className="flex items-start gap-4">
+            {session.user.image && (
+              <div className="flex-shrink-0">
+                <Image
+                  src={session.user.image}
+                  width={40}
+                  height={40}
+                  alt={session.user.name || "User"}
+                  className="rounded-full border-2 border-gray-700"
+                />
+              </div>
+            )}
+            
+            <div className="flex-grow">
+              <textarea
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Legg til en kommentar..."
+                className="w-full px-4 py-3 bg-gray-800/60 backdrop-blur-sm text-white rounded-xl border border-gray-700/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 min-h-[100px] resize-y"
+              />
+              
+              <div className="flex justify-end mt-2">
+                <button
+                  type="submit"
+                  disabled={!commentText.trim()}
+                  className="bg-blue-600 hover:bg-blue-500 text-white rounded-lg py-2 px-6 font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Kommenter
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+      ) : (
+        <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-8 flex flex-col items-center justify-center mb-12">
+          <FaRegCommentDots className="text-5xl text-gray-500 mb-4" />
+          <p className="text-xl text-gray-400 text-center mb-6">
             Du må være logget inn for å se og legge til kommentarer
           </p>
           <button
             onClick={() => signIn()}
-            className="bg-gray-800 text-lg md:text-xl text-gray-400 rounded-md p-2 mt-2 w-full md:w-36 hover:bg-gray-700 hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
+            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 text-white rounded-lg py-3 px-6 font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/20 flex items-center gap-2"
           >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+            </svg>
             Logg inn
           </button>
         </div>
       )}
 
-      {session &&
-        (sortedComments.length === 0 ? (
-          <div className="flex flex-col items-center justify-start w-full py-8 gap-2">
-            <FaRegCommentDots className="text-7xl text-gray-400 " />
-            <p className="text-xl text-gray-400">Ingen kommentarer enda</p>
-          </div>
-        ) : (
-          <div className="flex flex-col text-lg md:text-xl max-w-3/4">
-            {sortedComments.map((comment, index) => (
+      {/* Comments list */}
+      {session && (
+        <div className="space-y-6">
+          {sortedComments.length === 0 ? (
+            <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-8 flex flex-col items-center justify-center">
+              <FaRegCommentDots className="text-5xl text-gray-500 mb-4" />
+              <p className="text-xl text-gray-400">Ingen kommentarer enda</p>
+              <p className="text-gray-500 mt-2">Vær den første til å kommentere!</p>
+            </div>
+          ) : (
+            sortedComments.map((comment) => (
               <div
                 key={uuidv4()}
-                className="flex flex-row items-center justify-center md:justify-start w-full p-4 mt-4"
+                className="bg-gray-800/40 backdrop-blur-sm rounded-xl p-5 transition-all duration-300 hover:bg-gray-800/60"
               >
-                <div
-                  className="flex flex-col w-full justify-center items-center md:justify-start md:items-start max-w-3/4"
-                  key={uuidv4()}
-                >
-                  <div className="flex gap-2 text-lg md:text-2xl justify-center md:justify-start">
-                    <div className="flex gap-2 pb-4">
-                      <Image
-                        src={
-                          urlFor(comment.person.image)
-                            .width(100)
-                            .height(100)
-                            .url() || ""
-                        }
-                        width={100}
-                        height={100}
-                        className="rounded-full md:w-12 md:h-12 w-8 h-8"
-                        alt="Profile picture"
-                      />
-
-                      <p className="ml-2 mb-2 text-gray-400 font-bold ">
-                        {comment.person.name}
-                      </p>
-                      <p className="text-gray-400">for</p>
-                      <span className="text-gray-400">
-                        <TimeAgo
-                          date={comment.createdAt || comment._createdAt}
-                          formatter={(value, unit, suffix) => {
-                            if (unit === "second") {
-                              if (value === 1) {
-                                return `${value} sekund ${suffix.replace(
-                                  "ago",
-                                  "siden"
-                                )}`;
-                              } else {
-                                return `${value} sekunder ${suffix.replace(
-                                  "ago",
-                                  "siden"
-                                )}`;
-                              }
-                            } else if (unit === "minute") {
-                              if (value === 1) {
-                                return `${value} minutt ${suffix.replace(
-                                  "ago",
-                                  "siden"
-                                )}`;
-                              } else {
-                                return `${value} minutter ${suffix.replace(
-                                  "ago",
-                                  "siden"
-                                )}`;
-                              }
-                            } else if (unit === "hour") {
-                              if (value === 1) {
-                                return `${value} time ${suffix.replace(
-                                  "ago",
-                                  "siden"
-                                )}`;
-                              } else {
-                                return `${value} timer ${suffix.replace(
-                                  "ago",
-                                  "siden"
-                                )}`;
-                              }
-                            } else if (unit === "day") {
-                              if (value === 1) {
-                                return `${value} dag ${suffix.replace(
-                                  "ago",
-                                  "siden"
-                                )}`;
-                              } else {
-                                return `${value} dager ${suffix.replace(
-                                  "ago",
-                                  "siden"
-                                )}`;
-                              }
-                            } else if (unit === "week") {
-                              if (value === 1) {
-                                return `${value} uke ${suffix.replace(
-                                  "ago",
-                                  "siden"
-                                )}`;
-                              } else {
-                                return `${value} uker ${suffix.replace(
-                                  "ago",
-                                  "siden"
-                                )}`;
-                              }
-                            } else if (unit === "month") {
-                              if (value === 1) {
-                                return `${value} måned ${suffix.replace(
-                                  "ago",
-                                  "siden"
-                                )}`;
-                              } else {
-                                return `${value} måneder ${suffix.replace(
-                                  "ago",
-                                  "siden"
-                                )}`;
-                              }
-                            } else if (unit === "year") {
-                              if (value === 1) {
-                                return `${value} år ${suffix.replace(
-                                  "ago",
-                                  "siden"
-                                )}`;
-                              } else {
-                                return `${value} år ${suffix.replace(
-                                  "ago",
-                                  "siden"
-                                )}`;
-                              }
-                            }
-                          }}
-                        />
-                      </span>
-                    </div>
+                <div className="flex items-start gap-4">
+                  {/* User avatar */}
+                  <div className="flex-shrink-0">
+                    <Image
+                      src={urlFor(comment.person.image).width(100).height(100).url() || ""}
+                      width={40}
+                      height={40}
+                      className="rounded-full border-2 border-gray-700"
+                      alt={comment.person.name || "User"}
+                    />
                   </div>
-                  <div className="flex flex-row items-center justify-center md:justify-start md:items-center max-w-3/4">
-                    <p className="overflow-wrap break-word text-left text-gray-400 w-full">
-                      {comment.comment}
-                    </p>
-                    {session != null &&
-                      data != null &&
-                      comment.person._id == data._id && (
-                        <FaTrashAlt
-                          className="ml-3 text-gray-400 cursor-pointer 
-                      hover:text-gray-300
-                      "
+                  
+                  {/* Comment content */}
+                  <div className="flex-grow">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-white">{comment.person.name}</span>
+                        <span className="text-sm text-gray-400">
+                          <TimeAgo
+                            date={comment.createdAt || comment._createdAt}
+                            formatter={(value, unit, suffix) => {
+                              if (unit === "second") {
+                                if (value === 1) {
+                                  return `${value} sekund ${suffix.replace("ago", "siden")}`;
+                                } else {
+                                  return `${value} sekunder ${suffix.replace("ago", "siden")}`;
+                                }
+                              } else if (unit === "minute") {
+                                if (value === 1) {
+                                  return `${value} minutt ${suffix.replace("ago", "siden")}`;
+                                } else {
+                                  return `${value} minutter ${suffix.replace("ago", "siden")}`;
+                                }
+                              } else if (unit === "hour") {
+                                if (value === 1) {
+                                  return `${value} time ${suffix.replace("ago", "siden")}`;
+                                } else {
+                                  return `${value} timer ${suffix.replace("ago", "siden")}`;
+                                }
+                              } else if (unit === "day") {
+                                if (value === 1) {
+                                  return `${value} dag ${suffix.replace("ago", "siden")}`;
+                                } else {
+                                  return `${value} dager ${suffix.replace("ago", "siden")}`;
+                                }
+                              } else if (unit === "week") {
+                                if (value === 1) {
+                                  return `${value} uke ${suffix.replace("ago", "siden")}`;
+                                } else {
+                                  return `${value} uker ${suffix.replace("ago", "siden")}`;
+                                }
+                              } else if (unit === "month") {
+                                if (value === 1) {
+                                  return `${value} måned ${suffix.replace("ago", "siden")}`;
+                                } else {
+                                  return `${value} måneder ${suffix.replace("ago", "siden")}`;
+                                }
+                              } else if (unit === "year") {
+                                if (value === 1) {
+                                  return `${value} år ${suffix.replace("ago", "siden")}`;
+                                } else {
+                                  return `${value} år ${suffix.replace("ago", "siden")}`;
+                                }
+                              }
+                            }}
+                          />
+                        </span>
+                      </div>
+                      
+                      {/* Delete button (only for own comments) */}
+                      {session && data && comment.person._id === data._id && (
+                        <button
+                          className="text-gray-400 hover:text-red-500 transition-colors duration-200"
                           title="Slett kommentar"
                           onClick={async () => {
                             const confirmDelete = window.confirm(
@@ -290,8 +235,7 @@ function CommentForm({
                             );
 
                             if (confirmDelete) {
-                              const movieWithCommentToBeDeleted =
-                                await client.getDocument(movieId);
+                              const movieWithCommentToBeDeleted = await client.getDocument(movieId);
 
                               if (!movieWithCommentToBeDeleted) {
                                 console.error("Movie not found.");
@@ -304,24 +248,29 @@ function CommentForm({
                                 return commentToBeDeleted._key !== comment._key;
                               });
 
-                              movieWithCommentToBeDeleted.comments =
-                                updatedComments;
+                              movieWithCommentToBeDeleted.comments = updatedComments;
 
-                              await client.createOrReplace(
-                                movieWithCommentToBeDeleted
-                              );
+                              await client.createOrReplace(movieWithCommentToBeDeleted);
                               refetch();
                             }
                           }}
-                        />
+                        >
+                          <FaTrashAlt />
+                        </button>
                       )}
+                    </div>
+                    
+                    <p className="mt-2 text-gray-300 whitespace-pre-wrap break-words">
+                      {comment.comment}
+                    </p>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        ))}
-    </form>
+            ))
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 

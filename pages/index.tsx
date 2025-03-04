@@ -61,25 +61,31 @@ export default function Home() {
   const moviesToDisplay = sortedMovies.slice(0, 5);
 
   return (
-    <main>
-      <Carousel
-        className="hidden md:block "
-        autoPlay={true}
-        interval={10000}
-        stopOnHover={false}
-        infiniteLoop={true}
-        showThumbs={false}
-        showStatus={false}
-      >
-        {moviesToDisplay.map((movie: Movie) => (
-          <HomepageImage
-            key={uuidv4()}
-            url={urlFor(movie.poster_backdrop.asset).url() ?? ""}
-          >
-            <MovieTitle movie={movie} />
-          </HomepageImage>
-        ))}
-      </Carousel>
+    <main className="bg-black">
+      <div className="relative">
+        <Carousel
+          className="hidden md:block"
+          autoPlay={true}
+          interval={10000}
+          stopOnHover={false}
+          infiniteLoop={true}
+          showThumbs={false}
+          showStatus={false}
+        >
+          {moviesToDisplay.map((movie: Movie) => (
+            <HomepageImage
+              key={uuidv4()}
+              url={urlFor(movie.poster_backdrop.asset).url() ?? ""}
+            >
+              <MovieTitle movie={movie} />
+            </HomepageImage>
+          ))}
+        </Carousel>
+        
+        {/* Gradient overlay to create seamless transition to movies section */}
+        <div className="hidden md:block absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-black to-transparent"></div>
+      </div>
+      
       {isMoviesLoaded && <Movies />}
     </main>
   );
