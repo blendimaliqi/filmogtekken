@@ -402,7 +402,7 @@ function Movies() {
                   className="w-full h-full aspect-[2/3] bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-white rounded-lg p-6 flex flex-col items-center justify-center space-y-4 transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-gray-800/30 group"
                   onClick={openModal}
                 >
-                  <div className="w-16 h-16 rounded-full bg-yellow-600 flex items-center justify-center group-hover:bg-yellow-500 transition-all duration-300">
+                  <div className="w-16 h-16 rounded-full bg-yellow-800 flex items-center justify-center group-hover:bg-yellow-600 transition-all duration-300">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="h-8 w-8"
