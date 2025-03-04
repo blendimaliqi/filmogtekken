@@ -12,49 +12,112 @@ export interface MovieProps {
 
 function ModalMovie({ poster, movie }: MovieProps) {
   const url = `https://image.tmdb.org/t/p/w500/${poster}`;
+  const releaseYear = movie.release_date ? movie.release_date.slice(0, 4) : '';
+  const genres = movie.genre_ids ? movie.genre_ids.slice(0, 2) : [];
+  
+  // Map genre IDs to genre names (simplified version)
+  const genreMap: {[key: number]: string} = {
+    28: 'Action',
+    12: 'Eventyr',
+    16: 'Animasjon',
+    35: 'Komedie',
+    80: 'Krim',
+    99: 'Dokumentar',
+    18: 'Drama',
+    10751: 'Familie',
+    14: 'Fantasy',
+    36: 'Historie',
+    27: 'Skrekk',
+    10402: 'Musikk',
+    9648: 'Mysterie',
+    10749: 'Romantikk',
+    878: 'Sci-Fi',
+    10770: 'TV-Film',
+    53: 'Thriller',
+    10752: 'Krig',
+    37: 'Western'
+  };
 
   return (
-    <div className="hover:scale-105 transition duration-200 cursor-pointer">
+    <div className="relative overflow-hidden rounded-lg shadow-lg h-full bg-gray-900/80 backdrop-blur-sm border border-gray-800/50">
       {poster ? (
-        <div>
-          <div className="relative mt-5 rounded-3xl">
+        <>
+          <div className="relative aspect-[2/3] overflow-hidden">
             <Image
-              className="
-              sm:h-96 sm:w-72
-              rounded-3xl"
-              width={200}
-              height={300}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              width={300}
+              height={450}
               src={url}
-              alt="poster"
+              alt={movie.title || "Movie poster"}
             />
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition duration-200 bg-black bg-opacity-80">
-              <div className="flex flex-col justify-between items-center h-full">
-                <span className="text-white font-semibold text-2xl mt-40">
-                  <div className="flex flex-col">
-                    <div className="flex justify-center items-center mb-2">
-                      <p className="text-2xl">
-                        {movie.vote_average.toFixed(2)}
-                      </p>
-                      <AiFillStar style={{ marginTop: "4px" }} size={30} />
-                    </div>
-
-                    <p className="font-light text-center text-base">
-                      {" "}
-                      {movie.vote_count} ratings
-                    </p>
-                  </div>
-                </span>
-                <span className="text-white text-center font-semibold ">
-                  {movie.title}
-                </span>
-                <span className="text-white text-center font-semibold  pb-2">
-                  {movie.release_date.slice(0, 4)}
-                </span>
+            
+            {/* Overlay gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300"></div>
+            
+            {/* Rating badge */}
+            <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm rounded-full px-2 py-0.5 flex items-center gap-0.5">
+              <AiFillStar className="text-yellow-500" size={14} />
+              <span className="text-white text-xs font-medium">{movie.vote_average.toFixed(1)}</span>
+            </div>
+            
+            {/* Year badge */}
+            {releaseYear && (
+              <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm rounded-full px-2 py-0.5">
+                <span className="text-white text-xs font-medium">{releaseYear}</span>
               </div>
+            )}
+            
+            {/* Genres */}
+            <div className="absolute bottom-2 left-2 right-2 flex flex-wrap gap-1">
+              {genres.map((genreId: number) => (
+                <span 
+                  key={genreId} 
+                  className="text-xs px-2 py-0.5 bg-blue-600/70 backdrop-blur-sm rounded-full text-white"
+                >
+                  {genreMap[genreId] || 'Genre'}
+                </span>
+              ))}
             </div>
           </div>
+          
+          {/* Content */}
+          <div className="p-2 text-center">
+            <h3 className="text-white font-medium text-sm line-clamp-1">{movie.title}</h3>
+          </div>
+          
+          {/* Hover overlay with add button */}
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center p-3">
+            <h3 className="text-white font-semibold text-base line-clamp-2 mb-2 text-center">{movie.title}</h3>
+            
+            {movie.overview && (
+              <p className="text-gray-300 text-xs line-clamp-3 mb-3 text-center">
+                {movie.overview}
+              </p>
+            )}
+            
+            <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center">
+                <AiFillStar className="text-yellow-500 mr-1" size={16} />
+                <span className="text-white text-sm">{movie.vote_average.toFixed(1)}</span>
+              </div>
+              <span className="text-gray-400 text-xs">({movie.vote_count})</span>
+            </div>
+            
+            <button className="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Legg til
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="flex items-center justify-center bg-gray-800 aspect-[2/3] rounded-lg p-4">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h18M3 16h18" />
+          </svg>
         </div>
-      ) : null}
+      )}
     </div>
   );
 }
