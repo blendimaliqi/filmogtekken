@@ -24,13 +24,15 @@ function Movies() {
   const [sortMovies, setSortedMovies] = useAtom(moviesSortedAtom);
 
   const [allMovies, setAllMovies] = useState<any[]>([]);
+  const [isContentLoaded, setIsContentLoaded] = useState(false);
 
   const { isLoading, error, data } = useQuery({
     queryKey: ["movies"],
     queryFn: () => client.fetch(moviesQuery),
-    onSuccess: () => {
+    onSuccess: (data) => {
       setMovies(data);
       setAllMovies(data);
+      setIsContentLoaded(true);
     },
   });
   const { data: session, status } = useSession();
@@ -245,6 +247,22 @@ function Movies() {
       setSortedMovies([]);
     }
   };
+
+  if (!isContentLoaded) {
+    return (
+      <div className="flex justify-center items-center h-screen w-screen">
+        <ColorRing
+          visible={true}
+          height="80"
+          width="80"
+          ariaLabel="blocks-loading"
+          wrapperStyle={{}}
+          wrapperClass="blocks-wrapper"
+          colors={["#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff"]}
+        />
+      </div>
+    );
+  }
 
   return (
     <div draggable={false} className="min-h-screen">

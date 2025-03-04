@@ -32,14 +32,17 @@ export default function Home() {
     queryFn: () => client.fetch(moviesQuery),
     onSuccess: (data) => {
       setMovies(data);
-      setIsMoviesLoaded(true);
+      // Add a small delay to ensure DOM is fully updated
+      setTimeout(() => {
+        setIsMoviesLoaded(true);
+      }, 100);
     },
     onError: (error) => refetch(),
   });
 
   if (isLoading || !isMoviesLoaded)
     return (
-      <div style={centerStyle}>
+      <div className="fixed inset-0 flex justify-center items-center bg-black z-50">
         <ColorRing
           visible={true}
           height="80"
