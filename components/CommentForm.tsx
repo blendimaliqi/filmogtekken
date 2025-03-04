@@ -30,7 +30,13 @@ function CommentForm({
   // Check if user's profile image has changed and update it
   useEffect(() => {
     if (session && data && session.user.image) {
-      updateProfileImageIfChanged(data, session.user.image);
+      const lastUpdateTime = localStorage.getItem(`profile_update_${data._id}`);
+      const currentTime = Date.now();
+      
+      // Only update if it's been more than 24 hours since the last update
+      if (!lastUpdateTime || (currentTime - parseInt(lastUpdateTime)) > 24 * 60 * 60 * 1000) {
+        updateProfileImageIfChanged(data, session.user.image);
+      }
     }
   }, [session, data]);
 
@@ -41,8 +47,12 @@ function CommentForm({
       // Get the current image URL from Sanity
       const storedImageUrl = urlFor(person.image).url();
       
+      // Extract just the base URL without query parameters for comparison
+      const storedImageBase = storedImageUrl.split('?')[0];
+      const currentImageBase = currentImageUrl.split('?')[0];
+      
       // If the Discord image URL has changed, update the person's image in Sanity
-      if (storedImageUrl !== currentImageUrl) {
+      if (storedImageBase !== currentImageBase) {
         console.log("Updating profile image...");
         const imageAsset = await uploadExternalImage(currentImageUrl);
         
@@ -59,6 +69,7 @@ function CommentForm({
           .commit();
           
         console.log("Profile image updated successfully");
+        localStorage.setItem(`profile_update_${person._id}`, Date.now().toString());
         refetch();
       }
     } catch (error) {
