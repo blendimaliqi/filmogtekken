@@ -64,50 +64,61 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
     },
   });
 
-  const updateProfileImageIfChanged = useCallback(async (person: any, currentImageUrl: string) => {
-    if (!person || !person.image || !person.image.asset) return;
-    
-    try {
-      // Get the current image URL from Sanity
-      const storedImageUrl = urlFor(person.image).url();
-      
-      // Extract just the base URL without query parameters for comparison
-      const storedImageBase = storedImageUrl.split('?')[0];
-      const currentImageBase = currentImageUrl.split('?')[0];
-      
-      // If the Discord image URL has changed, update the person's image in Sanity
-      if (storedImageBase !== currentImageBase) {
-        console.log("Updating profile image...");
-        const imageAsset = await uploadExternalImage(currentImageUrl);
-        
-        await clientWithToken
-          .patch(person._id)
-          .set({
-            image: {
-              _type: "image",
-              asset: {
-                _ref: imageAsset._id,
+  const updateProfileImageIfChanged = useCallback(
+    async (person: any, currentImageUrl: string) => {
+      if (!person || !person.image || !person.image.asset) return;
+
+      try {
+        // Get the current image URL from Sanity
+        const storedImageUrl = urlFor(person.image).url();
+
+        // Extract just the base URL without query parameters for comparison
+        const storedImageBase = storedImageUrl.split("?")[0];
+        const currentImageBase = currentImageUrl.split("?")[0];
+
+        // If the Discord image URL has changed, update the person's image in Sanity
+        if (storedImageBase !== currentImageBase) {
+          console.log("Updating profile image...");
+          const imageAsset = await uploadExternalImage(currentImageUrl);
+
+          await clientWithToken
+            .patch(person._id)
+            .set({
+              image: {
+                _type: "image",
+                asset: {
+                  _ref: imageAsset._id,
+                },
               },
-            },
-          })
-          .commit();
-          
-        console.log("Profile image updated successfully");
-        localStorage.setItem(`profile_update_${person._id}`, Date.now().toString());
-        refetchPerson();
+            })
+            .commit();
+
+          console.log("Profile image updated successfully");
+          localStorage.setItem(
+            `profile_update_${person._id}`,
+            Date.now().toString()
+          );
+          refetchPerson();
+        }
+      } catch (error) {
+        console.error("Error updating profile image:", error);
       }
-    } catch (error) {
-      console.error("Error updating profile image:", error);
-    }
-  }, [refetchPerson]);
+    },
+    [refetchPerson]
+  );
 
   useEffect(() => {
     if (session && session.user && personData && session.user.image) {
-      const lastUpdateTime = localStorage.getItem(`profile_update_${personData._id}`);
+      const lastUpdateTime = localStorage.getItem(
+        `profile_update_${personData._id}`
+      );
       const currentTime = Date.now();
-      
+
       // Only update if it's been more than 24 hours since the last update
-      if (!lastUpdateTime || (currentTime - parseInt(lastUpdateTime)) > 24 * 60 * 60 * 1000) {
+      if (
+        !lastUpdateTime ||
+        currentTime - parseInt(lastUpdateTime) > 24 * 60 * 60 * 1000
+      ) {
         updateProfileImageIfChanged(personData, session.user.image);
       }
     }
@@ -235,7 +246,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
       </Head>
 
       {/* Hero section with backdrop */}
-      <div className="relative w-full h-[75vh] md:h-[85vh] pt-40">
+      <div className="relative w-full h-[65vh] md:h-[85vh] pt-12 md:pt-24">
         {/* Movie backdrop */}
         <div className="absolute inset-0 w-full h-full">
           <Image
@@ -246,137 +257,285 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
             className="object-cover opacity-90"
           />
           {/* Enhanced gradient overlays for better text readability while showing more of the image */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
         </div>
 
         {/* Content container */}
-        <div className="relative h-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-end pb-8 md:pb-16">
-          <div className="flex flex-col md:flex-row items-start gap-8">
-            {/* Movie poster */}
-            <div className="hidden md:block w-64 h-96 flex-shrink-0 -mb-32 shadow-2xl rounded-xl overflow-hidden border-4 border-black">
-              <Image
-                width={256}
-                height={384}
-                src={urlFor(movieData.poster).url()}
-                alt={movieData.title}
-                className="w-full h-full object-cover"
-              />
+        <div className="relative h-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex md:block">
+          {/* Mobile centered content */}
+          <div className="md:hidden w-full flex flex-col items-center justify-end h-full text-center pb-10">
+            <h1 className="text-3xl font-bold text-white mb-2 max-w-[280px]">
+              {movieData.title}
+            </h1>
+
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-gray-200 mt-4 max-w-[280px]">
+              {movieData.releaseDate && (
+                <div className="flex items-center bg-black/80 px-3 py-1 rounded-full">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 mr-1 text-yellow-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <span className="text-sm">
+                    {new Date(movieData.releaseDate ?? "").getFullYear()}
+                  </span>
+                </div>
+              )}
+
+              {movieData.length && (
+                <div className="flex items-center bg-black/80 px-3 py-1 rounded-full">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 mr-1 text-yellow-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span className="text-sm">{movieData.length} min</span>
+                </div>
+              )}
+
+              {movieData.ratings && movieData.ratings.length > 0 && (
+                <div className="flex items-center bg-black/80 px-3 py-1 rounded-full group relative">
+                  <AiFillStar className="text-yellow-500 mr-1" />
+                  <span className="text-sm">
+                    {(
+                      movieData.ratings.reduce(
+                        (acc: number, curr: any) => acc + curr.rating,
+                        0
+                      ) / movieData.ratings.length
+                    ).toFixed(1)}
+                  </span>
+                </div>
+              )}
             </div>
 
-            {/* Movie info */}
-            <div className="flex-1">
-              <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-2">{movieData.title}</h1>
-              
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-gray-200 mt-4">
-                {movieData.releaseDate && (
-                  <div className="flex items-center bg-black/80 px-3 py-1 rounded-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5 mr-1 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span className="text-sm md:text-base">{new Date(movieData.releaseDate ?? "").getFullYear()}</span>
-                  </div>
-                )}
-                
-                {movieData.length && (
-                  <div className="flex items-center bg-black/80 px-3 py-1 rounded-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5 mr-1 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span className="text-sm md:text-base">{movieData.length} min</span>
-                  </div>
-                )}
-                
-                {movieData.ratings && movieData.ratings.length > 0 && (
-                  <div className="flex items-center bg-black/80 px-3 py-1 rounded-full group relative">
-                    <AiFillStar className="text-yellow-500 mr-1" />
-                    <span className="text-sm md:text-base">
-                      {(
-                        movieData.ratings.reduce(
-                          (acc: number, curr: any) => acc + curr.rating,
-                          0
-                        ) / movieData.ratings.length
-                      ).toFixed(1)}
-                    </span>
-                    {/* Tooltip */}
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                      {movieData.ratings.length} {movieData.ratings.length === 1 ? "rating" : "ratings"}
-                    </div>
-                  </div>
-                )}
-                
-                {movieData.added && (
-                  <div className="flex items-center bg-black/80 px-3 py-1 rounded-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5 mr-1 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    <span className="text-sm md:text-base">Lagt til: {new Date(movieData.added).toLocaleDateString("no-NO")}</span>
-                  </div>
-                )}
+            {/* Genres - Mobile */}
+            <div className="flex flex-wrap gap-2 mt-4 justify-center max-w-[280px]">
+              {movieData.genres?.map((genre) => (
+                <span
+                  key={genre}
+                  className="px-2 py-0.5 bg-yellow-600/80 text-white text-xs font-medium rounded-full"
+                >
+                  {genre}
+                </span>
+              ))}
+            </div>
+
+            {/* Rate button - Mobile */}
+            <div className="mt-6 flex justify-center">
+              {session ? (
+                <button
+                  className="bg-gradient-to-r from-yellow-600 to-yellow-700 text-white rounded-lg py-2 px-4 text-sm font-medium flex items-center gap-2"
+                  onClick={() => setOpen(!open)}
+                >
+                  <AiFillStar size={18} />
+                  <span>Rate denne filmen</span>
+                </button>
+              ) : (
+                <button
+                  className="bg-gradient-to-r from-yellow-600 to-yellow-700 text-white rounded-lg py-2 px-4 text-sm font-medium flex items-center gap-2"
+                  onClick={() => signIn()}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                    />
+                  </svg>
+                  <span>Logg inn for å rate</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Desktop left-aligned content */}
+          <div className="hidden md:flex md:items-end md:h-full pb-16">
+            <div className="flex flex-row items-start gap-8">
+              {/* Movie poster - desktop only */}
+              <div className="w-64 h-[450px] flex-shrink-0 -mb-32 shadow-2xl rounded-xl overflow-hidden border-4 border-black">
+                <Image
+                  width={256}
+                  height={450}
+                  src={urlFor(movieData.poster).url()}
+                  alt={movieData.title}
+                  className="w-full h-full object-cover"
+                />
               </div>
 
-              {/* Genres */}
-              <div className="flex flex-wrap gap-2 mt-4">
-                {movieData.genres?.map((genre) => (
-                  <span
-                    key={genre}
-                    className="px-2 py-0.5 md:px-3 md:py-1 bg-yellow-600/80 text-white text-xs md:text-sm font-medium rounded-full"
-                  >
-                    {genre}
-                  </span>
-                ))}
-              </div>
-              
-              {/* Plot - hidden on small screens, will show below poster */}
-              <p className="hidden md:block mt-6 text-gray-300 text-lg leading-relaxed max-w-3xl">
-                {movieData.plot}
-              </p>
-              
-              {/* Rate button */}
-              <div className="mt-6 md:mt-8">
-                {session ? (
-                  <button
-                    className="bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-500 hover:to-yellow-600 text-white rounded-lg py-2 px-4 md:py-3 md:px-6 text-sm md:text-base font-medium flex items-center gap-2 transition-all duration-300 shadow-lg hover:shadow-yellow-600/20"
-                    onClick={() => setOpen(!open)}
-                  >
-                    <AiFillStar size={18} />
-                    <span>Rate denne filmen</span>
-                  </button>
-                ) : (
-                  <button
-                    className="bg-gray-700 hover:bg-gray-600 text-white rounded-lg py-2 px-4 md:py-3 md:px-6 text-sm md:text-base font-medium flex items-center gap-2 transition-all duration-300 shadow-lg"
-                    onClick={() => signIn()}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                    </svg>
-                    <span>Logg inn for å rate</span>
-                  </button>
-                )}
+              {/* Movie info */}
+              <div className="flex-1 flex flex-col items-start text-left">
+                <h1 className="text-5xl lg:text-6xl font-bold text-white mb-2">
+                  {movieData.title}
+                </h1>
+
+                <div className="flex flex-wrap items-center justify-start gap-x-4 gap-y-2 text-gray-200 mt-4">
+                  {/* Desktop metadata */}
+                  {movieData.releaseDate && (
+                    <div className="flex items-center bg-black/80 px-3 py-1 rounded-full">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-1 text-yellow-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <span className="text-base">
+                        {new Date(movieData.releaseDate ?? "").getFullYear()}
+                      </span>
+                    </div>
+                  )}
+
+                  {movieData.length && (
+                    <div className="flex items-center bg-black/80 px-3 py-1 rounded-full">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-1 text-yellow-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <span className="text-base">{movieData.length} min</span>
+                    </div>
+                  )}
+
+                  {movieData.ratings && movieData.ratings.length > 0 && (
+                    <div className="flex items-center bg-black/80 px-3 py-1 rounded-full group relative">
+                      <AiFillStar className="text-yellow-500 mr-1" />
+                      <span className="text-base">
+                        {(
+                          movieData.ratings.reduce(
+                            (acc: number, curr: any) => acc + curr.rating,
+                            0
+                          ) / movieData.ratings.length
+                        ).toFixed(1)}
+                      </span>
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                        {movieData.ratings.length}{" "}
+                        {movieData.ratings.length === 1 ? "rating" : "ratings"}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Genres - Desktop */}
+                <div className="flex flex-wrap gap-2 mt-4 justify-start">
+                  {movieData.genres?.map((genre) => (
+                    <span
+                      key={genre}
+                      className="px-3 py-1 bg-yellow-600/80 text-white text-sm font-medium rounded-full"
+                    >
+                      {genre}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Plot - Desktop */}
+                <p className="mt-6 text-gray-300 text-lg leading-relaxed max-w-3xl">
+                  {movieData.plot}
+                </p>
+
+                {/* Rate button - Desktop */}
+                <div className="mt-8">
+                  {session ? (
+                    <button
+                      className="bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-500 hover:to-yellow-600 text-white rounded-lg py-3 px-6 text-base font-medium flex items-center gap-2 transition-all duration-300 shadow-lg hover:shadow-yellow-600/20"
+                      onClick={() => setOpen(!open)}
+                    >
+                      <AiFillStar size={18} />
+                      <span>Rate denne filmen</span>
+                    </button>
+                  ) : (
+                    <button
+                      className="bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-500 hover:to-yellow-600 text-white rounded-lg py-3 px-6 text-base font-medium flex items-center gap-2 transition-all duration-300 shadow-lg hover:shadow-yellow-600/20"
+                      onClick={() => signIn()}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                        />
+                      </svg>
+                      <span>Logg inn for å rate</span>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Mobile poster (only visible on mobile) */}
-      <div className="md:hidden -mt-16 px-4 mb-6">
-        <div className="w-36 h-52 mx-auto shadow-2xl rounded-xl overflow-hidden border-4 border-black">
-          <Image
-            width={144}
-            height={208}
-            src={urlFor(movieData.poster).url()}
-            alt={movieData.title}
-            className="w-full h-full object-cover"
-          />
+      {/* Mobile poster and description section */}
+      <div className="md:hidden bg-black">
+        <div className="px-4 pt-0 pb-12">
+          <div className="flex flex-col items-center mx-auto">
+            <div className="w-[280px] h-[420px] shadow-xl rounded-lg overflow-hidden border border-gray-800 mx-auto">
+              <Image
+                width={280}
+                height={420}
+                src={urlFor(movieData.poster).url()}
+                alt={movieData.title}
+                className="w-full h-full object-cover"
+                priority
+              />
+            </div>
+            <div className="mt-8 w-[280px] text-center mx-auto">
+              {/* Plot - Mobile */}
+              <p className="text-gray-300 text-base leading-relaxed mb-6">
+                {movieData.plot}
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* Mobile plot (only visible on mobile) */}
-      <div className="md:hidden px-4 mb-8">
-        <p className="text-gray-300 text-base leading-relaxed">
-          {movieData.plot}
-        </p>
       </div>
 
       {/* Content section */}
@@ -390,8 +549,10 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
 
         {/* Individual ratings section */}
         {movieData.ratings && movieData.ratings.length > 0 && (
-          <div className="mt-8 md:mt-12 mb-12 md:mb-16">
-            <h2 className="text-xl md:text-2xl font-bold text-white mb-4 md:mb-6 border-b border-gray-800 pb-2">Individuelle vurderinger</h2>
+          <div className="mt-16 md:mt-32 mb-12 md:mb-16">
+            <h2 className="text-xl md:text-2xl font-bold text-white mb-4 md:mb-6 border-b border-gray-800 pb-2">
+              Individuelle vurderinger
+            </h2>
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 justify-items-start">
               {movieData.ratings.map((rating: any) => (
                 <div
@@ -425,7 +586,9 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
 
         {/* Comments section */}
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-16 bg-black">
-          <h2 className="text-xl md:text-2xl font-bold text-white mb-4 md:mb-6 border-b border-gray-800 pb-2">Kommentarer</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-white mb-4 md:mb-6 border-b border-gray-800 pb-2">
+            Kommentarer
+          </h2>
           <CommentForm
             refetch={refetch}
             movieData={movieData}
