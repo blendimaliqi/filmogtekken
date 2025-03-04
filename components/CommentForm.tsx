@@ -1,6 +1,6 @@
 import { client, clientWithToken, urlFor } from "@/config/client";
-import { uuidv4 } from "@/utils/helperFunctions";
-import React, { useState } from "react";
+import { uuidv4, uploadExternalImage } from "@/utils/helperFunctions";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import TimeAgo from "react-timeago";
 import { useQuery } from "@tanstack/react-query";
@@ -26,6 +26,45 @@ function CommentForm({
     onError: (error) => refetch(),
     enabled: !!session,
   });
+
+  // Check if user's profile image has changed and update it
+  useEffect(() => {
+    if (session && data && session.user.image) {
+      updateProfileImageIfChanged(data, session.user.image);
+    }
+  }, [session, data]);
+
+  async function updateProfileImageIfChanged(person: any, currentImageUrl: string) {
+    if (!person || !person.image || !person.image.asset) return;
+    
+    try {
+      // Get the current image URL from Sanity
+      const storedImageUrl = urlFor(person.image).url();
+      
+      // If the Discord image URL has changed, update the person's image in Sanity
+      if (storedImageUrl !== currentImageUrl) {
+        console.log("Updating profile image...");
+        const imageAsset = await uploadExternalImage(currentImageUrl);
+        
+        await clientWithToken
+          .patch(person._id)
+          .set({
+            image: {
+              _type: "image",
+              asset: {
+                _ref: imageAsset._id,
+              },
+            },
+          })
+          .commit();
+          
+        console.log("Profile image updated successfully");
+        refetch();
+      }
+    } catch (error) {
+      console.error("Error updating profile image:", error);
+    }
+  }
 
   async function GetPerson() {
     const userName = session.user.name;
@@ -130,7 +169,7 @@ function CommentForm({
           </p>
           <button
             onClick={() => signIn()}
-            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 text-white rounded-lg py-3 px-6 font-medium transition-all duration-300 shadow-lg hover:shadow-blue-500/20 flex items-center gap-2"
+            className="bg-gray-700 hover:bg-gray-600 text-white rounded-lg py-3 px-6 font-medium transition-all duration-300 shadow-lg flex items-center gap-2"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />

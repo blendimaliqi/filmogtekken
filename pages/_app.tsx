@@ -2,9 +2,9 @@ import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import Image from "next/image";
 import Head from "next/head";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Provider } from "jotai";
-import { SessionProvider } from "next-auth/react";
+import { SessionProvider, useSession } from "next-auth/react";
 import Nav from "@/components/Nav";
 import MiniNav from "@/components/MiniNav";
 import { useRouter } from "next/router";
@@ -12,6 +12,66 @@ import { useEffect, useState } from "react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ColorRing } from "react-loader-spinner";
+import { client, clientWithToken, urlFor } from "@/config/client";
+import { uploadExternalImage } from "@/utils/helperFunctions";
+
+// Component to handle profile image updates
+function ProfileImageUpdater() {
+  const { data: session } = useSession();
+  
+  // Query to get the current user's person record
+  const { data: personData, refetch: refetchPerson } = useQuery({
+    queryKey: ["globalCurrentPerson"],
+    enabled: !!session && !!session.user,
+    queryFn: async () => {
+      if (!session || !session.user || !session.user.name) return null;
+      const personQuery = `*[_type == "person" && name == "${session.user.name}"]`;
+      const result = await client.fetch(personQuery);
+      return result[0] || null;
+    },
+  });
+
+  // Check if user's profile image has changed and update it
+  useEffect(() => {
+    if (session && session.user && personData && session.user.image) {
+      updateProfileImageIfChanged(personData, session.user.image);
+    }
+  }, [session, personData]);
+
+  async function updateProfileImageIfChanged(person: any, currentImageUrl: string) {
+    if (!person || !person.image || !person.image.asset) return;
+    
+    try {
+      // Get the current image URL from Sanity
+      const storedImageUrl = urlFor(person.image).url();
+      
+      // If the Discord image URL has changed, update the person's image in Sanity
+      if (storedImageUrl !== currentImageUrl) {
+        console.log("Updating profile image globally...");
+        const imageAsset = await uploadExternalImage(currentImageUrl);
+        
+        await clientWithToken
+          .patch(person._id)
+          .set({
+            image: {
+              _type: "image",
+              asset: {
+                _ref: imageAsset._id,
+              },
+            },
+          })
+          .commit();
+          
+        console.log("Profile image updated successfully globally");
+        refetchPerson();
+      }
+    } catch (error) {
+      console.error("Error updating profile image globally:", error);
+    }
+  }
+
+  return null; // This component doesn't render anything
+}
 
 export default function App({
   Component,
@@ -47,6 +107,7 @@ export default function App({
     <SessionProvider session={session}>
       <QueryClientProvider client={queryClient}>
         <Provider>
+          <ProfileImageUpdater />
           {loading && (
             <div className="fixed inset-0 flex justify-center items-center bg-black z-50">
               <ColorRing

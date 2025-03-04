@@ -38,6 +38,7 @@ export interface Movie {
   };
   externalId: number;
   popularity: number;
+  added?: string; // Date when the movie was added
 }
 
 // Assuming you have a BlockContent interface defined, you can define it like this:

@@ -7,7 +7,7 @@ import { useSession, signIn } from "next-auth/react";
 import Head from "next/head";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AiFillStar } from "react-icons/ai";
 import { ColorRing } from "react-loader-spinner";
 import { Movie } from "../typings";
@@ -52,6 +52,57 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
     queryFn: () => client.fetch(movieQuery, { movieId: router.query.slug }),
   });
 
+  // Query to get the current user's person record
+  const { data: personData, refetch: refetchPerson } = useQuery({
+    queryKey: ["currentPerson"],
+    enabled: !!session && !!session.user,
+    queryFn: async () => {
+      if (!session || !session.user || !session.user.name) return null;
+      const personQuery = `*[_type == "person" && name == "${session.user.name}"]`;
+      const result = await client.fetch(personQuery);
+      return result[0] || null;
+    },
+  });
+
+  // Check if user's profile image has changed and update it
+  useEffect(() => {
+    if (session && session.user && personData && session.user.image) {
+      updateProfileImageIfChanged(personData, session.user.image);
+    }
+  }, [session, personData]);
+
+  async function updateProfileImageIfChanged(person: any, currentImageUrl: string) {
+    if (!person || !person.image || !person.image.asset) return;
+    
+    try {
+      // Get the current image URL from Sanity
+      const storedImageUrl = urlFor(person.image).url();
+      
+      // If the Discord image URL has changed, update the person's image in Sanity
+      if (storedImageUrl !== currentImageUrl) {
+        console.log("Updating profile image...");
+        const imageAsset = await uploadExternalImage(currentImageUrl);
+        
+        await clientWithToken
+          .patch(person._id)
+          .set({
+            image: {
+              _type: "image",
+              asset: {
+                _ref: imageAsset._id,
+              },
+            },
+          })
+          .commit();
+          
+        console.log("Profile image updated successfully");
+        refetchPerson();
+      }
+    } catch (error) {
+      console.error("Error updating profile image:", error);
+    }
+  }
+
   if (!movie)
     return (
       <div style={centerStyle}>
@@ -87,10 +138,8 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
 
   async function rateMovie(movieId: string, rating: number) {
     try {
-      if (session == null || session == undefined) {
+      if (!session || !session.user || !session.user.name) {
         return;
-      } else {
-        if (session.user == null || session.user == undefined) return;
       }
       const userName = session.user.name;
       const personQuery = `*[_type == "person" && name == "${userName}"]`;
@@ -285,7 +334,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
                   </button>
                 ) : (
                   <button
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 text-white rounded-lg py-3 px-6 font-medium flex items-center gap-2 transition-all duration-300 shadow-lg hover:shadow-blue-500/20"
+                    className="bg-gray-700 hover:bg-gray-600 text-white rounded-lg py-3 px-6 font-medium flex items-center gap-2 transition-all duration-300 shadow-lg"
                     onClick={() => signIn()}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -326,26 +375,26 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
         {movieData.ratings && movieData.ratings.length > 0 && (
           <div className="mt-12 mb-16">
             <h2 className="text-2xl font-bold text-white mb-6 border-b border-gray-900 pb-2">Individuelle vurderinger</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-start">
               {movieData.ratings.map((rating: any) => (
                 <div
                   key={uuidv4()}
-                  className="bg-gray-900/70 backdrop-blur-sm rounded-xl p-4 flex items-center gap-4 transition-transform duration-300 hover:transform hover:scale-105"
+                  className="flex flex-col items-center transition-transform duration-300 hover:transform hover:scale-105"
                 >
                   {rating.person.image.asset && (
                     <Image
-                      width={48}
-                      height={48}
+                      width={80}
+                      height={80}
                       src={urlFor(rating.person.image.asset).url()}
                       alt={rating.person.name ?? "Ukjent"}
-                      className="rounded-full w-12 h-12 object-cover border-2 border-gray-700"
+                      className="rounded-full w-20 h-20 object-cover border-3 border-gray-700 shadow-md mb-3"
                     />
                   )}
-                  <div>
-                    <p className="text-white font-medium">{rating.person.name}</p>
-                    <div className="flex items-center mt-1">
-                      <span className="text-xl font-bold text-yellow-500">{rating.rating}</span>
-                      <AiFillStar className="text-yellow-500 ml-1" />
+                  <div className="text-center">
+                    <p className="text-white text-lg font-medium">{rating.person.name}</p>
+                    <div className="flex items-center justify-center mt-2">
+                      <span className="text-2xl font-bold text-yellow-500">{rating.rating}</span>
+                      <AiFillStar className="text-yellow-500 ml-1 text-2xl" />
                     </div>
                   </div>
                 </div>

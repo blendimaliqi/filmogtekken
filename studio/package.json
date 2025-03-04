@@ -6,6 +6,8 @@
   "license": "UNLICENSED",
   "scripts": {
     "dev": "sanity dev",
+    "dev:local": "node scripts/switch-env.js development && sanity dev",
+    "dev:prod": "node scripts/switch-env.js production && sanity dev",
     "start": "sanity start",
     "build": "sanity build",
     "deploy": "sanity deploy",

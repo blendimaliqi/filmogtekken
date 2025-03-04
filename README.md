@@ -32,6 +32,7 @@ The following environment variables are used in this project:
 - Sanity CMS:
   - `SANITY_PROJECT_ID` - Sanity project ID
   - `SANITY_TOKEN` - Sanity API token
+  - `SANITY_DATASET` - Sanity dataset to use ('dev' or 'production')
 
 - TMDB API:
   - `TMDB_API_KEY` - The Movie Database API key
@@ -49,3 +50,22 @@ npm run dev:prod
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## Sanity Studio
+
+The project includes a Sanity Studio for content management. To run the Sanity Studio:
+
+```bash
+# Navigate to the studio directory
+cd studio
+
+# Use development environment
+npm run dev:local
+
+# Or use production environment
+npm run dev:prod
+```
+
+Open [http://localhost:3333](http://localhost:3333) with your browser to access the Sanity Studio.
+
+**Important**: When switching between development and production environments, you need to run the corresponding environment script for both the Next.js app and the Sanity Studio to ensure they're both using the same dataset.

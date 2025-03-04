@@ -1,8 +1,17 @@
 import { createClient } from "@sanity/client";
 import imageUrlBuilder from "@sanity/image-url";
 
-// Determine which dataset to use based on environment
-const dataset = process.env.NODE_ENV === "development" ? "dev" : "production";
+// Determine which dataset to use based on custom environment variable
+// Try the NEXT_PUBLIC version first (for client-side), then fallback to server-only version
+const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || process.env.SANITY_DATASET || "dev";
+
+// Debug which dataset is being used
+console.log("Next.js app using Sanity dataset:", dataset);
+console.log("Environment variables:", {
+  NEXT_PUBLIC_SANITY_DATASET: process.env.NEXT_PUBLIC_SANITY_DATASET,
+  SANITY_DATASET: process.env.SANITY_DATASET,
+  NODE_ENV: process.env.NODE_ENV
+});
 
 // Check if code is running on server or client
 const isServer = typeof window === 'undefined';
