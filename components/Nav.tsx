@@ -20,23 +20,25 @@ function Nav() {
       <div className="flex flex-row w-screen justify-end items-center">
         {session ? (
           <div className="flex flex-row items-center gap-4 bg-black bg-opacity-50 backdrop-blur-sm p-2 rounded-lg border border-gray-800">
-            <div className="flex flex-row items-center gap-3">
-              <div className="relative group">
-                <Image
-                  draggable={false}
-                  src={
-                    session.user?.image ??
-                    "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Question_mark_%28black%29.svg/800px-Question_mark_%28black%29.svg.png"
-                  }
-                  width={45}
-                  height={45}
-                  alt="discord profile picture"
-                  className="rounded-full border-2 border-yellow-600"
-                />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-gray-200 font-medium text-sm">{session.user?.name}</span>
-                <span className="text-yellow-500 text-xs">Logget inn</span>
+            <div className="flex flex-row items-center gap-3 group relative">
+              <Image
+                draggable={false}
+                src={
+                  session.user?.image ??
+                  "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Question_mark_%28black%29.svg/800px-Question_mark_%28black%29.svg.png"
+                }
+                width={45}
+                height={45}
+                alt="discord profile picture"
+                className="rounded-full border-2 border-yellow-600"
+              />
+              <div className="absolute left-full ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap bg-black bg-opacity-90 backdrop-blur-sm p-2 rounded-lg border border-gray-800 pointer-events-none">
+                <div className="flex flex-col">
+                  <span className="text-gray-200 font-medium text-sm">
+                    {session.user?.name}
+                  </span>
+                  <span className="text-yellow-500 text-xs">Logget inn</span>
+                </div>
               </div>
             </div>
             <button
@@ -51,7 +53,7 @@ function Nav() {
           <button
             className="whitespace-nowrap bg-gradient-to-r from-yellow-700 to-yellow-600 px-4 py-2 rounded-lg text-white font-medium
             hover:from-yellow-600 hover:to-yellow-500 transition duration-300 ease-in-out shadow-md"
-            onClick={() => signIn('discord')}
+            onClick={() => signIn("discord")}
           >
             Logg inn
           </button>
