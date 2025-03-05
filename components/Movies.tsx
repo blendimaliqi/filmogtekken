@@ -109,6 +109,88 @@ function Movies({ movies: propMovies }: MoviesProps) {
   const [allMovies, setAllMovies] = useState<Movie[]>([]);
   const [isContentLoaded, setIsContentLoaded] = useState(false);
 
+  // Define filter functions
+  function filterMoviesByHighestAverageRating(
+    moviesToFilter: Movie[]
+  ): MovieWithAverageRating[] {
+    return moviesToFilter
+      .map((movie) => {
+        const ratings = movie.ratings || [];
+        const totalRatings = ratings.length;
+        const sumRatings = ratings.reduce(
+          (sum, rating) => sum + rating.rating,
+          0
+        );
+        const averageRating = totalRatings > 0 ? sumRatings / totalRatings : 0;
+
+        return {
+          ...movie,
+          averageRating,
+        };
+      })
+      .sort((a, b) => b.averageRating - a.averageRating);
+  }
+
+  function filterMoviesByLowestAverageRating(
+    moviesToFilter: Movie[]
+  ): MovieWithAverageRating[] {
+    return moviesToFilter
+      .map((movie) => {
+        const ratings = movie.ratings || [];
+        const totalRatings = ratings.length;
+        const sumRatings = ratings.reduce(
+          (sum, rating) => sum + rating.rating,
+          0
+        );
+        const averageRating = totalRatings > 0 ? sumRatings / totalRatings : 0;
+
+        return {
+          ...movie,
+          averageRating,
+        };
+      })
+      .sort((a, b) => a.averageRating - b.averageRating);
+  }
+
+  function filterMoviesByHighestTotalComments(
+    moviesToFilter: Movie[]
+  ): MovieWithTotalComments[] {
+    return moviesToFilter
+      .map((movie) => {
+        const totalComments = movie.comments ? movie.comments.length : 0;
+        return {
+          ...movie,
+          totalComments,
+        };
+      })
+      .sort((a, b) => b.totalComments - a.totalComments);
+  }
+
+  // Memoize the handleSortByAverageRating function
+  const handleSortByAverageRating = useCallback(
+    (filter: string) => {
+      // Update the Jotai atom to persist the filter selection
+      setMoviesFiltered(filter);
+
+      if (filter === "highest") {
+        const sortedByHighestRating =
+          filterMoviesByHighestAverageRating(moviesToUse);
+        setSortedMovies(sortedByHighestRating);
+      } else if (filter === "lowest") {
+        const sortedByLowestRating =
+          filterMoviesByLowestAverageRating(moviesToUse);
+        setSortedMovies(sortedByLowestRating);
+      } else if (filter === "comments") {
+        const sortedByComments =
+          filterMoviesByHighestTotalComments(moviesToUse);
+        setSortedMovies(sortedByComments);
+      } else if (filter === "default") {
+        setSortedMovies([]);
+      }
+    },
+    [moviesToUse, setSortedMovies, setMoviesFiltered]
+  );
+
   // Add useEffect to trigger search when searchTerm changes
   useEffect(() => {
     if (searchTerm !== "") {
@@ -117,6 +199,13 @@ function Movies({ movies: propMovies }: MoviesProps) {
       setSortedMovies([]);
     }
   }, [searchTerm, getMovieRequest, isModalOpen, setSortedMovies]);
+
+  // Add useEffect to apply the filter when component mounts or movies data changes
+  useEffect(() => {
+    if (moviesToUse.length > 0 && moviesFiltered !== "default") {
+      handleSortByAverageRating(moviesFiltered);
+    }
+  }, [moviesToUse, moviesFiltered, handleSortByAverageRating]);
 
   const {
     isLoading: queryLoading,
@@ -308,79 +397,6 @@ function Movies({ movies: propMovies }: MoviesProps) {
       );
     }
   }
-
-  function filterMoviesByHighestAverageRating(
-    moviesToFilter: Movie[]
-  ): MovieWithAverageRating[] {
-    return moviesToFilter
-      .map((movie) => {
-        const ratings = movie.ratings || [];
-        const totalRatings = ratings.length;
-        const sumRatings = ratings.reduce(
-          (sum, rating) => sum + rating.rating,
-          0
-        );
-        const averageRating = totalRatings > 0 ? sumRatings / totalRatings : 0;
-
-        return {
-          ...movie,
-          averageRating,
-        };
-      })
-      .sort((a, b) => b.averageRating - a.averageRating);
-  }
-
-  function filterMoviesByLowestAverageRating(
-    moviesToFilter: Movie[]
-  ): MovieWithAverageRating[] {
-    return moviesToFilter
-      .map((movie) => {
-        const ratings = movie.ratings || [];
-        const totalRatings = ratings.length;
-        const sumRatings = ratings.reduce(
-          (sum, rating) => sum + rating.rating,
-          0
-        );
-        const averageRating = totalRatings > 0 ? sumRatings / totalRatings : 0;
-
-        return {
-          ...movie,
-          averageRating,
-        };
-      })
-      .sort((a, b) => a.averageRating - b.averageRating);
-  }
-
-  function filterMoviesByHighestTotalComments(
-    moviesToFilter: Movie[]
-  ): MovieWithTotalComments[] {
-    return moviesToFilter
-      .map((movie) => {
-        const totalComments = movie.comments ? movie.comments.length : 0;
-        return {
-          ...movie,
-          totalComments,
-        };
-      })
-      .sort((a, b) => b.totalComments - a.totalComments);
-  }
-
-  const handleSortByAverageRating = (filter: string) => {
-    if (filter === "highest") {
-      const sortedByHighestRating =
-        filterMoviesByHighestAverageRating(moviesToUse);
-      setSortedMovies(sortedByHighestRating);
-    } else if (filter === "lowest") {
-      const sortedByLowestRating =
-        filterMoviesByLowestAverageRating(moviesToUse);
-      setSortedMovies(sortedByLowestRating);
-    } else if (filter === "comments") {
-      const sortedByComments = filterMoviesByHighestTotalComments(moviesToUse);
-      setSortedMovies(sortedByComments);
-    } else if (filter === "default") {
-      setSortedMovies([]);
-    }
-  };
 
   // Determine the overall loading state
   const isPageLoading =
