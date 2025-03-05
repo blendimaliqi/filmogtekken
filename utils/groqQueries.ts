@@ -1,4 +1,4 @@
-export const movieQuery = `*[_type == "movie" && _id == $movieId] {
+export const movieQuery = `*[_type == "movie" && (slug.current == $movieId || _id == $movieId)][0] {
   _id,
   title,
   releaseDate,
@@ -29,7 +29,7 @@ export const movieQuery = `*[_type == "movie" && _id == $movieId] {
   },
   length,
   _createdAt
-}[0]`;
+}`;
 
 export const moviesQuery = `*[_type == "movie"] {
   _id,

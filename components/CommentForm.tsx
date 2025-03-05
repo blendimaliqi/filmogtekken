@@ -1,11 +1,16 @@
 import { client, clientWithToken, urlFor } from "@/config/client";
-import { uuidv4, uploadExternalImage } from "@/utils/helperFunctions";
 import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import TimeAgo from "react-timeago";
-import { useQuery } from "@tanstack/react-query";
 import { FaRegCommentDots, FaTrashAlt } from "react-icons/fa";
 import { signIn } from "next-auth/react";
+import {
+  useCurrentPerson,
+  useAddComment,
+  useDeleteComment,
+  useUpdateProfileImage,
+  useComments,
+} from "@/hooks";
 
 function CommentForm({
   movieId,
@@ -20,12 +25,15 @@ function CommentForm({
 }) {
   const [commentText, setCommentText] = useState("");
 
-  const { data } = useQuery({
-    queryKey: ["person"],
-    queryFn: () => GetPerson(),
-    onError: (error) => refetch(),
-    enabled: !!session,
-  });
+  // Use our custom hooks
+  const { data: personData } = useCurrentPerson();
+  const addComment = useAddComment();
+  const deleteComment = useDeleteComment();
+  const updateProfileImage = useUpdateProfileImage();
+
+  // Fetch comments using the useComments hook
+  const { data: commentsData, isLoading: commentsLoading } =
+    useComments(movieId);
 
   const updateProfileImageIfChanged = useCallback(
     async (person: any, currentImageUrl: string) => {
@@ -42,38 +50,38 @@ function CommentForm({
         // If the Discord image URL has changed, update the person's image in Sanity
         if (storedImageBase !== currentImageBase) {
           console.log("Updating profile image...");
-          const imageAsset = await uploadExternalImage(currentImageUrl);
 
-          await clientWithToken
-            .patch(person._id)
-            .set({
-              image: {
-                _type: "image",
-                asset: {
-                  _ref: imageAsset._id,
-                },
+          updateProfileImage.mutate(
+            {
+              personId: person._id,
+              imageUrl: currentImageUrl,
+            },
+            {
+              onSuccess: () => {
+                console.log("Profile image updated successfully");
+                localStorage.setItem(
+                  `profile_update_${person._id}`,
+                  Date.now().toString()
+                );
               },
-            })
-            .commit();
-
-          console.log("Profile image updated successfully");
-          localStorage.setItem(
-            `profile_update_${person._id}`,
-            Date.now().toString()
+              onError: (error) => {
+                console.error("Error updating profile image:", error);
+              },
+            }
           );
-          refetch();
         }
       } catch (error) {
         console.error("Error updating profile image:", error);
       }
     },
-    [refetch]
+    [updateProfileImage]
   );
 
-  // Check if user's profile image has changed and update it
   useEffect(() => {
-    if (session && data && session.user.image) {
-      const lastUpdateTime = localStorage.getItem(`profile_update_${data._id}`);
+    if (session && session.user && personData && session.user.image) {
+      const lastUpdateTime = localStorage.getItem(
+        `profile_update_${personData._id}`
+      );
       const currentTime = Date.now();
 
       // Only update if it's been more than 24 hours since the last update
@@ -81,59 +89,69 @@ function CommentForm({
         !lastUpdateTime ||
         currentTime - parseInt(lastUpdateTime) > 24 * 60 * 60 * 1000
       ) {
-        updateProfileImageIfChanged(data, session.user.image);
+        updateProfileImageIfChanged(personData, session.user.image);
       }
     }
-  }, [session, data, updateProfileImageIfChanged]);
-
-  async function GetPerson() {
-    const userName = session.user.name;
-    const personQuery = `*[_type == "person" && name == "${userName}"]`;
-    const existingPerson = await client.fetch(personQuery);
-    return existingPerson[0];
-  }
+  }, [session, personData, updateProfileImageIfChanged]);
 
   async function postCommentToMovie(
-    movieId: any,
-    personId: any,
-    commentText: any,
-    e: any
+    movieId: string,
+    personId: string,
+    commentText: string,
+    e: React.FormEvent
   ) {
-    try {
-      e.preventDefault();
-      if (!commentText) return;
-      const movie = await clientWithToken.getDocument(movieId);
+    e.preventDefault();
 
-      if (!movie) {
-        console.error("Movie not found.");
-        return;
-      }
+    if (!commentText.trim()) return;
 
-      const newComment = {
-        _type: "inlineComment",
-        person: {
-          _type: "reference",
-          _ref: personId,
-        },
+    addComment.mutate(
+      {
         comment: commentText,
-        createdAt: new Date().toISOString(),
-        _key: uuidv4(),
-      };
+        movieId,
+        personId,
+      },
+      {
+        onSuccess: () => {
+          setCommentText("");
+          refetch();
+        },
+        onError: (error) => {
+          console.error("Error posting comment:", error);
+        },
+      }
+    );
+  }
 
-      const updatedComments = [...(movie.comments || []), newComment];
-      movie.comments = updatedComments;
+  async function deleteCommentFromMovie(commentId: string) {
+    if (window.confirm("Are you sure you want to delete this comment?")) {
+      console.log("Deleting comment with ID:", commentId);
 
-      await clientWithToken.createOrReplace(movie);
-
-      console.log("Comment posted successfully.");
-
-      setCommentText("");
-      refetch();
-    } catch (error) {
-      console.error("Error posting comment:", error);
+      deleteComment.mutate(
+        {
+          commentId,
+          movieId,
+        },
+        {
+          onSuccess: () => {
+            console.log("Comment deleted successfully");
+            refetch();
+          },
+          onError: (error) => {
+            console.error("Error deleting comment:", error);
+          },
+        }
+      );
     }
   }
-  const sortedComments = [...(movieData.comments || [])].sort((a, b) => {
+
+  // Use commentsData if available, otherwise fall back to movieData.comments
+  const comments = commentsData || movieData?.comments || [];
+
+  // Log the comments to help debug
+  console.log("Comments data:", comments);
+  console.log("Movie data comments:", movieData?.comments);
+
+  const sortedComments = [...comments].sort((a, b) => {
     const dateA = a.createdAt || a._createdAt;
     const dateB = b.createdAt || b._createdAt;
     return new Date(dateB).getTime() - new Date(dateA).getTime();
@@ -146,7 +164,7 @@ function CommentForm({
           <form
             className="mb-0"
             onSubmit={(e) =>
-              postCommentToMovie(movieId, data?._id, commentText, e)
+              postCommentToMovie(movieId, personData?._id, commentText, e)
             }
           >
             <div className="flex items-start gap-4">
@@ -225,197 +243,66 @@ function CommentForm({
               <FaRegCommentDots className="text-5xl text-gray-500 mb-4" />
               <p className="text-xl text-gray-400">Ingen kommentarer enda</p>
               <p className="text-gray-500 mt-2">
-                Vær den første til å kommentere!
+                Bli den første til å kommentere denne filmen
               </p>
             </div>
           ) : (
             sortedComments.map((comment) => (
               <div
-                key={uuidv4()}
+                key={comment._id || comment._key}
                 className="bg-gray-900 rounded-lg p-5 border border-gray-800"
               >
                 <div className="flex items-start gap-4">
-                  {/* User avatar */}
-                  <div className="flex-shrink-0">
+                  {comment.person &&
+                  comment.person.image &&
+                  comment.person.image.asset ? (
                     <Image
-                      src={
-                        comment.person && comment.person.image
-                          ? urlFor(comment.person.image)
-                              .width(100)
-                              .height(100)
-                              .url()
-                          : "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Question_mark_%28black%29.svg/800px-Question_mark_%28black%29.svg.png"
-                      }
                       width={40}
                       height={40}
-                      className="rounded-full border-2 border-gray-800"
-                      alt={
-                        comment.person && comment.person.name
-                          ? comment.person.name
-                          : "User"
-                      }
+                      src={urlFor(comment.person.image.asset).url()}
+                      alt={comment.person.name || "User"}
+                      className="rounded-full border-2 border-gray-800 shadow-md"
                     />
-                  </div>
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                      <span className="text-gray-400 text-sm">?</span>
+                    </div>
+                  )}
 
-                  {/* Comment content */}
                   <div className="flex-grow">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-white">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium text-white">
                           {comment.person && comment.person.name
                             ? comment.person.name
-                            : "User"}
-                        </span>
-                        <span className="text-sm text-gray-400">
+                            : "Unknown"}
+                        </p>
+                        <p className="text-gray-400 text-sm">
                           <TimeAgo
                             date={comment.createdAt || comment._createdAt}
-                            formatter={(value, unit, suffix) => {
-                              if (unit === "second") {
-                                if (value === 1) {
-                                  return `${value} sekund ${suffix.replace(
-                                    "ago",
-                                    "siden"
-                                  )}`;
-                                } else {
-                                  return `${value} sekunder ${suffix.replace(
-                                    "ago",
-                                    "siden"
-                                  )}`;
-                                }
-                              } else if (unit === "minute") {
-                                if (value === 1) {
-                                  return `${value} minutt ${suffix.replace(
-                                    "ago",
-                                    "siden"
-                                  )}`;
-                                } else {
-                                  return `${value} minutter ${suffix.replace(
-                                    "ago",
-                                    "siden"
-                                  )}`;
-                                }
-                              } else if (unit === "hour") {
-                                if (value === 1) {
-                                  return `${value} time ${suffix.replace(
-                                    "ago",
-                                    "siden"
-                                  )}`;
-                                } else {
-                                  return `${value} timer ${suffix.replace(
-                                    "ago",
-                                    "siden"
-                                  )}`;
-                                }
-                              } else if (unit === "day") {
-                                if (value === 1) {
-                                  return `${value} dag ${suffix.replace(
-                                    "ago",
-                                    "siden"
-                                  )}`;
-                                } else {
-                                  return `${value} dager ${suffix.replace(
-                                    "ago",
-                                    "siden"
-                                  )}`;
-                                }
-                              } else if (unit === "week") {
-                                if (value === 1) {
-                                  return `${value} uke ${suffix.replace(
-                                    "ago",
-                                    "siden"
-                                  )}`;
-                                } else {
-                                  return `${value} uker ${suffix.replace(
-                                    "ago",
-                                    "siden"
-                                  )}`;
-                                }
-                              } else if (unit === "month") {
-                                if (value === 1) {
-                                  return `${value} måned ${suffix.replace(
-                                    "ago",
-                                    "siden"
-                                  )}`;
-                                } else {
-                                  return `${value} måneder ${suffix.replace(
-                                    "ago",
-                                    "siden"
-                                  )}`;
-                                }
-                              } else if (unit === "year") {
-                                if (value === 1) {
-                                  return `${value} år ${suffix.replace(
-                                    "ago",
-                                    "siden"
-                                  )}`;
-                                } else {
-                                  return `${value} år ${suffix.replace(
-                                    "ago",
-                                    "siden"
-                                  )}`;
-                                }
-                              }
-                            }}
                           />
-                        </span>
+                        </p>
                       </div>
 
                       {/* Delete button (only for own comments) */}
                       {session &&
-                        data &&
+                        personData &&
                         comment.person &&
-                        comment.person._id === data._id && (
+                        ((comment.person._id &&
+                          comment.person._id === personData._id) ||
+                          (comment.person._ref &&
+                            comment.person._ref === personData._id)) && (
                           <button
                             className="text-gray-400 hover:text-red-500 transition-colors duration-200"
                             title="Slett kommentar"
-                            onClick={async () => {
-                              const confirmDelete = window.confirm(
-                                "Er du sikker på at du vil slette denne kommentaren?"
-                              );
-
-                              if (confirmDelete) {
-                                try {
-                                  const movieWithCommentToBeDeleted =
-                                    await clientWithToken.getDocument(movieId);
-
-                                  if (!movieWithCommentToBeDeleted) {
-                                    console.error("Movie not found.");
-                                    return;
-                                  }
-
-                                  const updatedComments = [
-                                    ...(movieWithCommentToBeDeleted.comments ||
-                                      []),
-                                  ].filter((commentToBeDeleted) => {
-                                    return (
-                                      commentToBeDeleted._key !== comment._key
-                                    );
-                                  });
-
-                                  movieWithCommentToBeDeleted.comments =
-                                    updatedComments;
-
-                                  await clientWithToken.createOrReplace(
-                                    movieWithCommentToBeDeleted
-                                  );
-                                  refetch();
-                                } catch (error) {
-                                  console.error(
-                                    "Error deleting comment:",
-                                    error
-                                  );
-                                }
-                              }
-                            }}
+                            onClick={() => deleteCommentFromMovie(comment._key)}
                           >
                             <FaTrashAlt />
                           </button>
                         )}
                     </div>
 
-                    <p className="mt-2 text-gray-300 whitespace-pre-wrap break-words">
-                      {comment.comment}
-                    </p>
+                    <p className="mt-3 text-white">{comment.comment}</p>
                   </div>
                 </div>
               </div>
