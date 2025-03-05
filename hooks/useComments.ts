@@ -18,7 +18,10 @@ export function useComments(movieIdOrSlug: string) {
     enabled: !!movieIdOrSlug,
     queryFn: async () => {
       try {
-        console.log("Fetching comments for movie:", movieIdOrSlug);
+        // Only log in development
+        if (process.env.NODE_ENV !== "production") {
+          console.log("Fetching comments for movie:", movieIdOrSlug);
+        }
 
         // First try to get the movie by ID
         let movieQuery = `*[_type == "movie" && _id == $identifier][0]{
@@ -31,7 +34,10 @@ export function useComments(movieIdOrSlug: string) {
 
         // If not found by ID, try by slug
         if (!movie) {
-          console.log("No movie found with ID, trying slug:", movieIdOrSlug);
+          if (process.env.NODE_ENV !== "production") {
+            console.log("No movie found with ID, trying slug:", movieIdOrSlug);
+          }
+
           movieQuery = `*[_type == "movie" && slug.current == $identifier][0]{
             comments
           }`;
@@ -39,7 +45,9 @@ export function useComments(movieIdOrSlug: string) {
         }
 
         if (movie && movie.comments && movie.comments.length > 0) {
-          console.log(`Found ${movie.comments.length} comments`);
+          if (process.env.NODE_ENV !== "production") {
+            console.log(`Found ${movie.comments.length} comments`);
+          }
 
           // For each comment, fetch the person data if needed
           const commentsWithPerson = await Promise.all(
@@ -73,7 +81,10 @@ export function useComments(movieIdOrSlug: string) {
             })
           );
 
-          console.log("Processed comments:", commentsWithPerson);
+          if (process.env.NODE_ENV !== "production") {
+            console.log("Processed comments:", commentsWithPerson);
+          }
+
           return commentsWithPerson;
         }
 
@@ -89,16 +100,20 @@ export function useComments(movieIdOrSlug: string) {
         const comments = await client.fetch(commentsQuery, {
           movieId: movieIdOrSlug,
         });
-        console.log(
-          `Fetched ${comments.length} regular comments for movie ${movieIdOrSlug}`
-        );
+
+        if (process.env.NODE_ENV !== "production") {
+          console.log(
+            `Fetched ${comments.length} regular comments for movie ${movieIdOrSlug}`
+          );
+        }
+
         return comments;
       } catch (error) {
         console.error("Error fetching comments:", error);
         throw error;
       }
     },
-    staleTime: 1000 * 60 * 1, // 1 minute - comments should be fresher
+    staleTime: 1000 * 60 * 5, // Increase to 5 minutes to match other queries
   });
 }
 
@@ -117,10 +132,14 @@ export function useAddComment() {
       personId: string;
     }) => {
       try {
-        console.log("Adding comment to movie:", movieId);
+        if (process.env.NODE_ENV !== "production") {
+          console.log("Adding comment to movie:", movieId);
+        }
 
         // Add as comment in the comments array
-        console.log("Adding as comment");
+        if (process.env.NODE_ENV !== "production") {
+          console.log("Adding as comment");
+        }
 
         const newComment = {
           _key: `comment-${uuidv4()}`,
@@ -133,7 +152,9 @@ export function useAddComment() {
           createdAt: new Date().toISOString(),
         };
 
-        console.log("New comment:", newComment);
+        if (process.env.NODE_ENV !== "production") {
+          console.log("New comment:", newComment);
+        }
 
         return clientWithToken
           .patch(movieId)
