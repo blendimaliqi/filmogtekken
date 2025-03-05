@@ -27,6 +27,24 @@ function Movie({ title, poster, movie }: MovieProps) {
     // Start the leaving animation
     setIsLeaving(true);
 
+    // Create a full-screen black overlay with loading spinner
+    const overlay = document.createElement("div");
+    overlay.id = "movie-loading-overlay";
+    overlay.className =
+      "fixed inset-0 bg-black z-50 flex items-center justify-center transition-opacity duration-300";
+    overlay.style.opacity = "0";
+
+    const spinner = document.createElement("div");
+    spinner.className =
+      "animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white";
+    overlay.appendChild(spinner);
+
+    document.body.appendChild(overlay);
+
+    // Force reflow to ensure the transition works
+    void overlay.offsetWidth;
+    overlay.style.opacity = "1";
+
     // Navigate after a short delay to allow the animation to complete
     setTimeout(async () => {
       await router.push(`/${moviePath}`);

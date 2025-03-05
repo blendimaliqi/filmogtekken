@@ -50,6 +50,15 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
 
   // Handle loading state
   useEffect(() => {
+    // Remove any existing loading overlay from the Movie component
+    const existingOverlay = document.getElementById("movie-loading-overlay");
+    if (existingOverlay) {
+      existingOverlay.style.opacity = "0";
+      setTimeout(() => {
+        existingOverlay.remove();
+      }, 300);
+    }
+
     // If we have initial data, don't show loader
     if (initialMovieData) {
       // Just show content with a small delay for smooth animation
@@ -229,7 +238,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
       {/* Loading spinner - only shown when actually loading and no initial data */}
       {showLocalLoader && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black transition-opacity duration-500 animate-fadeIn">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-yellow-600"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
         </div>
       )}
 
@@ -254,9 +263,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
         {/* Content container */}
         <div
           className={`relative h-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex md:block transition-all duration-700 ${
-            contentVisible
-              ? "opacity-100 transform translate-y-0"
-              : "opacity-0 transform translate-y-4"
+            contentVisible ? "opacity-100" : "opacity-0"
           }`}
         >
           {/* Mobile centered content */}
@@ -514,9 +521,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
       {/* Mobile poster and description section */}
       <div
         className={`md:hidden bg-black transition-all duration-700 delay-100 ${
-          contentVisible
-            ? "opacity-100 transform translate-y-0"
-            : "opacity-0 transform translate-y-8"
+          contentVisible ? "opacity-100" : "opacity-0"
         }`}
       >
         <div className="px-4 pt-0 pb-12">
@@ -544,9 +549,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
       {/* Content section */}
       <div
         className={`max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-20 bg-black transition-all duration-700 delay-200 ${
-          contentVisible
-            ? "opacity-100 transform translate-y-0"
-            : "opacity-0 transform translate-y-8"
+          contentVisible ? "opacity-100" : "opacity-0"
         }`}
       >
         <RatingModal
@@ -568,9 +571,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
                   <div
                     key={uuidv4()}
                     className={`flex flex-col items-center transition-all duration-500 hover:transform hover:scale-105 ${
-                      contentVisible
-                        ? "opacity-100 transform translate-y-0"
-                        : "opacity-0 transform translate-y-4"
+                      contentVisible ? "opacity-100" : "opacity-0"
                     }`}
                     style={{ transitionDelay: `${200 + index * 50}ms` }}
                   >
@@ -610,9 +611,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
         {/* Comments section */}
         <section
           className={`py-16 bg-black transition-all duration-700 delay-300 ${
-            contentVisible
-              ? "opacity-100 transform translate-y-0"
-              : "opacity-0 transform translate-y-8"
+            contentVisible ? "opacity-100" : "opacity-0"
           }`}
         >
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
