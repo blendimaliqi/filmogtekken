@@ -38,6 +38,8 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [open, setOpen] = useState(false);
+  const [contentVisible, setContentVisible] = useState(false);
+  const [showLocalLoader, setShowLocalLoader] = useState(false);
 
   const {
     isLoading,
@@ -45,6 +47,51 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
     data: movie,
     refetch,
   } = useMovie(router.query.slug as string, initialMovieData || undefined);
+
+  // Handle loading state
+  useEffect(() => {
+    // If we have initial data, don't show loader
+    if (initialMovieData) {
+      // Just show content with a small delay for smooth animation
+      const timer = setTimeout(() => {
+        setContentVisible(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+
+    // If we're loading and don't have initial data, show loader
+    if (isLoading && !initialMovieData) {
+      setShowLocalLoader(true);
+      setContentVisible(false);
+    } else {
+      // Data loaded, hide loader and show content
+      const loaderTimer = setTimeout(() => {
+        setShowLocalLoader(false);
+      }, 300);
+
+      // Show content with a small delay after loader disappears
+      const contentTimer = setTimeout(() => {
+        setContentVisible(true);
+      }, 400);
+
+      return () => {
+        clearTimeout(loaderTimer);
+        clearTimeout(contentTimer);
+      };
+    }
+  }, [isLoading, initialMovieData, movie]);
+
+  // Hide content when navigating away
+  useEffect(() => {
+    const handleRouteChange = () => {
+      setContentVisible(false);
+    };
+
+    router.events.on("routeChangeStart", handleRouteChange);
+    return () => {
+      router.events.off("routeChangeStart", handleRouteChange);
+    };
+  }, [router]);
 
   // Get the current user's person record
   const { data: personData, refetch: refetchPerson } = useCurrentPerson();
@@ -179,6 +226,13 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
         <title>{movieData.title ?? ""}</title>
       </Head>
 
+      {/* Loading spinner - only shown when actually loading and no initial data */}
+      {showLocalLoader && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black transition-opacity duration-500 animate-fadeIn">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-yellow-600"></div>
+        </div>
+      )}
+
       {/* Hero section with backdrop */}
       <div className="relative w-full h-[65vh] md:h-[85vh] pt-12 md:pt-24">
         {/* Movie backdrop */}
@@ -188,7 +242,9 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
             alt="Movie backdrop"
             fill
             priority
-            className="object-cover opacity-90"
+            className={`object-cover opacity-90 transition-opacity duration-700 ${
+              contentVisible ? "opacity-90" : "opacity-0"
+            }`}
           />
           {/* Enhanced gradient overlays for better text readability while showing more of the image */}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
@@ -196,7 +252,13 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
         </div>
 
         {/* Content container */}
-        <div className="relative h-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex md:block">
+        <div
+          className={`relative h-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex md:block transition-all duration-700 ${
+            contentVisible
+              ? "opacity-100 transform translate-y-0"
+              : "opacity-0 transform translate-y-4"
+          }`}
+        >
           {/* Mobile centered content */}
           <div className="md:hidden w-full flex flex-col items-center justify-end h-full text-center pb-10">
             <h1 className="text-3xl font-bold text-white mb-2 max-w-[280px]">
@@ -312,7 +374,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
           <div className="hidden md:flex md:items-end md:h-full pb-16">
             <div className="flex flex-row items-start gap-8">
               {/* Movie poster - desktop only */}
-              <div className="w-64 h-[450px] flex-shrink-0 -mb-32 shadow-2xl rounded-xl overflow-hidden border-4 border-black">
+              <div className="w-64 h-[450px] flex-shrink-0 -mb-32 shadow-2xl rounded-xl overflow-hidden border-4 border-black transition-transform duration-700 ease-out transform">
                 <Image
                   width={256}
                   height={450}
@@ -450,7 +512,13 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
       </div>
 
       {/* Mobile poster and description section */}
-      <div className="md:hidden bg-black">
+      <div
+        className={`md:hidden bg-black transition-all duration-700 delay-100 ${
+          contentVisible
+            ? "opacity-100 transform translate-y-0"
+            : "opacity-0 transform translate-y-8"
+        }`}
+      >
         <div className="px-4 pt-0 pb-12">
           <div className="flex flex-col items-center mx-auto">
             <div className="w-[280px] h-[420px] shadow-xl rounded-lg overflow-hidden border border-gray-800 mx-auto">
@@ -474,7 +542,13 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
       </div>
 
       {/* Content section */}
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-20 bg-black">
+      <div
+        className={`max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 pb-20 bg-black transition-all duration-700 delay-200 ${
+          contentVisible
+            ? "opacity-100 transform translate-y-0"
+            : "opacity-0 transform translate-y-8"
+        }`}
+      >
         <RatingModal
           open={open}
           setOpen={setOpen}
@@ -490,10 +564,15 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 justify-items-start">
               {movieData.ratings &&
-                movieData.ratings.map((rating: any) => (
+                movieData.ratings.map((rating: any, index: number) => (
                   <div
                     key={uuidv4()}
-                    className="flex flex-col items-center transition-transform duration-300 hover:transform hover:scale-105"
+                    className={`flex flex-col items-center transition-all duration-500 hover:transform hover:scale-105 ${
+                      contentVisible
+                        ? "opacity-100 transform translate-y-0"
+                        : "opacity-0 transform translate-y-4"
+                    }`}
+                    style={{ transitionDelay: `${200 + index * 50}ms` }}
                   >
                     {rating.person &&
                     rating.person.image &&
@@ -529,7 +608,13 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
         )}
 
         {/* Comments section */}
-        <section className="py-16 bg-black">
+        <section
+          className={`py-16 bg-black transition-all duration-700 delay-300 ${
+            contentVisible
+              ? "opacity-100 transform translate-y-0"
+              : "opacity-0 transform translate-y-8"
+          }`}
+        >
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl font-bold text-white mb-8">Kommentarer</h2>
             <CommentForm

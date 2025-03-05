@@ -15,17 +15,22 @@ export interface MovieProps {
 
 function Movie({ title, poster, movie }: MovieProps) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
 
   // Get the correct URL path
   const moviePath = movie.slug?.current || movie._id;
 
   const handleClick = async (e: React.MouseEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    await router.push(`/${moviePath}`);
-    setIsLoading(false);
+
+    // Start the leaving animation
+    setIsLeaving(true);
+
+    // Navigate after a short delay to allow the animation to complete
+    setTimeout(async () => {
+      await router.push(`/${moviePath}`);
+    }, 300);
   };
 
   // Calculate average rating
@@ -44,29 +49,18 @@ function Movie({ title, poster, movie }: MovieProps) {
     <Link
       href={`/${moviePath}`}
       draggable={false}
-      className="relative overflow-hidden rounded-xl transition-all duration-300 transform hover:translate-y-[-8px] hover:shadow-[0_20px_30px_rgba(0,0,0,0.3)] cursor-pointer"
+      className={`relative overflow-hidden rounded-xl transition-all duration-300 transform 
+        ${isLeaving ? "scale-95 opacity-70" : "hover:translate-y-[-8px]"} 
+        hover:shadow-[0_20px_30px_rgba(0,0,0,0.3)] cursor-pointer`}
       onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-50 rounded-xl">
-          <ColorRing
-            visible={true}
-            height="80"
-            width="80"
-            ariaLabel="blocks-loading"
-            wrapperStyle={{}}
-            wrapperClass="blocks-wrapper"
-            colors={["#cacaca", "#cacaca", "#cacaca", "#cacaca", "#cacaca"]}
-          />
-        </div>
-      )}
-
       <div className="relative aspect-[2/3] w-full">
         {/* Movie poster */}
         <Image
-          className="w-full h-full object-cover rounded-xl select-none"
+          className={`w-full h-full object-cover rounded-xl select-none transition-transform duration-300 
+            ${isHovered ? "scale-105" : "scale-100"}`}
           draggable={false}
           width={500}
           height={750}
@@ -80,9 +74,8 @@ function Movie({ title, poster, movie }: MovieProps) {
 
         {/* Hover overlay - slides up from bottom */}
         <div
-          className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent transition-opacity duration-300 rounded-xl ${
-            isHovered ? "opacity-100" : "opacity-0"
-          }`}
+          className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent transition-all duration-300 rounded-xl 
+            ${isHovered ? "opacity-100" : "opacity-0"}`}
         ></div>
 
         {/* Content container */}
@@ -102,9 +95,12 @@ function Movie({ title, poster, movie }: MovieProps) {
           {/* Dynamic content - appears on hover with fade in transition */}
           <div>
             <div
-              className={`transition-opacity duration-300 ease-out ${
-                isHovered ? "opacity-100" : "opacity-0"
-              }`}
+              className={`transition-all duration-300 ease-out transform 
+                ${
+                  isHovered
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-4"
+                }`}
             >
               {/* Rating and comments */}
               <div className="flex items-center space-x-3 mt-2 mb-4">

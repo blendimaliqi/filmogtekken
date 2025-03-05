@@ -118,18 +118,53 @@ export default function App({
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [pageKey, setPageKey] = useState("");
+  const [fadeIn, setFadeIn] = useState(true);
 
   useEffect(() => {
-    const handleStart = () => {
-      console.log("Route change started");
-      setLoading(true);
+    // Set the page key based on the route
+    setPageKey(router.asPath);
+
+    // Fade in the new page
+    setFadeIn(true);
+  }, [router.asPath]);
+
+  useEffect(() => {
+    // Track if we should show loading state
+    let loadingTimeout: NodeJS.Timeout;
+
+    const handleStart = (url: string) => {
+      // Only show loading for navigation to new pages, not for cached pages
+      const currentPath = router.asPath;
+      const targetPath = url.split("?")[0];
+
+      // Skip loading state for cached pages
+      if (currentPath !== targetPath) {
+        console.log("Route change started:", currentPath, "->", targetPath);
+
+        // Start fading out the current page
+        setFadeIn(false);
+
+        // Only show loading spinner after a delay (to avoid flashing for fast loads)
+        clearTimeout(loadingTimeout);
+        loadingTimeout = setTimeout(() => {
+          setLoading(true);
+        }, 300);
+      }
     };
 
     const handleComplete = () => {
       console.log("Route change completed");
-      // Add a small delay to ensure smooth transition
+
+      // Clear the loading timeout to prevent showing spinner for fast loads
+      clearTimeout(loadingTimeout);
+
+      // Hide loading spinner immediately
+      setLoading(false);
+
+      // Fade in the new page after a short delay
       setTimeout(() => {
-        setLoading(false);
+        setFadeIn(true);
       }, 100);
     };
 
@@ -138,6 +173,7 @@ export default function App({
     router.events.on("routeChangeError", handleComplete);
 
     return () => {
+      clearTimeout(loadingTimeout);
       router.events.off("routeChangeStart", handleStart);
       router.events.off("routeChangeComplete", handleComplete);
       router.events.off("routeChangeError", handleComplete);
@@ -150,22 +186,65 @@ export default function App({
         <Provider>
           <ProfileImageUpdater />
           {loading && (
-            <div className="fixed inset-0 flex justify-center items-center bg-black z-50">
-              <ColorRing
-                visible={true}
-                height="80"
-                width="80"
-                ariaLabel="blocks-loading"
-                wrapperStyle={{}}
-                wrapperClass="blocks-wrapper"
-                colors={["#cacaca", "#cacaca", "#cacaca", "#cacaca", "#cacaca"]}
-              />
+            <div className="fixed inset-0 flex justify-center items-center bg-black/90 z-50 animate-fadeIn">
+              <div className="flex flex-col items-center">
+                <ColorRing
+                  visible={true}
+                  height="80"
+                  width="80"
+                  ariaLabel="blocks-loading"
+                  wrapperStyle={{}}
+                  wrapperClass="blocks-wrapper"
+                  colors={[
+                    "#cacaca",
+                    "#cacaca",
+                    "#cacaca",
+                    "#cacaca",
+                    "#cacaca",
+                  ]}
+                />
+                <p className="text-gray-300 mt-4 text-sm">Laster inn...</p>
+              </div>
             </div>
           )}
           <Head>
             <title>Film med Gutta</title>
           </Head>
-          <style>{`body { overflow-x: hidden; }`}</style>
+          <style jsx global>{`
+            body {
+              overflow-x: hidden;
+            }
+
+            @keyframes fadeIn {
+              from {
+                opacity: 0;
+              }
+              to {
+                opacity: 1;
+              }
+            }
+
+            @keyframes fadeOut {
+              from {
+                opacity: 1;
+              }
+              to {
+                opacity: 0;
+              }
+            }
+
+            .animate-fadeIn {
+              animation: fadeIn 0.3s ease-in-out forwards;
+            }
+
+            .animate-fadeOut {
+              animation: fadeOut 0.3s ease-in-out forwards;
+            }
+
+            .page-transition {
+              transition: opacity 0.3s ease-in-out;
+            }
+          `}</style>
 
           <div
             style={{
@@ -181,7 +260,12 @@ export default function App({
           <div className="flex flex-col justify-center items-center">
             <MiniNav />
           </div>
-          <div className="pt-0 md:pt-0">
+          <div
+            className={`pt-0 md:pt-0 page-transition ${
+              fadeIn ? "opacity-100" : "opacity-0"
+            }`}
+            key={pageKey}
+          >
             <Component {...pageProps} />
           </div>
 
