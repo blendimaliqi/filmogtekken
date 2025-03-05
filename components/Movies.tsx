@@ -12,12 +12,13 @@ import {
   moviesSortedAtom,
   moviesFilteredAtom,
 } from "@/pages";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { atom, useAtom } from "jotai";
 import { signIn, useSession } from "next-auth/react";
 import { moviesQuery } from "@/utils/groqQueries";
 import { uploadExternalImage, uuidv4 } from "@/utils/helperFunctions";
 import type { Movie } from "@/typings";
+import { movieKeys } from "@/hooks/useMovie";
 
 interface MovieWithAverageRating extends Movie {
   averageRating: number;
@@ -43,6 +44,7 @@ function Movies({ movies: propMovies }: MoviesProps) {
   const { data: session } = useSession();
   const [tmdbMovies, setTmdbMovies] = useState<any[]>([]);
   const [input, setInput] = useState("");
+  const queryClient = useQueryClient();
 
   // Use propMovies if provided, otherwise use the movies from the atom
   const moviesToUse = propMovies || movies;
@@ -114,6 +116,8 @@ function Movies({ movies: propMovies }: MoviesProps) {
     },
     // Disable the query when propMovies is provided
     enabled: !propMovies || propMovies.length === 0,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 
   const [selectValue, setSelectValue] = useAtom(moviesFilteredAtom);
@@ -125,8 +129,13 @@ function Movies({ movies: propMovies }: MoviesProps) {
     try {
       const refetchedData = await client.fetch(moviesQuery);
       setMovies(refetchedData);
+      setAllMovies(refetchedData);
+      // Reset sorted movies to show the newly added movie
+      setSortedMovies([]);
+      return refetchedData;
     } catch (error) {
       console.log("error", error);
+      throw error;
     }
   }
 
@@ -178,7 +187,6 @@ function Movies({ movies: propMovies }: MoviesProps) {
       );
 
       if (!movieExists) {
-        setIsLoading(false);
         console.log("Created movie:", mov);
 
         toast.success(`${mov.title} lagt til 😁`, {
@@ -191,11 +199,56 @@ function Movies({ movies: propMovies }: MoviesProps) {
           theme: "dark",
         });
 
+        // Create the movie in Sanity
+        const createdMovie = await createPost(movieData);
+
+        // Add the created movie to both state arrays with the _id from Sanity
+        const newMovieWithId = {
+          ...movieData,
+          _id: createdMovie._id,
+          _createdAt: new Date().toISOString(),
+          _rev: "",
+          _updatedAt: new Date().toISOString(),
+          comments: [],
+          ratings: [],
+          year: new Date(mov.release_date).getFullYear().toString(),
+          director: "",
+          cast: [],
+          overview: { _type: "block", children: [] },
+          externalId: mov.id,
+          popularity: mov.popularity || 0,
+        } as unknown as Movie;
+
+        // Update all state variables that affect the UI
+        const updatedMovies = [newMovieWithId, ...movies];
+        setMovies(updatedMovies);
+        setAllMovies([newMovieWithId, ...allMovies]);
+
+        // Reset the sorted movies to show the newly added movie
+        setSortedMovies([]);
+
+        // Clear the search results
+        setTmdbMovies([]);
+        setInput("");
+
+        // Invalidate the React Query cache
+        queryClient.invalidateQueries(movieKeys.all);
+
+        // Refetch the movies query
+        queryClient.refetchQueries(movieKeys.lists());
+
+        // Also directly refetch movies to update the UI
+        refetchMovies()
+          .then(() => {
+            console.log("Movies refetched successfully");
+          })
+          .catch((error) => {
+            console.error("Error refetching movies:", error);
+          });
+
+        // Close the modal and reset loading state
         closeModal();
-        await createPost(movieData);
-        const newMovies: any = [...movies, movieData];
-        setMovies(newMovies);
-        refetchMovies();
+        setIsLoading(false);
       } else {
         toast.error(`${mov.title} finnes allerede 😅`, {
           position: "top-right",
@@ -211,6 +264,19 @@ function Movies({ movies: propMovies }: MoviesProps) {
       }
     } catch (error) {
       console.log("error", error);
+      setIsLoading(false);
+      toast.error(
+        "Det oppstod en feil ved tillegging av filmen. Prøv igjen senere.",
+        {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "dark",
+        }
+      );
     }
   }
 
