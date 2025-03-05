@@ -2,10 +2,23 @@ import Link from "next/link";
 import React from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Image from "next/image";
+import { useRouter } from "next/router";
 
 function MiniNav() {
   const { data: session, status } = useSession();
   const isLoading = status === "loading";
+  const router = useRouter();
+
+  // Check if we're already on the homepage
+  const isHomePage = router.pathname === "/";
+
+  // Function to handle homepage link click
+  const handleHomeClick = (e: React.MouseEvent) => {
+    // If already on the homepage, prevent default navigation
+    if (isHomePage) {
+      e.preventDefault();
+    }
+  };
 
   return (
     <nav className="flex w-full justify-between items-center px-4 py-4 md:hidden z-50 bg-black bg-opacity-80 backdrop-blur-sm">
@@ -15,6 +28,7 @@ function MiniNav() {
           draggable="false"
           href="/"
           className="text-2xl font-bold text-yellow-400 hover:text-yellow-500 transition duration-300 ease-in-out cursor-pointer"
+          onClick={handleHomeClick}
         >
           Film med Gutta
         </Link>

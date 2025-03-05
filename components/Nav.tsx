@@ -7,12 +7,24 @@ function Nav() {
   const router = useRouter();
   const { data: session } = useSession();
 
+  // Check if we're already on the homepage
+  const isHomePage = router.pathname === "/";
+
+  // Function to handle homepage link click
+  const handleHomeClick = (e: React.MouseEvent) => {
+    // If already on the homepage, prevent default navigation
+    if (isHomePage) {
+      e.preventDefault();
+    }
+  };
+
   return (
     <div className="hidden md:flex items-center p-24 w-full bg-transparent z-20">
       <Link
         draggable="false"
         href="/"
         className="text-3xl font-bold md:text-5xl text-yellow-400 hover:text-yellow-700 transition duration-300 ease-in-out cursor-pointer whitespace-nowrap"
+        onClick={handleHomeClick}
       >
         Film med Gutta
       </Link>
