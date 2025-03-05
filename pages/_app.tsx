@@ -29,13 +29,18 @@ const queryClient = new QueryClient({
       cacheTime: 1000 * 60 * 30, // 30 minutes
       refetchOnWindowFocus: false,
       retry: 1,
+      // Reduce excessive logging in production
       onError: (error) => {
-        console.error("Global query error:", error);
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Global query error:", error);
+        }
       },
     },
     mutations: {
       onError: (error) => {
-        console.error("Global mutation error:", error);
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Global mutation error:", error);
+        }
       },
     },
   },
@@ -188,22 +193,7 @@ export default function App({
           {loading && (
             <div className="fixed inset-0 flex justify-center items-center bg-black/90 z-50 animate-fadeIn">
               <div className="flex flex-col items-center">
-                <ColorRing
-                  visible={true}
-                  height="80"
-                  width="80"
-                  ariaLabel="blocks-loading"
-                  wrapperStyle={{}}
-                  wrapperClass="blocks-wrapper"
-                  colors={[
-                    "#cacaca",
-                    "#cacaca",
-                    "#cacaca",
-                    "#cacaca",
-                    "#cacaca",
-                  ]}
-                />
-                <p className="text-gray-300 mt-4 text-sm">Laster inn...</p>
+                <div className="animate-spin rounded-full h-16 w-16 border-[6px] border-gray-600 border-t-yellow-500"></div>
               </div>
             </div>
           )}

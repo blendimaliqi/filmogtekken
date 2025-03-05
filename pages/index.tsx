@@ -64,7 +64,9 @@ export default function Home() {
   if (isLoading) {
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-black z-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-[5px] border-gray-700 border-t-white"></div>
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-[6px] border-gray-600 border-t-yellow-500"></div>
+        </div>
       </div>
     );
   }

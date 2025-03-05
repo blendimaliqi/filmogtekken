@@ -4,7 +4,6 @@ import { urlFor } from "../config/client";
 import Image from "next/image";
 import Link from "next/link";
 import { AiFillStar, AiOutlineComment } from "react-icons/ai";
-import { ColorRing } from "react-loader-spinner";
 
 export interface MovieProps {
   title: string;
@@ -31,13 +30,19 @@ function Movie({ title, poster, movie }: MovieProps) {
     const overlay = document.createElement("div");
     overlay.id = "movie-loading-overlay";
     overlay.className =
-      "fixed inset-0 bg-black z-50 flex items-center justify-center transition-opacity duration-300";
+      "fixed inset-0 bg-black z-50 flex flex-col items-center justify-center transition-opacity duration-300";
     overlay.style.opacity = "0";
+
+    // Use the standardized spinner
+    const spinnerContainer = document.createElement("div");
+    spinnerContainer.className = "flex flex-col items-center";
 
     const spinner = document.createElement("div");
     spinner.className =
-      "animate-spin rounded-full h-12 w-12 border-[5px] border-gray-700 border-t-white";
-    overlay.appendChild(spinner);
+      "animate-spin rounded-full h-16 w-16 border-[6px] border-gray-600 border-t-yellow-500";
+
+    spinnerContainer.appendChild(spinner);
+    overlay.appendChild(spinnerContainer);
 
     document.body.appendChild(overlay);
 

@@ -3,7 +3,6 @@ import MovieComponent from "./Movie";
 import { client, createPost } from "@/config/client";
 import { Modal } from "./modal/Modal";
 import ModalMovie from "./modal/ModalMovie";
-import { ColorRing } from "react-loader-spinner";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
@@ -448,15 +447,9 @@ function Movies({ movies: propMovies }: MoviesProps) {
   if (isPageLoading) {
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-black z-50">
-        <ColorRing
-          visible={true}
-          height="80"
-          width="80"
-          ariaLabel="blocks-loading"
-          wrapperStyle={{}}
-          wrapperClass="blocks-wrapper"
-          colors={["#cacaca", "#cacaca", "#cacaca", "#cacaca", "#cacaca"]}
-        />
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-[6px] border-gray-600 border-t-yellow-500"></div>
+        </div>
       </div>
     );
   }
@@ -708,15 +701,9 @@ function Movies({ movies: propMovies }: MoviesProps) {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 px-8 pb-8 max-h-[60vh] overflow-y-auto">
           {isLoading ? (
             <div className="fixed inset-0 flex justify-center items-center bg-black/70 backdrop-blur-sm z-50">
-              <ColorRing
-                visible={true}
-                height="80"
-                width="80"
-                ariaLabel="blocks-loading"
-                wrapperStyle={{}}
-                wrapperClass="blocks-wrapper"
-                colors={["#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff"]}
-              />
+              <div className="flex flex-col items-center">
+                <div className="animate-spin rounded-full h-16 w-16 border-[6px] border-gray-600 border-t-yellow-500"></div>
+              </div>
             </div>
           ) : !hasSearched ? (
             <div className="col-span-full flex flex-col items-center justify-center py-16 px-4 text-center">

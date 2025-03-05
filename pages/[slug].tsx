@@ -9,7 +9,6 @@ import Image from "next/image";
 import { useRouter } from "next/router";
 import { useState, useEffect, useCallback } from "react";
 import { AiFillStar } from "react-icons/ai";
-import { ColorRing } from "react-loader-spinner";
 import { Movie } from "../typings";
 import CommentForm from "@/components/CommentForm";
 import { GetServerSideProps } from "next";
@@ -171,15 +170,9 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
   if (!movie) {
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-black z-50">
-        <ColorRing
-          visible={true}
-          height="80"
-          width="80"
-          ariaLabel="blocks-loading"
-          wrapperStyle={{}}
-          wrapperClass="blocks-wrapper"
-          colors={["#cacaca", "#cacaca", "#cacaca", "#cacaca", "#cacaca"]}
-        />
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-[6px] border-gray-600 border-t-yellow-500"></div>
+        </div>
       </div>
     );
   }
@@ -189,15 +182,9 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
   if (isLoading || status === "loading")
     return (
       <div style={centerStyle}>
-        <ColorRing
-          visible={true}
-          height="80"
-          width="80"
-          ariaLabel="blocks-loading"
-          wrapperStyle={{}}
-          wrapperClass="blocks-wrapper"
-          colors={["#cacaca", "#cacaca", "#cacaca", "#cacaca", "#cacaca"]}
-        />
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-[6px] border-gray-600 border-t-yellow-500"></div>
+        </div>
       </div>
     );
 
@@ -235,10 +222,12 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
         <title>{movieData.title ?? ""}</title>
       </Head>
 
-      {/* Loading spinner - only shown when actually loading and no initial data */}
+      {/* Loading state */}
       {showLocalLoader && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black transition-opacity duration-500 animate-fadeIn">
-          <div className="animate-spin rounded-full h-12 w-12 border-[5px] border-gray-700 border-t-white"></div>
+        <div className="fixed inset-0 bg-black/90 flex justify-center items-center z-50 animate-fadeIn">
+          <div className="flex flex-col items-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-[6px] border-gray-600 border-t-yellow-500"></div>
+          </div>
         </div>
       )}
 
@@ -255,9 +244,9 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
               contentVisible ? "animate-backdropFadeFast" : "opacity-0"
             }`}
           />
-          {/* Enhanced gradient overlays for better text readability while showing more of the image */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
+          {/* Lighter gradient overlays for a less dark appearance */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent" />
         </div>
 
         {/* Content container */}

@@ -201,7 +201,7 @@ function CommentForm({
                   >
                     {addComment.isLoading ? (
                       <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-600 border-t-white"></div>
+                        <div className="animate-spin rounded-full h-4 w-4 border-[2px] border-gray-600 border-t-yellow-500"></div>
                         <span>Kommenterer...</span>
                       </>
                     ) : (
@@ -247,8 +247,7 @@ function CommentForm({
         <div className="space-y-6">
           {commentsLoading ? (
             <div className="bg-black rounded-lg p-8 flex flex-col items-center justify-center border border-gray-800">
-              <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-700 border-t-white mb-4"></div>
-              <p className="text-xl text-gray-400">Laster kommentarer...</p>
+              <div className="animate-spin rounded-full h-12 w-12 border-[5px] border-gray-700 border-t-yellow-500"></div>
             </div>
           ) : sortedComments.length === 0 ? (
             <div className="bg-black rounded-lg p-8 flex flex-col items-center justify-center border border-gray-800">
@@ -313,7 +312,7 @@ function CommentForm({
                             {deleteComment.isLoading &&
                             deleteComment.variables?.commentId ===
                               comment._key ? (
-                              <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-600 border-t-white"></div>
+                              <div className="animate-spin rounded-full h-4 w-4 border-[2px] border-gray-600 border-t-yellow-500"></div>
                             ) : (
                               <FaTrashAlt />
                             )}
