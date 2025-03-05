@@ -110,6 +110,7 @@ export default function Home() {
         }`}
       >
         <div className="relative">
+          {/* Desktop Carousel */}
           <Carousel
             className="hidden md:block"
             autoPlay={true}
