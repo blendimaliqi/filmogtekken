@@ -12,6 +12,7 @@ import { moviesQuery } from "@/utils/groqQueries";
 import { Movie } from "@/typings";
 import { uuidv4 } from "@/utils/helperFunctions";
 import { useMovies } from "@/hooks";
+import { useRouter } from "next/router";
 
 export const centerStyle = {
   display: "flex",
@@ -26,8 +27,10 @@ export const moviesFilteredAtom = atom("default");
 
 export default function Home() {
   const [movies, setMovies] = useAtom(moviesAtom);
+  const [contentVisible, setContentVisible] = useState(false);
 
   const { isLoading, error, data, refetch } = useMovies();
+  const router = useRouter();
 
   useEffect(() => {
     if (data) {
@@ -35,18 +38,33 @@ export default function Home() {
     }
   }, [data, setMovies]);
 
+  // Add fade-in effect when component mounts or data loads
+  useEffect(() => {
+    if (!isLoading && data) {
+      // Small delay for smooth animation
+      const timer = setTimeout(() => {
+        setContentVisible(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, data]);
+
+  // Hide content when navigating away
+  useEffect(() => {
+    const handleRouteChange = () => {
+      setContentVisible(false);
+    };
+
+    router.events.on("routeChangeStart", handleRouteChange);
+    return () => {
+      router.events.off("routeChangeStart", handleRouteChange);
+    };
+  }, []);
+
   if (isLoading) {
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-black z-50">
-        <ColorRing
-          visible={true}
-          height="80"
-          width="80"
-          ariaLabel="blocks-loading"
-          wrapperStyle={{}}
-          wrapperClass="blocks-wrapper"
-          colors={["#cacaca", "#cacaca", "#cacaca", "#cacaca", "#cacaca"]}
-        />
+        <div className="animate-spin rounded-full h-12 w-12 border-[5px] border-gray-700 border-t-white"></div>
       </div>
     );
   }
@@ -86,101 +104,113 @@ export default function Home() {
 
   return (
     <main className="bg-black">
-      <div className="relative">
-        <Carousel
-          className="hidden md:block"
-          autoPlay={true}
-          interval={10000}
-          stopOnHover={false}
-          infiniteLoop={true}
-          showThumbs={false}
-          showStatus={false}
-          showArrows={true}
-          swipeable={true}
-          emulateTouch={true}
-          dynamicHeight={false}
-          renderIndicator={(onClickHandler, isSelected, index, label) => {
-            const indicatorClasses = isSelected
-              ? "w-12 bg-yellow-600"
-              : "w-8 bg-gray-700 hover:bg-gray-600";
+      <div
+        className={`transition-opacity duration-300 ${
+          contentVisible ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        <div className="relative">
+          <Carousel
+            className="hidden md:block"
+            autoPlay={true}
+            interval={10000}
+            stopOnHover={false}
+            infiniteLoop={true}
+            showThumbs={false}
+            showStatus={false}
+            showArrows={true}
+            swipeable={true}
+            emulateTouch={true}
+            dynamicHeight={false}
+            renderIndicator={(onClickHandler, isSelected, index, label) => {
+              const indicatorClasses = isSelected
+                ? "w-12 bg-yellow-600"
+                : "w-8 bg-gray-700 hover:bg-gray-600";
 
-            return (
-              <button
-                type="button"
-                onClick={onClickHandler}
-                className={`h-1.5 rounded-full mx-1 transition-all duration-300 ${indicatorClasses}`}
-                aria-label={`Slide ${index + 1}`}
-                title={`${label} ${index + 1}`}
-              />
-            );
-          }}
-          renderArrowPrev={(onClickHandler, hasPrev) =>
-            hasPrev && (
-              <button
-                type="button"
-                onClick={onClickHandler}
-                className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300"
-                aria-label="Previous slide"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+              return (
+                <button
+                  type="button"
+                  onClick={onClickHandler}
+                  className={`h-1.5 rounded-full mx-1 transition-all duration-300 ${indicatorClasses}`}
+                  aria-label={`Slide ${index + 1}`}
+                  title={`${label} ${index + 1}`}
+                />
+              );
+            }}
+            renderArrowPrev={(onClickHandler, hasPrev) =>
+              hasPrev && (
+                <button
+                  type="button"
+                  onClick={onClickHandler}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300"
+                  aria-label="Previous slide"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-              </button>
-            )
-          }
-          renderArrowNext={(onClickHandler, hasNext) =>
-            hasNext && (
-              <button
-                type="button"
-                onClick={onClickHandler}
-                className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300"
-                aria-label="Next slide"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 19l-7-7 7-7"
+                    />
+                  </svg>
+                </button>
+              )
+            }
+            renderArrowNext={(onClickHandler, hasNext) =>
+              hasNext && (
+                <button
+                  type="button"
+                  onClick={onClickHandler}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300"
+                  aria-label="Next slide"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </button>
-            )
-          }
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
+              )
+            }
+          >
+            {moviesToDisplay.map((movie: Movie) => (
+              <HomepageImage
+                key={uuidv4()}
+                url={urlFor(movie.poster_backdrop.asset).url() ?? ""}
+              >
+                <MovieTitle movie={movie} />
+              </HomepageImage>
+            ))}
+          </Carousel>
+
+          {/* Gradient overlay to create seamless transition to movies section */}
+          <div className="hidden md:block absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-black to-transparent"></div>
+        </div>
+
+        {/* Pass the sortedMovies to the Movies component */}
+        <div
+          className={`transition-opacity duration-300 ${
+            contentVisible ? "opacity-100 animate-pureFade" : "opacity-0"
+          }`}
         >
-          {moviesToDisplay.map((movie: Movie) => (
-            <HomepageImage
-              key={uuidv4()}
-              url={urlFor(movie.poster_backdrop.asset).url() ?? ""}
-            >
-              <MovieTitle movie={movie} />
-            </HomepageImage>
-          ))}
-        </Carousel>
-
-        {/* Gradient overlay to create seamless transition to movies section */}
-        <div className="hidden md:block absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-black to-transparent"></div>
+          <Movies movies={sortedMovies} />
+        </div>
       </div>
-
-      {/* Pass the sortedMovies to the Movies component */}
-      <Movies movies={sortedMovies} />
     </main>
   );
 }
