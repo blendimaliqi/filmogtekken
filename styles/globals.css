@@ -126,6 +126,85 @@
       opacity: 0;
     }
   }
+
+  /* Backdrop image animation - combines scale and fade */
+  .animate-backdropReveal {
+    animation: backdropReveal 1.2s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+  }
+
+  @keyframes backdropReveal {
+    from {
+      transform: scale(0.95);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 0.9;
+    }
+  }
+
+  /* More dramatic backdrop reveal from center */
+  .animate-backdropRevealDramatic {
+    animation: backdropRevealDramatic 1.5s cubic-bezier(0.19, 1, 0.22, 1)
+      forwards;
+    transform-origin: center center;
+  }
+
+  @keyframes backdropRevealDramatic {
+    0% {
+      transform: scale(0.85);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 0.9;
+    }
+  }
+
+  /* Pure visibility transition for backdrop */
+  .animate-backdropFade {
+    animation: backdropFade 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  @keyframes backdropFade {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 0.9;
+    }
+  }
+
+  /* Elegant fade-in for backdrop with subtle timing */
+  .animate-backdropFadeElegant {
+    animation: backdropFadeElegant 0.8s ease-in-out forwards;
+  }
+
+  @keyframes backdropFadeElegant {
+    0% {
+      opacity: 0;
+    }
+    30% {
+      opacity: 0.3;
+    }
+    100% {
+      opacity: 0.9;
+    }
+  }
+
+  /* Fast fade-in for backdrop */
+  .animate-backdropFadeFast {
+    animation: backdropFadeFast 0.5s ease-out forwards;
+  }
+
+  @keyframes backdropFadeFast {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 0.9;
+    }
+  }
 }
 
 :root {

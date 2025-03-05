@@ -64,7 +64,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
       // Just show content with a small delay for smooth animation
       const timer = setTimeout(() => {
         setContentVisible(true);
-      }, 100);
+      }, 10);
       return () => clearTimeout(timer);
     }
 
@@ -76,12 +76,12 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
       // Data loaded, hide loader and show content
       const loaderTimer = setTimeout(() => {
         setShowLocalLoader(false);
-      }, 300);
+      }, 200);
 
       // Show content with a small delay after loader disappears
       const contentTimer = setTimeout(() => {
         setContentVisible(true);
-      }, 400);
+      }, 250);
 
       return () => {
         clearTimeout(loaderTimer);
@@ -251,8 +251,8 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
             alt="Movie backdrop"
             fill
             priority
-            className={`object-cover opacity-90 transition-opacity duration-700 ${
-              contentVisible ? "opacity-90" : "opacity-0"
+            className={`object-cover ${
+              contentVisible ? "animate-backdropFadeFast" : "opacity-0"
             }`}
           />
           {/* Enhanced gradient overlays for better text readability while showing more of the image */}
