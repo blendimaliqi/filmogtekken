@@ -8,9 +8,20 @@ function MiniNav() {
   const isLoading = status === "loading";
 
   return (
-    <nav className="flex flex-col w-full items-center md:hidden z-50">
-      {/* Login section - positioned at the top right */}
-      <div className="absolute top-4 right-4 z-30">
+    <nav className="flex w-full justify-between items-center px-4 py-4 md:hidden z-50 bg-black bg-opacity-80 backdrop-blur-sm">
+      {/* Title section */}
+      <div className="flex-1 flex justify-center">
+        <Link
+          draggable="false"
+          href="/"
+          className="text-2xl font-bold text-yellow-400 hover:text-yellow-500 transition duration-300 ease-in-out cursor-pointer"
+        >
+          Film med Gutta
+        </Link>
+      </div>
+
+      {/* Login section */}
+      <div className="flex items-center">
         {isLoading ? (
           <div className="bg-black bg-opacity-70 backdrop-blur-sm p-1.5 rounded-lg border border-gray-800">
             <div className="w-28 h-7 bg-gray-700 animate-pulse rounded"></div>
@@ -42,22 +53,13 @@ function MiniNav() {
           <button
             className="whitespace-nowrap bg-gradient-to-r from-yellow-700 to-yellow-600 px-3 py-1.5 rounded text-white text-sm font-medium
             hover:from-yellow-600 hover:to-yellow-500 transition duration-300 ease-in-out shadow-md"
-            onClick={() => signIn('discord', { callbackUrl: window.location.href })}
+            onClick={() =>
+              signIn("discord", { callbackUrl: window.location.href })
+            }
           >
             Logg inn
           </button>
         )}
-      </div>
-
-      {/* Title section - centered horizontally but lower vertically */}
-      <div className="absolute top-20 left-0 right-0 z-20 flex justify-center">
-        <Link
-          draggable="false"
-          href="/"
-          className="text-3xl font-bold text-yellow-400 hover:text-yellow-500 transition duration-300 ease-in-out cursor-pointer bg-black bg-opacity-50 px-4 py-2 rounded-lg backdrop-blur-sm"
-        >
-          Film med Gutta
-        </Link>
       </div>
     </nav>
   );

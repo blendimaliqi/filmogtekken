@@ -466,11 +466,11 @@ function Movies({ movies: propMovies }: MoviesProps) {
 
   return (
     <div className="bg-black min-h-screen">
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto py-4 md:py-8">
         {/* Search and filter section */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8 px-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 px-4 md:px-8 space-y-4 md:space-y-0 pt-2 md:pt-0">
           {/* Search input */}
-          <div className="relative w-full md:w-96 mb-4 md:mb-0">
+          <div className="relative w-full md:w-96 mb-2 md:mb-0">
             <input
               type="text"
               placeholder="Søk etter filmer..."
@@ -523,10 +523,10 @@ function Movies({ movies: propMovies }: MoviesProps) {
           </div>
 
           {/* Filter dropdown */}
-          <div className="flex items-center space-x-4">
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+            <div className="relative w-full sm:w-auto">
               <select
-                className="appearance-none bg-gray-800 text-white border border-gray-700 rounded-lg py-3 px-4 pr-8 focus:outline-none focus:ring-2 focus:ring-yellow-600 focus:border-transparent"
+                className="appearance-none w-full sm:w-auto bg-gray-800 text-white border border-gray-700 rounded-lg py-3 px-4 pr-8 focus:outline-none focus:ring-2 focus:ring-yellow-600 focus:border-transparent"
                 value={moviesFiltered}
                 onChange={(e) => handleSortByAverageRating(e.target.value)}
               >
@@ -555,7 +555,7 @@ function Movies({ movies: propMovies }: MoviesProps) {
             {session ? (
               <button
                 onClick={openModal}
-                className="bg-gradient-to-r from-yellow-600 to-yellow-700 text-white font-medium py-3 px-6 rounded-lg hover:from-yellow-500 hover:to-yellow-600 transition-all duration-300 flex items-center"
+                className="w-full sm:w-auto bg-gradient-to-r from-yellow-600 to-yellow-700 text-white font-medium py-3 px-6 rounded-lg hover:from-yellow-500 hover:to-yellow-600 transition-all duration-300 flex items-center justify-center"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -576,7 +576,7 @@ function Movies({ movies: propMovies }: MoviesProps) {
             ) : (
               <button
                 onClick={() => signIn("discord")}
-                className="bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 flex flex-col items-center"
+                className="w-full sm:w-auto bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 flex flex-col items-center"
               >
                 <div className="flex items-center mb-1">
                   <svg
@@ -602,7 +602,7 @@ function Movies({ movies: propMovies }: MoviesProps) {
         </div>
 
         {/* Movie grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 px-8 pb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 px-4 md:px-8 pb-8">
           {displayMovies.map((movie: any) => (
             <MovieComponent
               key={uuidv4()}
