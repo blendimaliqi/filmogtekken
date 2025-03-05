@@ -238,7 +238,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
       {/* Loading spinner - only shown when actually loading and no initial data */}
       {showLocalLoader && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black transition-opacity duration-500 animate-fadeIn">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-[5px] border-gray-700 border-t-white"></div>
         </div>
       )}
 

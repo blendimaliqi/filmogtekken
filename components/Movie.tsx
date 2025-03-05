@@ -36,7 +36,7 @@ function Movie({ title, poster, movie }: MovieProps) {
 
     const spinner = document.createElement("div");
     spinner.className =
-      "animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white";
+      "animate-spin rounded-full h-12 w-12 border-[5px] border-gray-700 border-t-white";
     overlay.appendChild(spinner);
 
     document.body.appendChild(overlay);
