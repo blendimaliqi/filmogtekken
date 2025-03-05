@@ -19,6 +19,7 @@ import { moviesQuery } from "@/utils/groqQueries";
 import { uploadExternalImage, uuidv4 } from "@/utils/helperFunctions";
 import type { Movie } from "@/typings";
 import { movieKeys } from "@/hooks/useMovie";
+import CustomToast from "./ui/CustomToast";
 
 interface MovieWithAverageRating extends Movie {
   averageRating: number;
@@ -307,15 +308,30 @@ function Movies({ movies: propMovies }: MoviesProps) {
       if (!movieExists) {
         console.log("Created movie:", mov);
 
-        toast.success(`${mov.title} lagt til 😁`, {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          theme: "dark",
-        });
+        toast.success(
+          ({ closeToast }) => (
+            <CustomToast
+              title="Film lagt til"
+              message={`${mov.title} er nå lagt til i din samling`}
+              type="success"
+              closeToast={closeToast}
+              posterUrl={mov.poster}
+            />
+          ),
+          {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: true,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            theme: "dark",
+            className:
+              "!bg-transparent !shadow-none !p-0 !rounded-none !max-w-sm",
+            bodyClassName: "!p-0 !m-0",
+            icon: false,
+          }
+        );
 
         // Create the movie in Sanity
         const createdMovie = await createPost(movieData);
@@ -368,15 +384,30 @@ function Movies({ movies: propMovies }: MoviesProps) {
         closeModal();
         setIsLoading(false);
       } else {
-        toast.error(`${mov.title} finnes allerede 😅`, {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          theme: "dark",
-        });
+        toast.error(
+          ({ closeToast }) => (
+            <CustomToast
+              title="Film finnes allerede"
+              message={`${mov.title} er allerede i din samling`}
+              type="error"
+              closeToast={closeToast}
+              posterUrl={mov.poster}
+            />
+          ),
+          {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: true,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            theme: "dark",
+            className:
+              "!bg-transparent !shadow-none !p-0 !rounded-none !max-w-sm",
+            bodyClassName: "!p-0 !m-0",
+            icon: false,
+          }
+        );
         setIsLoading(false);
         closeModal();
       }
@@ -384,15 +415,26 @@ function Movies({ movies: propMovies }: MoviesProps) {
       console.log("error", error);
       setIsLoading(false);
       toast.error(
-        "Det oppstod en feil ved tillegging av filmen. Prøv igjen senere.",
+        ({ closeToast }) => (
+          <CustomToast
+            title="Feil"
+            message="Det oppstod en feil ved tillegging av filmen. Prøv igjen senere."
+            type="error"
+            closeToast={closeToast}
+          />
+        ),
         {
           position: "top-right",
           autoClose: 5000,
-          hideProgressBar: false,
+          hideProgressBar: true,
           closeOnClick: true,
           pauseOnHover: true,
           draggable: true,
           theme: "dark",
+          className:
+            "!bg-transparent !shadow-none !p-0 !rounded-none !max-w-sm",
+          bodyClassName: "!p-0 !m-0",
+          icon: false,
         }
       );
     }
