@@ -59,7 +59,7 @@ export default function Home() {
     return () => {
       router.events.off("routeChangeStart", handleRouteChange);
     };
-  }, []);
+  }, [router.events]);
 
   if (isLoading) {
     return (
@@ -75,7 +75,7 @@ export default function Home() {
       <div className="flex flex-col items-center justify-center min-h-screen p-4 text-white">
         <h2 className="text-2xl font-bold mb-4">Error Loading Movies</h2>
         <p className="mb-4">
-          Sorry, we couldn't load the movies. Please try again later.
+          Sorry, we couldn&apos;t load the movies. Please try again later.
         </p>
         <button
           onClick={() => refetch()}
