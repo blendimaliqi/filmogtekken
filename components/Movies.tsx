@@ -44,6 +44,7 @@ function Movies({ movies: propMovies }: MoviesProps) {
   const { data: session } = useSession();
   const [tmdbMovies, setTmdbMovies] = useState<any[]>([]);
   const [input, setInput] = useState("");
+  const [hasSearched, setHasSearched] = useState(false);
   const queryClient = useQueryClient();
 
   // Use propMovies if provided, otherwise use the movies from the atom
@@ -53,34 +54,42 @@ function Movies({ movies: propMovies }: MoviesProps) {
   const getMovieRequest = useCallback(() => {
     try {
       // For regular search in the main page
-      if (searchTerm !== "" && !isModalOpen) {
-        const searchResults = moviesToUse.filter((movie: Movie) =>
-          movie.title.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setSortedMovies(searchResults);
+      if (!isModalOpen) {
+        if (searchTerm !== "") {
+          const searchResults = moviesToUse.filter((movie: Movie) =>
+            movie.title.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+          setSortedMovies(searchResults);
+        } else {
+          setSortedMovies([]);
+        }
         return;
       }
 
       // For TMDB search in the modal
-      if (isModalOpen && input !== "") {
-        setIsLoading(true);
-        // Call TMDB API to search for movies
-        fetch(
-          `https://api.themoviedb.org/3/search/movie?api_key=${process.env.TMDB_API_KEY}&language=en-US&query=${input}&page=1&include_adult=false`
-        )
-          .then((response) => response.json())
-          .then((data) => {
-            setTmdbMovies(data.results);
-            setIsLoading(false);
-          })
-          .catch((error) => {
-            console.error("Error searching TMDB:", error);
-            setIsLoading(false);
-          });
-      } else if (isModalOpen && input === "") {
-        setTmdbMovies([]);
-      } else if (!isModalOpen && searchTerm === "") {
-        setSortedMovies([]);
+      if (isModalOpen) {
+        // Only set hasSearched to true, indicating a search was performed
+        setHasSearched(true);
+
+        if (input !== "") {
+          setIsLoading(true);
+          // Call TMDB API to search for movies
+          fetch(
+            `https://api.themoviedb.org/3/search/movie?api_key=${process.env.TMDB_API_KEY}&language=en-US&query=${input}&page=1&include_adult=false`
+          )
+            .then((response) => response.json())
+            .then((data) => {
+              setTmdbMovies(data.results);
+              setIsLoading(false);
+            })
+            .catch((error) => {
+              console.error("Error searching TMDB:", error);
+              setIsLoading(false);
+            });
+        } else {
+          // Only clear results if the user explicitly searches with empty input
+          setTmdbMovies([]);
+        }
       }
     } catch (error) {
       console.error("Error searching movies:", error);
@@ -94,10 +103,20 @@ function Movies({ movies: propMovies }: MoviesProps) {
     input,
     setTmdbMovies,
     setIsLoading,
+    setHasSearched,
   ]);
 
   const [allMovies, setAllMovies] = useState<Movie[]>([]);
   const [isContentLoaded, setIsContentLoaded] = useState(false);
+
+  // Add useEffect to trigger search when searchTerm changes
+  useEffect(() => {
+    if (searchTerm !== "") {
+      getMovieRequest();
+    } else if (searchTerm === "" && !isModalOpen) {
+      setSortedMovies([]);
+    }
+  }, [searchTerm, getMovieRequest, isModalOpen, setSortedMovies]);
 
   const {
     isLoading: queryLoading,
@@ -122,8 +141,18 @@ function Movies({ movies: propMovies }: MoviesProps) {
 
   const [selectValue, setSelectValue] = useAtom(moviesFilteredAtom);
 
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
+  const openModal = () => {
+    setIsModalOpen(true);
+    setHasSearched(false);
+    setInput("");
+    setTmdbMovies([]);
+  };
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setInput("");
+    setTmdbMovies([]);
+    setHasSearched(false);
+  };
 
   async function refetchMovies() {
     try {
@@ -389,7 +418,9 @@ function Movies({ movies: propMovies }: MoviesProps) {
               placeholder="Søk etter filmer..."
               className="w-full bg-gray-800 text-white border border-gray-700 rounded-lg py-3 px-4 pl-12 focus:outline-none focus:ring-2 focus:ring-yellow-600 focus:border-transparent"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   getMovieRequest();
@@ -574,7 +605,11 @@ function Movies({ movies: propMovies }: MoviesProps) {
                   getMovieRequest();
                 }
               }}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setInput(value);
+                // Don't clear results when input is emptied
+              }}
               className="w-full pl-12 pr-14 py-4 bg-gray-800/80 backdrop-blur-sm text-white rounded-xl border border-gray-700/50 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200 shadow-lg"
             />
             <button
@@ -625,7 +660,7 @@ function Movies({ movies: propMovies }: MoviesProps) {
                 colors={["#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff"]}
               />
             </div>
-          ) : input === "" ? (
+          ) : !hasSearched ? (
             <div className="col-span-full flex flex-col items-center justify-center py-16 px-4 text-center">
               <div className="bg-yellow-600/20 p-4 rounded-full mb-4">
                 <svg
