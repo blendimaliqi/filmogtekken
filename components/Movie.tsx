@@ -97,14 +97,14 @@ function Movie({ title, poster, movie }: MovieProps) {
         ></div>
 
         {/* Content container */}
-        <div className="absolute inset-0 flex flex-col justify-end p-5">
+        <div className="absolute inset-0 flex flex-col justify-end p-3 sm:p-5">
           {/* Static content - always visible */}
           <div className="z-10">
-            <h3 className="text-white font-bold text-xl md:text-2xl line-clamp-2 drop-shadow-lg">
+            <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white line-clamp-2 drop-shadow-lg">
               {title}
             </h3>
             {movie.releaseDate && (
-              <p className="text-gray-300 text-sm md:text-base drop-shadow-md mt-1 mb-2">
+              <p className="text-xs sm:text-sm md:text-base text-gray-300 drop-shadow-md mt-1 mb-2">
                 {movie.releaseDate.split("-")[0]}
               </p>
             )}
@@ -121,11 +121,11 @@ function Movie({ title, poster, movie }: MovieProps) {
                 }`}
             >
               {/* Rating and comments */}
-              <div className="flex items-center space-x-3 mt-2 mb-4">
+              <div className="flex items-center space-x-3 mt-2 mb-2 sm:mb-4">
                 {averageRating && (
                   <div className="flex items-center">
-                    <AiFillStar className="text-yellow-400 mr-1" size={20} />
-                    <span className="text-white font-bold">
+                    <AiFillStar className="text-yellow-400 mr-1" size={16} />
+                    <span className="text-white text-sm sm:text-base font-bold">
                       {averageRating}
                     </span>
                   </div>
@@ -135,22 +135,24 @@ function Movie({ title, poster, movie }: MovieProps) {
                   <div className="flex items-center">
                     <AiOutlineComment
                       className="text-blue-300 mr-1"
-                      size={20}
+                      size={16}
                     />
-                    <span className="text-white font-bold">{commentCount}</span>
+                    <span className="text-white text-sm sm:text-base font-bold">
+                      {commentCount}
+                    </span>
                   </div>
                 )}
               </div>
 
               {/* Genres if available */}
               {movie.genres && movie.genres.length > 0 && (
-                <div className="flex flex-wrap gap-1 mb-4">
+                <div className="flex flex-wrap gap-1 mb-2 sm:mb-4">
                   {movie.genres
                     .slice(0, 2)
                     .map((genre: string, index: number) => (
                       <span
                         key={index}
-                        className="text-xs text-white/80 bg-white/10 px-2 py-0.5 rounded-full"
+                        className="text-[10px] sm:text-xs text-white/80 bg-white/10 px-1.5 sm:px-2 py-0.5 rounded-full"
                       >
                         {genre}
                       </span>
