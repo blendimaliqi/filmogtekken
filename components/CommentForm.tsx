@@ -196,10 +196,17 @@ function CommentForm({
                 <div className="flex justify-end mt-3">
                   <button
                     type="submit"
-                    disabled={!commentText.trim()}
-                    className="bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg py-2 px-6 font-medium transition-all duration-300 shadow-lg hover:shadow-yellow-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!commentText.trim() || addComment.isLoading}
+                    className="bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg py-2 px-6 font-medium transition-all duration-300 shadow-lg hover:shadow-yellow-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
-                    Kommenter
+                    {addComment.isLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-600 border-t-white"></div>
+                        <span>Kommenterer...</span>
+                      </>
+                    ) : (
+                      "Kommenter"
+                    )}
                   </button>
                 </div>
               </div>
@@ -238,7 +245,12 @@ function CommentForm({
       {/* Comments list */}
       {session && (
         <div className="space-y-6">
-          {sortedComments.length === 0 ? (
+          {commentsLoading ? (
+            <div className="bg-black rounded-lg p-8 flex flex-col items-center justify-center border border-gray-800">
+              <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-700 border-t-white mb-4"></div>
+              <p className="text-xl text-gray-400">Laster kommentarer...</p>
+            </div>
+          ) : sortedComments.length === 0 ? (
             <div className="bg-black rounded-lg p-8 flex flex-col items-center justify-center border border-gray-800">
               <FaRegCommentDots className="text-5xl text-gray-500 mb-4" />
               <p className="text-xl text-gray-400">Ingen kommentarer enda</p>
@@ -296,8 +308,15 @@ function CommentForm({
                             className="text-gray-400 hover:text-red-500 transition-colors duration-200"
                             title="Slett kommentar"
                             onClick={() => deleteCommentFromMovie(comment._key)}
+                            disabled={deleteComment.isLoading}
                           >
-                            <FaTrashAlt />
+                            {deleteComment.isLoading &&
+                            deleteComment.variables?.commentId ===
+                              comment._key ? (
+                              <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-600 border-t-white"></div>
+                            ) : (
+                              <FaTrashAlt />
+                            )}
                           </button>
                         )}
                     </div>
