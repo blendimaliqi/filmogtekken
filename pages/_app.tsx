@@ -2,7 +2,12 @@ import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import Image from "next/image";
 import Head from "next/head";
-import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQuery,
+} from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Provider } from "jotai";
 import { SessionProvider, useSession } from "next-auth/react";
 import Nav from "@/components/Nav";
@@ -14,66 +19,88 @@ import "react-toastify/dist/ReactToastify.css";
 import { ColorRing } from "react-loader-spinner";
 import { client, clientWithToken, urlFor } from "@/config/client";
 import { uploadExternalImage } from "@/utils/helperFunctions";
+import { useCurrentPerson, useUpdateProfileImage } from "@/hooks";
+
+// Create a client with better error handling
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      cacheTime: 1000 * 60 * 30, // 30 minutes
+      refetchOnWindowFocus: false,
+      retry: 1,
+      onError: (error) => {
+        console.error("Global query error:", error);
+      },
+    },
+    mutations: {
+      onError: (error) => {
+        console.error("Global mutation error:", error);
+      },
+    },
+  },
+});
 
 // Component to handle profile image updates
 function ProfileImageUpdater() {
   const { data: session } = useSession();
-  
-  // Query to get the current user's person record
-  const { data: personData, refetch: refetchPerson } = useQuery({
-    queryKey: ["globalCurrentPerson"],
-    enabled: !!session && !!session.user,
-    queryFn: async () => {
-      if (!session || !session.user || !session.user.name) return null;
-      const personQuery = `*[_type == "person" && name == "${session.user.name}"]`;
-      const result = await client.fetch(personQuery);
-      return result[0] || null;
-    },
-  });
+  const { data: personData, refetch: refetchPerson } = useCurrentPerson();
+  const updateProfileImage = useUpdateProfileImage();
 
-  const updateProfileImageIfChanged = useCallback(async (person: any, currentImageUrl: string) => {
-    if (!person || !person.image || !person.image.asset) return;
-    
-    try {
-      const storedImageUrl = urlFor(person.image).url();
-      
-      // Extract just the base URL without query parameters for comparison
-      const storedImageBase = storedImageUrl.split('?')[0];
-      const currentImageBase = currentImageUrl.split('?')[0];
-      
-      // If the Discord image URL has changed, update the person's image in Sanity
-      if (storedImageBase !== currentImageBase) {
-        console.log("Updating profile image globally...");
-        const imageAsset = await uploadExternalImage(currentImageUrl);
-        
-        await clientWithToken
-          .patch(person._id)
-          .set({
-            image: {
-              _type: "image",
-              asset: {
-                _ref: imageAsset._id,
-              },
+  const updateProfileImageIfChanged = useCallback(
+    async (person: any, currentImageUrl: string) => {
+      if (!person || !person.image || !person.image.asset) return;
+
+      try {
+        const storedImageUrl = urlFor(person.image).url();
+
+        // Extract just the base URL without query parameters for comparison
+        const storedImageBase = storedImageUrl.split("?")[0];
+        const currentImageBase = currentImageUrl.split("?")[0];
+
+        // If the Discord image URL has changed, update the person's image in Sanity
+        if (storedImageBase !== currentImageBase) {
+          console.log("Updating profile image globally...");
+
+          updateProfileImage.mutate(
+            {
+              personId: person._id,
+              imageUrl: currentImageUrl,
             },
-          })
-          .commit();
-          
-        console.log("Profile image updated successfully globally");
-        localStorage.setItem(`profile_update_${person._id}`, Date.now().toString());
-        refetchPerson();
+            {
+              onSuccess: () => {
+                console.log("Profile image updated successfully globally");
+                localStorage.setItem(
+                  `profile_update_${person._id}`,
+                  Date.now().toString()
+                );
+                refetchPerson();
+              },
+              onError: (error) => {
+                console.error("Error updating profile image globally:", error);
+              },
+            }
+          );
+        }
+      } catch (error) {
+        console.error("Error updating profile image globally:", error);
       }
-    } catch (error) {
-      console.error("Error updating profile image globally:", error);
-    }
-  }, [refetchPerson]);
+    },
+    [refetchPerson, updateProfileImage]
+  );
 
   useEffect(() => {
     if (session && session.user && personData && session.user.image) {
-      const lastUpdateTime = localStorage.getItem(`profile_update_${personData._id}`);
+      const lastUpdateTime = localStorage.getItem(
+        `profile_update_${personData._id}`
+      );
       const currentTime = Date.now();
-      
+
       // Only update if it's been more than 24 hours since the last update
-      if (!lastUpdateTime || (currentTime - parseInt(lastUpdateTime)) > 24 * 60 * 60 * 1000) {
+      if (
+        !lastUpdateTime ||
+        currentTime - parseInt(lastUpdateTime) > 24 * 60 * 60 * 1000
+      ) {
         updateProfileImageIfChanged(personData, session.user.image);
       }
     }
@@ -89,16 +116,21 @@ export default function App({
   Component: any;
   pageProps: any;
 }) {
-  const queryClient = new QueryClient();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const handleStart = () => setLoading(true);
+    const handleStart = () => {
+      console.log("Route change started");
+      setLoading(true);
+    };
+
     const handleComplete = () => {
+      console.log("Route change completed");
+      // Add a small delay to ensure smooth transition
       setTimeout(() => {
         setLoading(false);
-      }, 100); // Small delay to ensure smooth transition
+      }, 100);
     };
 
     router.events.on("routeChangeStart", handleStart);
@@ -134,8 +166,16 @@ export default function App({
             <title>Film med Gutta</title>
           </Head>
           <style>{`body { overflow-x: hidden; }`}</style>
-          
-          <div style={{ position: "absolute", top: "0", left: "0", zIndex: "20", width: "100%" }}>
+
+          <div
+            style={{
+              position: "absolute",
+              top: "0",
+              left: "0",
+              zIndex: "20",
+              width: "100%",
+            }}
+          >
             <Nav />
           </div>
           <div className="flex flex-col justify-center items-center">
@@ -144,8 +184,9 @@ export default function App({
           <div className="pt-0 md:pt-0">
             <Component {...pageProps} />
           </div>
-          
+
           <ToastContainer />
+          <ReactQueryDevtools initialIsOpen={false} />
         </Provider>
       </QueryClientProvider>
     </SessionProvider>
