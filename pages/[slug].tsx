@@ -13,6 +13,8 @@ import { ColorRing } from "react-loader-spinner";
 import { Movie } from "../typings";
 import CommentForm from "@/components/CommentForm";
 import { GetServerSideProps } from "next";
+import { useMovie, useCurrentPerson, useRateMovie } from "@/hooks";
+import { toast } from "react-toastify";
 
 const centerStyle = {
   display: "flex",
@@ -42,27 +44,13 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
     error,
     data: movie,
     refetch,
-  }: UseQueryResult<Movie, Error> = useQuery({
-    queryKey: ["movie", router.query.slug],
-    initialData: initialMovieData,
-    onError: (error) => {
-      refetch();
-      console.log(error);
-    },
-    queryFn: () => client.fetch(movieQuery, { movieId: router.query.slug }),
-  });
+  } = useMovie(router.query.slug as string, initialMovieData || undefined);
 
-  // Query to get the current user's person record
-  const { data: personData, refetch: refetchPerson } = useQuery({
-    queryKey: ["currentPerson"],
-    enabled: !!session && !!session.user,
-    queryFn: async () => {
-      if (!session || !session.user || !session.user.name) return null;
-      const personQuery = `*[_type == "person" && name == "${session.user.name}"]`;
-      const result = await client.fetch(personQuery);
-      return result[0] || null;
-    },
-  });
+  // Get the current user's person record
+  const { data: personData, refetch: refetchPerson } = useCurrentPerson();
+
+  // Use the rating mutation
+  const rateMovieMutation = useRateMovie();
 
   const updateProfileImageIfChanged = useCallback(
     async (person: any, currentImageUrl: string) => {
@@ -124,9 +112,9 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
     }
   }, [session, personData, updateProfileImageIfChanged]);
 
-  if (!movie)
+  if (!movie) {
     return (
-      <div style={centerStyle}>
+      <div className="fixed inset-0 flex justify-center items-center bg-black z-50">
         <ColorRing
           visible={true}
           height="80"
@@ -138,7 +126,9 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
         />
       </div>
     );
-  const movieData: Movie = movie;
+  }
+
+  const movieData = movie || {};
 
   if (isLoading || status === "loading")
     return (
@@ -159,83 +149,27 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
 
   async function rateMovie(movieId: string, rating: number) {
     try {
-      if (!session || !session.user || !session.user.name) {
+      if (!session || !session.user || !session.user.name || !personData) {
         return;
       }
-      const userName = session.user.name;
-      const personQuery = `*[_type == "person" && name == "${userName}"]`;
-      const [existingPerson] = await client.fetch(personQuery);
 
-      let person: any;
-
-      if (!existingPerson) {
-        // Create a new person if not found
-        const imageAsset = await uploadExternalImage(session.user.image ?? "");
-        const imageAssetId = imageAsset._id;
-
-        const newPerson = {
-          _type: "person",
-          _id: uuidv4(),
-          name: userName,
-          image: {
-            _type: "image",
-            asset: {
-              _ref: imageAssetId,
-            },
+      rateMovieMutation.mutate(
+        {
+          movieId,
+          personId: personData._id,
+          rating,
+        },
+        {
+          onSuccess: () => {
+            refetch();
           },
-          slug: {
-            _type: "slug",
-            current: userName?.toLowerCase().replace(/\s+/g, "-"),
+          onError: (error) => {
+            console.error("Error rating movie:", error);
           },
-        };
-
-        person = await clientWithToken.create(newPerson);
-      } else {
-        person = existingPerson;
-      }
-
-      const movieQueryWithRating = `*[_type == "movie" && _id == "${movieId}" && defined(ratings)]`;
-
-      const [movieWithRating] = await client.fetch(movieQueryWithRating);
-
-      if (movieWithRating) {
-        const existingRatingIndex = movieWithRating.ratings.findIndex(
-          (rating: any) => rating.person._ref === person._id
-        );
-
-        if (existingRatingIndex > -1) {
-          const updatedRatings = [...movieWithRating.ratings];
-          updatedRatings[existingRatingIndex].rating = rating;
-          movieWithRating.ratings = updatedRatings;
-        } else {
-          const newRating = {
-            _key: uuidv4(),
-            person: { _type: "reference", _ref: person._id },
-            rating: rating,
-          };
-          movieWithRating.ratings.push(newRating);
         }
-
-        const updatedMovie = await clientWithToken
-          .patch(movieId)
-          .set({ ratings: movieWithRating.ratings })
-          .commit();
-      } else {
-        const newRating = {
-          _key: uuidv4(),
-          person: { _type: "reference", _ref: person._id },
-          rating: rating,
-        };
-
-        const updatedMovie = await clientWithToken
-          .patch(movieId)
-          .setIfMissing({ ratings: [] })
-          .append("ratings", [newRating])
-          .commit();
-      }
-      refetch();
+      );
     } catch (error) {
-      console.error("Error updating movie rating:", error);
+      console.error("Error rating movie:", error);
     }
   }
 
@@ -287,7 +221,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
                     />
                   </svg>
                   <span className="text-sm">
-                    {new Date(movieData.releaseDate ?? "").getFullYear()}
+                    {new Date(movieData.releaseDate).getFullYear()}
                   </span>
                 </div>
               )}
@@ -318,7 +252,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
                   <span className="text-sm">
                     {(
                       movieData.ratings.reduce(
-                        (acc: number, curr: any) => acc + curr.rating,
+                        (acc: number, curr: any) => acc + (curr.rating || 0),
                         0
                       ) / movieData.ratings.length
                     ).toFixed(1)}
@@ -413,7 +347,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
                         />
                       </svg>
                       <span className="text-base">
-                        {new Date(movieData.releaseDate ?? "").getFullYear()}
+                        {new Date(movieData.releaseDate).getFullYear()}
                       </span>
                     </div>
                   )}
@@ -444,7 +378,8 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
                       <span className="text-base">
                         {(
                           movieData.ratings.reduce(
-                            (acc: number, curr: any) => acc + curr.rating,
+                            (acc: number, curr: any) =>
+                              acc + (curr.rating || 0),
                             0
                           ) / movieData.ratings.length
                         ).toFixed(1)}
@@ -551,51 +486,60 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
         {movieData.ratings && movieData.ratings.length > 0 && (
           <div className="mt-16 md:mt-32 mb-12 md:mb-16">
             <h2 className="text-xl md:text-2xl font-bold text-white mb-4 md:mb-6 border-b border-gray-800 pb-2">
-              Individuelle vurderinger
+              Vurderinger
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 justify-items-start">
-              {movieData.ratings.map((rating: any) => (
-                <div
-                  key={uuidv4()}
-                  className="flex flex-col items-center transition-transform duration-300 hover:transform hover:scale-105"
-                >
-                  {rating.person.image.asset && (
-                    <Image
-                      width={64}
-                      height={64}
-                      src={urlFor(rating.person.image.asset).url()}
-                      alt={rating.person.name ?? "Ukjent"}
-                      className="rounded-full w-16 h-16 md:w-20 md:h-20 object-cover border-3 border-gray-800 shadow-md mb-2 md:mb-3"
-                    />
-                  )}
-                  <div className="flex flex-col items-center">
-                    <div className="bg-yellow-600 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center mb-1 md:mb-2">
-                      <span className="text-white font-bold text-sm md:text-base">
-                        {rating.rating}
+              {movieData.ratings &&
+                movieData.ratings.map((rating: any) => (
+                  <div
+                    key={uuidv4()}
+                    className="flex flex-col items-center transition-transform duration-300 hover:transform hover:scale-105"
+                  >
+                    {rating.person &&
+                    rating.person.image &&
+                    rating.person.image.asset ? (
+                      <Image
+                        width={64}
+                        height={64}
+                        src={urlFor(rating.person.image.asset).url()}
+                        alt={rating.person.name ?? "Ukjent"}
+                        className="rounded-full w-16 h-16 md:w-20 md:h-20 object-cover border-3 border-gray-800 shadow-md mb-2 md:mb-3"
+                      />
+                    ) : (
+                      <div className="rounded-full w-16 h-16 md:w-20 md:h-20 bg-gray-700 flex items-center justify-center mb-2 md:mb-3">
+                        <span className="text-gray-400 text-xl">?</span>
+                      </div>
+                    )}
+                    <div className="flex flex-col items-center">
+                      <div className="bg-yellow-600 rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center mb-1 md:mb-2">
+                        <span className="text-white font-bold text-sm md:text-base">
+                          {rating.rating}
+                        </span>
+                      </div>
+                      <span className="text-white text-xs md:text-sm font-medium text-center">
+                        {rating.person && rating.person.name
+                          ? rating.person.name
+                          : "Ukjent"}
                       </span>
                     </div>
-                    <p className="text-white text-sm md:text-base font-medium text-center">
-                      {rating.person.name}
-                    </p>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           </div>
         )}
 
         {/* Comments section */}
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-16 bg-black">
-          <h2 className="text-xl md:text-2xl font-bold text-white mb-4 md:mb-6 border-b border-gray-800 pb-2">
-            Kommentarer
-          </h2>
-          <CommentForm
-            refetch={refetch}
-            movieData={movieData}
-            movieId={movieData._id}
-            session={session}
-          />
-        </div>
+        <section className="py-16 bg-black">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-bold text-white mb-8">Kommentarer</h2>
+            <CommentForm
+              movieId={movieData._id}
+              session={session}
+              movieData={movieData}
+              refetch={refetch}
+            />
+          </div>
+        </section>
       </div>
     </main>
   );
