@@ -2,7 +2,11 @@ import RatingModal from "@/components/modal/RatingModal";
 import { client, clientWithToken, urlFor } from "@/config/client";
 import { movieQuery } from "@/utils/groqQueries";
 import { uploadExternalImage, uuidv4 } from "@/utils/helperFunctions";
-import { useQuery, UseQueryResult } from "@tanstack/react-query";
+import {
+  useQuery,
+  UseQueryResult,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useSession, signIn } from "next-auth/react";
 import Head from "next/head";
 import Image from "next/image";
@@ -24,13 +28,40 @@ const centerStyle = {
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { slug } = context.params!;
-  const movie = await client.fetch(movieQuery, { movieId: slug });
 
-  return {
-    props: {
-      initialMovieData: movie || null,
-    },
-  };
+  try {
+    // Use a simpler query for initial load to improve performance
+    // We'll fetch comments and ratings client-side
+    const movie = await client.fetch(
+      `*[_type == "movie" && (slug.current == $movieId || _id == $movieId)][0]{
+        _id,
+        title,
+        slug,
+        poster,
+        poster_backdrop,
+        overview,
+        releaseDate,
+        genres,
+        cast,
+        director,
+        trailer
+      }`,
+      { movieId: slug }
+    );
+
+    return {
+      props: {
+        initialMovieData: movie || null,
+      },
+    };
+  } catch (error) {
+    console.error("Error in getServerSideProps:", error);
+    return {
+      props: {
+        initialMovieData: null,
+      },
+    };
+  }
 };
 
 function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
@@ -39,6 +70,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
   const [open, setOpen] = useState(false);
   const [contentVisible, setContentVisible] = useState(false);
   const [showLocalLoader, setShowLocalLoader] = useState(false);
+  const queryClient = useQueryClient();
 
   const {
     isLoading,
@@ -46,6 +78,16 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
     data: movie,
     refetch,
   } = useMovie(router.query.slug as string, initialMovieData || undefined);
+
+  // Pre-populate the cache with the initial data
+  useEffect(() => {
+    if (initialMovieData && router.query.slug) {
+      queryClient.setQueryData(
+        ["movies", "detail", router.query.slug as string],
+        initialMovieData
+      );
+    }
+  }, [initialMovieData, queryClient, router.query.slug]);
 
   // Handle loading state
   useEffect(() => {
@@ -58,8 +100,8 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
       }, 300);
     }
 
-    // If we have initial data, don't show loader
-    if (initialMovieData) {
+    // If we have initial data or cached data, don't show loader
+    if (initialMovieData || movie) {
       // Just show content with a small delay for smooth animation
       const timer = setTimeout(() => {
         setContentVisible(true);
@@ -68,7 +110,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
     }
 
     // If we're loading and don't have initial data, show loader
-    if (isLoading && !initialMovieData) {
+    if (isLoading && !initialMovieData && !movie) {
       setShowLocalLoader(true);
       setContentVisible(false);
     } else {
@@ -235,15 +277,31 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
       <div className="relative w-full h-[65vh] md:h-[85vh] pt-12 md:pt-24">
         {/* Movie backdrop */}
         <div className="absolute inset-0 w-full h-full">
-          <Image
-            src={urlFor(movieData.poster_backdrop.asset).url()}
-            alt="Movie backdrop"
-            fill
-            priority
-            className={`object-cover ${
-              contentVisible ? "animate-backdropFadeFast" : "opacity-0"
-            }`}
-          />
+          {movieData.poster_backdrop && movieData.poster_backdrop.asset ? (
+            <Image
+              src={urlFor(movieData.poster_backdrop.asset).url()}
+              alt="Movie backdrop"
+              fill
+              priority
+              className={`object-cover ${
+                contentVisible ? "animate-backdropFadeFast" : "opacity-0"
+              }`}
+            />
+          ) : movieData.poster && movieData.poster.asset ? (
+            <Image
+              src={urlFor(movieData.poster.asset).url()}
+              alt="Movie poster"
+              fill
+              priority
+              className={`object-cover object-center ${
+                contentVisible ? "animate-backdropFadeFast" : "opacity-0"
+              }`}
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-900 flex items-center justify-center">
+              <p className="text-gray-500 text-lg">No backdrop available</p>
+            </div>
+          )}
           {/* Lighter gradient overlays for a less dark appearance */}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent" />

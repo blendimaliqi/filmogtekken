@@ -5,7 +5,7 @@ import HomepageImage from "@/components/HomepageImage";
 import MovieTitle from "@/components/MovieTitle";
 import { client, urlFor } from "../config/client";
 import { ColorRing } from "react-loader-spinner";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { atom, useAtom } from "jotai";
 import Movies from "@/components/Movies";
 import { moviesQuery } from "@/utils/groqQueries";
@@ -28,6 +28,7 @@ export const moviesFilteredAtom = atom("default");
 export default function Home() {
   const [movies, setMovies] = useAtom(moviesAtom);
   const [contentVisible, setContentVisible] = useState(false);
+  const queryClient = useQueryClient();
 
   const { isLoading, error, data, refetch } = useMovies();
   const router = useRouter();
@@ -35,8 +36,24 @@ export default function Home() {
   useEffect(() => {
     if (data) {
       setMovies(data);
+
+      // Pre-populate individual movie cache entries to avoid refetching
+      data.forEach((movie) => {
+        const movieId = movie._id;
+        const slug = movie.slug?.current;
+
+        if (movieId) {
+          // Cache by ID
+          queryClient.setQueryData(["movies", "detail", movieId], movie);
+        }
+
+        if (slug) {
+          // Cache by slug
+          queryClient.setQueryData(["movies", "detail", slug], movie);
+        }
+      });
     }
-  }, [data, setMovies]);
+  }, [data, setMovies, queryClient]);
 
   // Add fade-in effect when component mounts or data loads
   useEffect(() => {

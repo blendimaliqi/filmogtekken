@@ -122,13 +122,13 @@ function CommentForm({
     );
   }
 
-  async function deleteCommentFromMovie(commentId: string) {
+  async function deleteCommentFromMovie(commentKey: string) {
     if (window.confirm("Are you sure you want to delete this comment?")) {
-      console.log("Deleting comment with ID:", commentId);
+      console.log("Deleting comment with key:", commentKey);
 
       deleteComment.mutate(
         {
-          commentId,
+          commentKey,
           movieId,
         },
         {
@@ -286,7 +286,7 @@ function CommentForm({
                         <p className="font-medium text-white">
                           {comment.person && comment.person.name
                             ? comment.person.name
-                            : "Unknown"}
+                            : "Ukjent bruker"}
                         </p>
                         <p className="text-gray-400 text-sm">
                           <TimeAgo
@@ -310,7 +310,7 @@ function CommentForm({
                             disabled={deleteComment.isLoading}
                           >
                             {deleteComment.isLoading &&
-                            deleteComment.variables?.commentId ===
+                            deleteComment.variables?.commentKey ===
                               comment._key ? (
                               <div className="animate-spin rounded-full h-4 w-4 border-[2px] border-gray-600 border-t-yellow-500"></div>
                             ) : (

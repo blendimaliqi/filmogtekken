@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { clientWithToken } from "@/config/client";
 import { movieKeys } from "./useMovie";
+import { Movie } from "@/typings";
 
 // Hook to rate a movie
 export function useRateMovie() {
@@ -44,7 +45,7 @@ export function useRateMovie() {
             {
               _key: `rating-${Date.now()}`,
               person: {
-                _type: "reference",
+                _type: "reference" as const,
                 _ref: personId,
               },
               rating,
@@ -53,11 +54,51 @@ export function useRateMovie() {
           .commit();
       }
     },
-    onSuccess: (_, variables) => {
-      // Invalidate and refetch the movie data
-      queryClient.invalidateQueries({
-        queryKey: movieKeys.detail(variables.movieId),
-      });
+    onSuccess: (result, variables) => {
+      // Update the cache directly instead of invalidating
+      const movieCache = queryClient.getQueryData<Movie>(
+        movieKeys.detail(variables.movieId)
+      );
+
+      if (movieCache) {
+        // Create a new rating object
+        const newRating = {
+          person: {
+            _type: "reference" as const,
+            _ref: variables.personId,
+          },
+          rating: variables.rating,
+        };
+
+        // Check if the rating already exists
+        const existingRatingIndex = movieCache.ratings?.findIndex(
+          (r) => r.person._ref === variables.personId
+        );
+
+        let updatedRatings = [...(movieCache.ratings || [])];
+
+        if (existingRatingIndex >= 0) {
+          // Update existing rating
+          updatedRatings[existingRatingIndex] = {
+            ...updatedRatings[existingRatingIndex],
+            rating: variables.rating,
+          };
+        } else {
+          // Add new rating
+          updatedRatings.push(newRating);
+        }
+
+        // Update the cache
+        queryClient.setQueryData(movieKeys.detail(variables.movieId), {
+          ...movieCache,
+          ratings: updatedRatings,
+        });
+      } else {
+        // If we don't have the movie in cache, invalidate to refetch
+        queryClient.invalidateQueries({
+          queryKey: movieKeys.detail(variables.movieId),
+        });
+      }
     },
   });
 }
@@ -96,10 +137,28 @@ export function useDeleteRating() {
         .commit();
     },
     onSuccess: (_, variables) => {
-      // Invalidate and refetch the movie data
-      queryClient.invalidateQueries({
-        queryKey: movieKeys.detail(variables.movieId),
-      });
+      // Update the cache directly instead of invalidating
+      const movieCache = queryClient.getQueryData<Movie>(
+        movieKeys.detail(variables.movieId)
+      );
+
+      if (movieCache && movieCache.ratings) {
+        // Filter out the rating from the person
+        const updatedRatings = movieCache.ratings.filter(
+          (r) => r.person._ref !== variables.personId
+        );
+
+        // Update the cache
+        queryClient.setQueryData(movieKeys.detail(variables.movieId), {
+          ...movieCache,
+          ratings: updatedRatings,
+        });
+      } else {
+        // If we don't have the movie in cache, invalidate to refetch
+        queryClient.invalidateQueries({
+          queryKey: movieKeys.detail(variables.movieId),
+        });
+      }
     },
   });
 }

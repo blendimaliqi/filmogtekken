@@ -13,7 +13,7 @@ import { SessionProvider, useSession } from "next-auth/react";
 import Nav from "@/components/Nav";
 import MiniNav from "@/components/MiniNav";
 import { useRouter } from "next/router";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ColorRing } from "react-loader-spinner";
@@ -25,10 +25,11 @@ import { useCurrentPerson, useUpdateProfileImage } from "@/hooks";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      cacheTime: 1000 * 60 * 30, // 30 minutes
+      staleTime: 1000 * 60 * 15, // 15 minutes (increased from 5)
+      cacheTime: 1000 * 60 * 60, // 60 minutes (increased from 30)
       refetchOnWindowFocus: false,
       retry: 1,
+      refetchOnMount: false, // Don't refetch when component mounts if data exists
       // Reduce excessive logging in production
       onError: (error) => {
         if (process.env.NODE_ENV !== "production") {
@@ -121,76 +122,71 @@ export default function App({
   Component: any;
   pageProps: any;
 }) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState("");
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [pageKey, setPageKey] = useState("");
-  const [fadeIn, setFadeIn] = useState(true);
+  const queryClientRef = useRef<QueryClient>();
+
+  // Initialize QueryClient if it doesn't exist yet
+  if (!queryClientRef.current) {
+    queryClientRef.current = queryClient;
+  }
+
+  // Handle route change start
+  const handleStart = (url: string) => {
+    // Don't show loading indicator for same-page anchor links
+    if (
+      url.includes("#") &&
+      url.split("#")[0] === router.asPath.split("#")[0]
+    ) {
+      return;
+    }
+
+    // Don't show loading for quick navigations (using cached data)
+    const hasMoviesCache = queryClient.getQueryData([
+      "movies",
+      "list",
+      { filters: "all" },
+    ]);
+    const targetSlug = url.split("/").pop();
+    const hasTargetMovieCache =
+      targetSlug && queryClient.getQueryData(["movies", "detail", targetSlug]);
+
+    // Only show loading for uncached routes or initial load
+    if (!hasMoviesCache || (targetSlug && !hasTargetMovieCache)) {
+      setIsLoading(true);
+      setLoadingText("Loading...");
+    }
+  };
+
+  // Handle route change complete
+  const handleComplete = () => {
+    setIsLoading(false);
+  };
+
+  // Handle route change error
+  const handleError = () => {
+    setIsLoading(false);
+  };
 
   useEffect(() => {
-    // Set the page key based on the route
-    setPageKey(router.asPath);
-
-    // Fade in the new page
-    setFadeIn(true);
-  }, [router.asPath]);
-
-  useEffect(() => {
-    // Track if we should show loading state
-    let loadingTimeout: NodeJS.Timeout;
-
-    const handleStart = (url: string) => {
-      // Only show loading for navigation to new pages, not for cached pages
-      const currentPath = router.asPath;
-      const targetPath = url.split("?")[0];
-
-      // Skip loading state for cached pages
-      if (currentPath !== targetPath) {
-        console.log("Route change started:", currentPath, "->", targetPath);
-
-        // Start fading out the current page
-        setFadeIn(false);
-
-        // Only show loading spinner after a delay (to avoid flashing for fast loads)
-        clearTimeout(loadingTimeout);
-        loadingTimeout = setTimeout(() => {
-          setLoading(true);
-        }, 300);
-      }
-    };
-
-    const handleComplete = () => {
-      console.log("Route change completed");
-
-      // Clear the loading timeout to prevent showing spinner for fast loads
-      clearTimeout(loadingTimeout);
-
-      // Hide loading spinner immediately
-      setLoading(false);
-
-      // Fade in the new page after a short delay
-      setTimeout(() => {
-        setFadeIn(true);
-      }, 100);
-    };
-
     router.events.on("routeChangeStart", handleStart);
     router.events.on("routeChangeComplete", handleComplete);
-    router.events.on("routeChangeError", handleComplete);
+    router.events.on("routeChangeError", handleError);
 
     return () => {
-      clearTimeout(loadingTimeout);
       router.events.off("routeChangeStart", handleStart);
       router.events.off("routeChangeComplete", handleComplete);
-      router.events.off("routeChangeError", handleComplete);
+      router.events.off("routeChangeError", handleError);
     };
-  }, [router]);
+  }, [router.events]);
 
   return (
     <SessionProvider session={session}>
       <QueryClientProvider client={queryClient}>
         <Provider>
           <ProfileImageUpdater />
-          {loading && (
+          {isLoading && (
             <div className="fixed inset-0 flex justify-center items-center bg-black/90 z-50 animate-fadeIn">
               <div className="flex flex-col items-center">
                 <div className="animate-spin rounded-full h-16 w-16 border-[6px] border-gray-600 border-t-yellow-500"></div>
@@ -252,9 +248,8 @@ export default function App({
           </div>
           <div
             className={`pt-0 md:pt-0 page-transition ${
-              fadeIn ? "opacity-100" : "opacity-0"
+              !isLoading ? "opacity-100" : "opacity-0"
             }`}
-            key={pageKey}
           >
             <Component {...pageProps} />
           </div>

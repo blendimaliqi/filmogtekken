@@ -1,4 +1,8 @@
-import { useQuery, UseQueryResult } from "@tanstack/react-query";
+import {
+  useQuery,
+  UseQueryResult,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { client } from "@/config/client";
 import { Movie } from "@/typings";
 
@@ -17,12 +21,31 @@ export function useMovie(
   slugOrId: string | string[] | undefined,
   initialData?: Movie
 ): UseQueryResult<Movie, Error> {
+  const queryClient = useQueryClient();
+
   return useQuery({
     queryKey: movieKeys.detail(slugOrId as string),
     queryFn: async () => {
       if (!slugOrId) throw new Error("No slug or ID provided");
 
       try {
+        // Check if we already have this movie in the cache from the list query
+        const allMoviesCache = queryClient.getQueryData<Movie[]>(
+          movieKeys.list(undefined)
+        );
+
+        if (allMoviesCache) {
+          const cachedMovie = allMoviesCache.find(
+            (m) => m.slug?.current === slugOrId || m._id === slugOrId
+          );
+
+          // If we have a basic version of the movie in cache, we can use it while fetching details
+          if (cachedMovie && !initialData) {
+            // Use as initialData if not already provided
+            initialData = cachedMovie;
+          }
+        }
+
         // Only log in development
         if (process.env.NODE_ENV !== "production") {
           console.log("Fetching movie with slug or ID:", slugOrId);
@@ -84,7 +107,8 @@ export function useMovie(
     },
     enabled: !!slugOrId,
     initialData,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 15, // 15 minutes
+    refetchOnMount: false, // Don't refetch when component mounts if data exists
   });
 }
 
@@ -128,11 +152,11 @@ export function useMovies(filters?: string): UseQueryResult<Movie[], Error> {
         throw error;
       }
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    cacheTime: 1000 * 60 * 30, // 30 minutes
+    staleTime: 1000 * 60 * 15, // 15 minutes (increased from 5)
+    cacheTime: 1000 * 60 * 60, // 60 minutes (increased from 30)
     retry: 2,
     retryDelay: 1000,
-    refetchOnMount: true,
+    refetchOnMount: false, // Don't refetch when component mounts if data exists
     refetchOnWindowFocus: false,
     onError: (error) => {
       console.error("React Query error in useMovies:", error);
