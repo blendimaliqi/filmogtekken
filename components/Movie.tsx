@@ -33,46 +33,10 @@ const Movie = memo(function Movie({ title, poster, movie }: MovieProps) {
   // Get the correct URL path
   const moviePath = movie.slug?.current || movie._id;
 
-  const handleClick = async (e: React.MouseEvent) => {
-    e.preventDefault();
-
-    // Start the leaving animation
+  // Simplified click handler that lets Next.js handle the navigation
+  const handleClick = (e: React.MouseEvent) => {
+    // Don't prevent default - let Next.js Link handle the navigation
     setIsLeaving(true);
-
-    // Use a more lightweight approach for mobile
-    if (isMobile) {
-      router.push(`/${moviePath}`);
-      return;
-    }
-
-    // Create a full-screen black overlay with loading spinner
-    const overlay = document.createElement("div");
-    overlay.id = "movie-loading-overlay";
-    overlay.className =
-      "fixed inset-0 bg-black z-50 flex flex-col items-center justify-center transition-opacity duration-300";
-    overlay.style.opacity = "0";
-
-    // Use the standardized spinner
-    const spinnerContainer = document.createElement("div");
-    spinnerContainer.className = "flex flex-col items-center";
-
-    const spinner = document.createElement("div");
-    spinner.className =
-      "animate-spin rounded-full h-16 w-16 border-[6px] border-gray-600 border-t-yellow-500";
-
-    spinnerContainer.appendChild(spinner);
-    overlay.appendChild(spinnerContainer);
-
-    document.body.appendChild(overlay);
-
-    // Force reflow to ensure the transition works
-    void overlay.offsetWidth;
-    overlay.style.opacity = "1";
-
-    // Navigate after a short delay to allow the animation to complete
-    setTimeout(async () => {
-      await router.push(`/${moviePath}`);
-    }, 300);
   };
 
   // Calculate average rating and optimize with memoization

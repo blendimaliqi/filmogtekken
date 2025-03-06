@@ -69,14 +69,21 @@ export function useMovie(
               releaseDate,
               genres,
               length,
-              "ratings": ratings[] {
+              _createdAt,
+              ratings[] {
                 _key,
                 rating,
-                "person": person._ref
+                _createdAt,
+                person->{
+                  _id,
+                  name,
+                  image
+                }
               }
             }`
           : `*[_type == "movie" && (slug.current == $identifier || _id == $identifier)][0]{
               ...,
+              _createdAt,
               comments[] {
                 person-> {
                   name,
@@ -90,12 +97,14 @@ export function useMovie(
                 createdAt
               },
               ratings[] {
+                _key,
+                rating,
+                _createdAt,
                 person-> {
-                  name,
-                  image,
                   _id,
-                },
-                rating
+                  name,
+                  image
+                }
               }
             }`;
 

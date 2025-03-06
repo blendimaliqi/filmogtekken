@@ -44,6 +44,7 @@ export function useRateMovie() {
           .append("ratings", [
             {
               _key: `rating-${Date.now()}`,
+              _createdAt: new Date().toISOString(),
               person: {
                 _type: "reference" as const,
                 _ref: personId,
