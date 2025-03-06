@@ -39,6 +39,7 @@ export default function Home() {
   const queryClient = useQueryClient();
 
   const { isLoading, error, data, refetch } = useMovies();
+  console.log("Home - useMovies data:", data?.length);
   const router = useRouter();
 
   // Check for mobile view on mount and window resize
@@ -57,6 +58,7 @@ export default function Home() {
 
   useEffect(() => {
     if (data) {
+      console.log("Home - Setting movies from data:", data.length);
       setMovies(data);
 
       // Pre-populate individual movie cache entries to avoid refetching
@@ -106,16 +108,20 @@ export default function Home() {
   // Memoize the sorted movies to avoid unnecessary re-renders
   const sortedMovies = useMemo(() => {
     if (!data) return [];
-    return [...data].sort((a: Movie, b: Movie) => {
+    const sorted = [...data].sort((a: Movie, b: Movie) => {
       return (
         new Date(b._createdAt).getTime() - new Date(a._createdAt).getTime()
       );
     });
+    console.log("Home - Sorted movies:", sorted.length);
+    return sorted;
   }, [data]);
 
   // Memoize the movies to display in the carousel
   const moviesToDisplay = useMemo(() => {
-    return sortedMovies.slice(0, isMobileView ? 3 : 5);
+    const sliced = sortedMovies.slice(0, isMobileView ? 3 : 5);
+    console.log("Home - Movies to display in carousel:", sliced.length);
+    return sliced;
   }, [sortedMovies, isMobileView]);
 
   if (isLoading) {
