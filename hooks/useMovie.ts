@@ -4,7 +4,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { client } from "@/config/client";
-import { Movie } from "@/typings";
+import { Movie, BlockContent } from "@/typings";
 
 // Query key factory for movies
 export const movieKeys = {
@@ -58,9 +58,17 @@ export function useMovie(
         // Try to get by slug or ID with optimized query for mobile
         const movieQuery = isMobile
           ? `*[_type == "movie" && (slug.current == $identifier || _id == $identifier)][0]{
-              ...,
+              _id,
+              _type,
+              title,
+              slug,
+              poster,
+              poster_backdrop,
               overview,
               plot,
+              releaseDate,
+              genres,
+              length,
               "ratings": ratings[] {
                 _key,
                 rating,
@@ -98,27 +106,50 @@ export function useMovie(
           throw new Error("Movie not found");
         }
 
+        // Create a safe result object with default values for required fields
+        const safeResult = {
+          _type: "movie",
+          _id: result._id || "",
+          _rev: result._rev || "",
+          _createdAt: result._createdAt || "",
+          _updatedAt: result._updatedAt || "",
+          title: result.title || "Untitled Movie",
+          comments: result.comments || [],
+          ratings: result.ratings || [],
+          length: result.length || 0,
+          plot: result.plot || "",
+          slug: result.slug || { _type: "slug", current: "" },
+          overview: result.overview || null,
+          releaseDate: result.releaseDate || "",
+          poster: result.poster || null,
+          genres: result.genres || [],
+          poster_backdrop: result.poster_backdrop || null,
+          externalId: result.externalId || 0,
+          popularity: result.popularity || 0,
+          ...result,
+        };
+
         // For mobile, process the comments to reduce memory footprint and ensure plot field is available
         if (isMobile) {
           // Ensure we only keep essential data for ratings
-          if (result.ratings) {
-            result.ratings = result.ratings.map((rating: any) => ({
-              _key: rating._key,
-              rating: rating.rating,
+          if (safeResult.ratings) {
+            safeResult.ratings = safeResult.ratings.map((rating: any) => ({
+              _key: rating._key || "",
+              rating: rating.rating || 0,
               person: rating.person ? { _ref: rating.person } : null,
             }));
           }
 
           // Always ensure plot field is available regardless of overview format
-          if (!result.plot || result.plot === "") {
-            if (result.overview) {
+          if (!safeResult.plot || safeResult.plot === "") {
+            if (safeResult.overview) {
               try {
                 // Handle different types of overview field (string or BlockContent)
-                if (typeof result.overview === "string") {
-                  result.plot = result.overview;
-                } else if (Array.isArray(result.overview)) {
+                if (typeof safeResult.overview === "string") {
+                  safeResult.plot = safeResult.overview;
+                } else if (Array.isArray(safeResult.overview)) {
                   // Handle array format (sometimes used for rich text)
-                  result.plot = result.overview
+                  safeResult.plot = safeResult.overview
                     .map((block: any) => {
                       if (typeof block === "string") return block;
                       if (block && block.children) {
@@ -131,75 +162,75 @@ export function useMovie(
                     .join("\n")
                     .trim();
                 } else if (
-                  result.overview &&
-                  result.overview._type &&
-                  result.overview.children &&
-                  Array.isArray(result.overview.children)
+                  safeResult.overview &&
+                  safeResult.overview._type &&
+                  safeResult.overview.children &&
+                  Array.isArray(safeResult.overview.children)
                 ) {
                   // Try to extract text from blockContent if possible
-                  const blocks = result.overview.children || [];
-                  result.plot = blocks
+                  const blocks = safeResult.overview.children || [];
+                  safeResult.plot = blocks
                     .map((block: any) => block?.text || "")
                     .join("\n")
                     .trim();
                 } else {
                   // Fallback for other object structures - safely stringify
                   try {
-                    if (typeof result.overview === "object") {
+                    if (typeof safeResult.overview === "object") {
                       // Try to find any text property in the overview object
-                      const overviewObj = result.overview;
+                      const overviewObj = safeResult.overview;
                       if (overviewObj.text) {
-                        result.plot = overviewObj.text;
+                        safeResult.plot = overviewObj.text;
                       } else if (overviewObj.content) {
                         if (typeof overviewObj.content === "string") {
-                          result.plot = overviewObj.content;
+                          safeResult.plot = overviewObj.content;
                         } else if (Array.isArray(overviewObj.content)) {
-                          result.plot = overviewObj.content
+                          safeResult.plot = overviewObj.content
                             .map((item: any) =>
                               typeof item === "string" ? item : item?.text || ""
                             )
                             .join("\n");
                         }
                       } else {
-                        result.plot = "No description available";
+                        safeResult.plot = "No description available";
                       }
                     } else {
-                      result.plot = "No description available";
+                      safeResult.plot = "No description available";
                     }
                   } catch (e) {
                     console.error("Error processing overview object:", e);
-                    result.plot = "No description available";
+                    safeResult.plot = "No description available";
                   }
                 }
               } catch (e) {
                 console.error("Error processing overview:", e);
-                result.plot = "No description available";
+                safeResult.plot = "No description available";
               }
             } else {
               // No overview available
-              result.plot = "No description available";
+              safeResult.plot = "No description available";
             }
           }
         } else {
           // For desktop, ensure plot field is available from overview if needed
-          if (!result.plot && result.overview) {
+          if (!safeResult.plot && safeResult.overview) {
             // Handle different types of overview field (string or BlockContent)
-            if (typeof result.overview === "string") {
-              result.plot = result.overview;
-            } else if (result.overview._type === "blockContent") {
+            if (typeof safeResult.overview === "string") {
+              safeResult.plot = safeResult.overview;
+            } else if (safeResult.overview._type === "blockContent") {
               // Try to extract text from blockContent if possible
               try {
-                const blocks = result.overview.children || [];
-                result.plot = blocks
-                  .map((block: any) => block.text || "")
+                const blocks = safeResult.overview.children || [];
+                safeResult.plot = blocks
+                  .map((block: any) => block?.text || "")
                   .join("\n");
               } catch (e) {
                 console.error("Error extracting text from blockContent:", e);
-                result.plot = "No description available";
+                safeResult.plot = "No description available";
               }
             } else {
               // Fallback
-              result.plot = "No description available";
+              safeResult.plot = "No description available";
             }
           }
         }
@@ -207,23 +238,52 @@ export function useMovie(
         // Only log in development
         if (process.env.NODE_ENV !== "production") {
           // Log the raw data to help debug, but only in dev mode
-          console.log("Raw movie data:", result);
+          console.log("Raw movie data:", safeResult);
 
           // Check if the movie has comments
-          if (result.comments && result.comments.length > 0) {
-            console.log(`Movie has ${result.comments.length} comments`);
+          if (safeResult.comments && safeResult.comments.length > 0) {
+            console.log(`Movie has ${safeResult.comments.length} comments`);
           }
 
           // Check if the movie has ratings
-          if (result.ratings && result.ratings.length > 0) {
-            console.log(`Movie has ${result.ratings.length} ratings`);
+          if (safeResult.ratings && safeResult.ratings.length > 0) {
+            console.log(`Movie has ${safeResult.ratings.length} ratings`);
           }
         }
 
-        return result;
+        return safeResult;
       } catch (error) {
         console.error("Error fetching movie:", error);
-        throw error;
+
+        // Return a minimal valid Movie object in case of error
+        const fallbackMovie = {
+          _type: "movie",
+          _id: typeof slugOrId === "string" ? slugOrId : "",
+          _rev: "",
+          _createdAt: "",
+          _updatedAt: "",
+          title: "Error loading movie",
+          comments: [],
+          ratings: [],
+          length: 0,
+          plot: "There was an error loading this movie. Please try again later.",
+          slug: {
+            _type: "slug",
+            current: typeof slugOrId === "string" ? slugOrId : "",
+          },
+          overview: { _type: "block", children: [] } as BlockContent,
+          releaseDate: "",
+          poster: { _type: "image", asset: { _type: "reference", _ref: "" } },
+          genres: [],
+          poster_backdrop: {
+            _type: "image",
+            asset: { _type: "reference", _ref: "" },
+          },
+          externalId: 0,
+          popularity: 0,
+        } as Movie;
+
+        return fallbackMovie;
       }
     },
     enabled: !!slugOrId,
@@ -232,6 +292,10 @@ export function useMovie(
     refetchOnMount: false, // Don't refetch when component mounts if data exists
     refetchOnWindowFocus: false, // Don't refetch on window focus
     cacheTime: 1000 * 60 * 60, // 60 minutes
+    retry: 1, // Only retry once to avoid excessive requests on error
+    onError: (error) => {
+      console.error("React Query error in useMovie:", error);
+    },
   });
 }
 
