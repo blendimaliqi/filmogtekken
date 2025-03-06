@@ -334,13 +334,13 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
         {/* Backdrop image */}
         {movieData.poster_backdrop && movieData.poster_backdrop.asset && (
           <>
-            <div className="absolute inset-0 h-[80vh]">
+            <div className="absolute inset-0 h-[100vh]">
               <Image
                 src={urlFor(movieData.poster_backdrop).url()}
                 alt={movieData.title || "Movie backdrop"}
                 priority
                 fill
-                className="object-cover opacity-30"
+                className="object-cover opacity-40"
               />
               <div className="absolute inset-0 bg-gradient-to-b from-transparent from-40% to-black" />
             </div>
@@ -349,7 +349,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
 
         {/* Movie content */}
         <div
-          className={`relative pt-60 pb-20 px-4 md:px-8 lg:px-16 transition-opacity duration-700 ${
+          className={`relative pt-80 pb-40 px-4 md:px-8 lg:px-16 transition-opacity duration-700 ${
             contentVisible ? "opacity-100" : "opacity-0"
           }`}
         >
@@ -375,11 +375,21 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
 
               {/* Movie info */}
               <div className="flex-1 text-white">
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-8">
                   {movieData.title}
                 </h1>
 
                 <div className="flex flex-wrap items-center gap-4 mb-6 text-lg text-gray-300">
+                  {/* Added date */}
+                  {movieData._createdAt && (
+                    <div className="flex items-center">
+                      <span className="text-gray-400">
+                        Lagt til{" "}
+                        {new Date(movieData._createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  )}
+
                   {/* Release year */}
                   {movieData.releaseDate && (
                     <div className="flex items-center">
@@ -396,22 +406,14 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
                     </div>
                   )}
 
-                  {/* Added date */}
-                  {movieData._createdAt && (
-                    <div className="flex items-center">
-                      <span className="text-gray-400">
-                        Lagt til{" "}
-                        {new Date(movieData._createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Average rating */}
+                  {/* Average rating - enhanced visibility */}
                   {averageRating && (
-                    <div className="flex items-center gap-1">
-                      <span className="text-yellow-500">{averageRating}</span>
-                      <AiFillStar className="text-yellow-500" />
-                      <span className="text-sm">
+                    <div className="flex items-center gap-2 bg-yellow-600/20 px-4 py-1 rounded-full">
+                      <span className="text-yellow-500 text-xl font-bold">
+                        {averageRating}
+                      </span>
+                      <AiFillStar className="text-yellow-500 text-xl" />
+                      <span className="text-sm text-yellow-500/80">
                         ({movieData.ratings.length}{" "}
                         {movieData.ratings.length === 1 ? "rating" : "ratings"})
                       </span>
@@ -462,7 +464,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
 
       {/* Content section */}
       <div
-        className={`max-w-7xl mx-auto px-4 md:px-8 pb-20 transition-opacity duration-700 delay-200 ${
+        className={`relative max-w-7xl mx-auto px-4 md:px-8 pb-20 transition-opacity duration-700 delay-200 ${
           contentVisible ? "opacity-100" : "opacity-0"
         }`}
       >
@@ -475,7 +477,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
 
         {/* Individual ratings section */}
         {movieData.ratings && movieData.ratings.length > 0 && (
-          <div className="mt-24 mb-12">
+          <div className="mt-0 mb-12">
             <h2 className="text-2xl font-bold text-white mb-6 border-b border-yellow-600/50 pb-2">
               Individuell Rating
             </h2>
