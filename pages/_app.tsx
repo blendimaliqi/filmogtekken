@@ -66,8 +66,6 @@ function ProfileImageUpdater() {
 
         // If the Discord image URL has changed, update the person's image in Sanity
         if (storedImageBase !== currentImageBase) {
-          console.log("Updating profile image globally...");
-
           updateProfileImage.mutate(
             {
               personId: person._id,
@@ -75,7 +73,6 @@ function ProfileImageUpdater() {
             },
             {
               onSuccess: () => {
-                console.log("Profile image updated successfully globally");
                 localStorage.setItem(
                   `profile_update_${person._id}`,
                   Date.now().toString()

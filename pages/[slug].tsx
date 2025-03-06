@@ -28,17 +28,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     // We'll fetch comments and ratings client-side
     const movie = await client.fetch(movieQuery, { movieId: slug });
 
-    // Log the movie data to help debug
-    if (process.env.NODE_ENV !== "production") {
-      console.log("Movie data from getServerSideProps:", {
-        id: movie?._id,
-        title: movie?.title,
-        hasOverview: !!movie?.overview,
-        hasPlot: !!movie?.plot,
-        slug: movie?.slug?.current,
-      });
-    }
-
     return {
       props: {
         initialMovieData: movie || null,
@@ -122,7 +111,6 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
     initialData: initialMovieData,
     queryFn: async () => {
       if (!slug || typeof slug !== "string") return null;
-      console.log("Fetching movie data for slug:", slug);
       const result = await client.fetch(movieQuery, { movieId: slug });
       if (!result) {
         throw new Error(`Movie not found for slug: ${slug}`);
@@ -135,21 +123,6 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
     cacheTime: 1000 * 60 * 30, // Cache for 30 minutes
   });
 
-  // Debug log the movie data and query state
-  useEffect(() => {
-    if (process.env.NODE_ENV !== "production") {
-      console.log("Query state:", {
-        slug,
-        isRouteLoading,
-        isQueryLoading,
-        hasMovie: !!movie,
-        movieId: movie?._id,
-        routerReady: router.isReady,
-      });
-    }
-  }, [slug, isRouteLoading, isQueryLoading, movie, router.isReady]);
-
-  // Determine if we're in a loading state with more precise conditions
   const isLoading =
     !router.isReady ||
     isRouteLoading ||
@@ -219,8 +192,6 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
     try {
       if (!session?.user?.name) return;
 
-      console.log(`Rating movie with ID: ${movieId}, rating value: ${rating}`);
-
       const userName = session.user.name;
       const personQuery = `*[_type == "person" && name == "${userName}"]`;
       const [existingPerson] = await client.fetch(personQuery);
@@ -251,14 +222,6 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
         person = await client.create(newPerson);
       } else {
         person = existingPerson;
-      }
-
-      // Log the person for debugging
-      if (process.env.NODE_ENV !== "production") {
-        console.log("Rating from person:", {
-          id: person._id,
-          name: person.name,
-        });
       }
 
       const movieQueryWithRating = `*[_type == "movie" && _id == "${movieId}" && defined(ratings)]`;
