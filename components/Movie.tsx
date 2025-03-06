@@ -19,6 +19,15 @@ const Movie = memo(function Movie({ title, poster, movie }: MovieProps) {
   const [isLeaving, setIsLeaving] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  // Debug logs
+  console.log("Movie component - rendering:", {
+    title,
+    poster,
+    movieId: movie?._id,
+    slug: movie?.slug?.current,
+  });
 
   // Check if device is mobile on mount
   useEffect(() => {
@@ -52,10 +61,26 @@ const Movie = memo(function Movie({ title, poster, movie }: MovieProps) {
   const commentCount = movie.comments ? movie.comments.length : 0;
 
   // Optimize image URL
-  const optimizedImageUrl = urlFor(poster)
-    .width(isMobile ? 300 : 500)
-    .height(isMobile ? 450 : 750)
-    .url();
+  let optimizedImageUrl;
+  try {
+    optimizedImageUrl = urlFor(poster)
+      .width(isMobile ? 300 : 500)
+      .height(isMobile ? 450 : 750)
+      .url();
+    console.log("Movie component - optimizedImageUrl:", optimizedImageUrl);
+  } catch (error) {
+    console.error("Error generating image URL:", error);
+    optimizedImageUrl = "";
+  }
+
+  // If we have no poster URL, show a placeholder
+  if (!optimizedImageUrl) {
+    return (
+      <div className="relative aspect-[2/3] w-full bg-gray-800 rounded-xl flex items-center justify-center">
+        <h3 className="text-white text-center p-4">{title}</h3>
+      </div>
+    );
+  }
 
   return (
     <Link
@@ -72,7 +97,7 @@ const Movie = memo(function Movie({ title, poster, movie }: MovieProps) {
     >
       <div className="relative aspect-[2/3] w-full">
         {/* Loading skeleton */}
-        {!imageLoaded && (
+        {!imageLoaded && !imageError && (
           <div className="absolute inset-0 bg-gray-900 rounded-xl animate-pulse"></div>
         )}
 
@@ -80,16 +105,30 @@ const Movie = memo(function Movie({ title, poster, movie }: MovieProps) {
         <Image
           className={`w-full h-full object-cover rounded-xl select-none transition-transform duration-300 
             ${isHovered ? "scale-105" : "scale-100"}
-            ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+            ${imageLoaded && !imageError ? "opacity-100" : "opacity-0"}`}
           draggable={false}
           width={isMobile ? 300 : 500}
           height={isMobile ? 450 : 750}
           src={optimizedImageUrl}
           alt={title || "Movie poster"}
           loading="lazy"
-          onLoad={() => setImageLoaded(true)}
+          onLoad={() => {
+            console.log("Movie component - image loaded:", title);
+            setImageLoaded(true);
+          }}
+          onError={() => {
+            console.error("Movie component - image error:", title);
+            setImageError(true);
+          }}
           style={{ objectPosition: "center" }}
         />
+
+        {/* Show error state */}
+        {imageError && (
+          <div className="absolute inset-0 bg-gray-800 rounded-xl flex items-center justify-center">
+            <h3 className="text-white text-center p-4">{title}</h3>
+          </div>
+        )}
 
         {/* Permanent gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent rounded-xl"></div>
