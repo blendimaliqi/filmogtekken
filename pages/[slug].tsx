@@ -544,13 +544,27 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
         {/* Comments section */}
         <div className="py-16">
           <h2 className="text-2xl font-bold text-white mb-8">Kommentarer</h2>
-          <CommentForm
-            movieId={movieData._id}
-            session={session}
-            movieData={movieData}
-            refetch={refetch}
-            hideHeading={true}
-          />
+          {session ? (
+            <CommentForm
+              movieId={movieData._id}
+              session={session}
+              movieData={movieData}
+              refetch={refetch}
+              hideHeading={true}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center p-8 bg-zinc-900/50 rounded-xl backdrop-blur-sm border border-zinc-800/50">
+              <div className="text-gray-400 mb-4">
+                Du må være logget inn for å se og legge til kommentarer
+              </div>
+              <button
+                onClick={() => signIn()}
+                className="bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg py-2 px-4 font-medium flex items-center gap-2"
+              >
+                Logg inn
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </main>
