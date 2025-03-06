@@ -187,7 +187,7 @@ export default function App({
       router.events.off("routeChangeComplete", handleComplete);
       router.events.off("routeChangeError", handleError);
     };
-  }, [router.events]);
+  }, [router.events, handleStart]);
 
   return (
     <SessionProvider session={session}>

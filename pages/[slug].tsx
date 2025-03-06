@@ -202,7 +202,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
       <div className="flex flex-col items-center justify-center min-h-screen bg-black p-4 text-white">
         <h1 className="text-2xl font-bold mb-4">Movie not found</h1>
         <p className="text-gray-400 mb-6">
-          We couldn't find the movie you're looking for.
+          We couldn&apos;t find the movie you&apos;re looking for.
         </p>
         <button
           onClick={() => router.push("/")}

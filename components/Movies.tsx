@@ -89,8 +89,8 @@ function Movies({ movies: propMovies }: MoviesProps) {
   const moviesToUse = propMovies || movies;
 
   // Search functionality - memoized and debounced for performance
-  const getMovieRequest = useCallback(
-    debounce(() => {
+  const getMovieRequest = useCallback(() => {
+    const debouncedFunction = debounce(() => {
       try {
         // For regular search in the main page
         if (!isModalOpen) {
@@ -138,19 +138,20 @@ function Movies({ movies: propMovies }: MoviesProps) {
         console.error("Error searching movies:", error);
         setIsLoading(false);
       }
-    }, 300), // 300ms debounce delay
-    [
-      searchTerm,
-      moviesToUse,
-      setSortedMovies,
-      isModalOpen,
-      input,
-      setTmdbMovies,
-      setIsLoading,
-      setHasSearched,
-      isMobile,
-    ]
-  );
+    }, 300);
+
+    debouncedFunction();
+  }, [
+    searchTerm,
+    moviesToUse,
+    setSortedMovies,
+    isModalOpen,
+    input,
+    setTmdbMovies,
+    setIsLoading,
+    setHasSearched,
+    isMobile,
+  ]);
 
   const [allMovies, setAllMovies] = useState<Movie[]>([]);
   const [isContentLoaded, setIsContentLoaded] = useState(false);
