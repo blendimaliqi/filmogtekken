@@ -276,8 +276,13 @@ function Movies({ movies: propMovies }: MoviesProps) {
     data,
   } = useQuery({
     queryKey: ["movies"],
-    queryFn: () => client.fetch(moviesQuery),
+    queryFn: () => {
+      console.log("Fetching movies from Sanity...");
+      return client.fetch(moviesQuery);
+    },
     onSuccess: (data) => {
+      console.log("Movies fetched successfully. Total count:", data?.length);
+      console.log("First few movies:", data?.slice(0, 3));
       // Only update if we don't have propMovies
       if (!propMovies || propMovies.length === 0) {
         setMovies(data);
@@ -504,20 +509,37 @@ function Movies({ movies: propMovies }: MoviesProps) {
     }
   }
 
-  // Memoize displayMovies to prevent unnecessary calculations
-  const displayMovies = useMemo(
-    () => (sortMovies.length > 0 ? sortMovies : moviesToUse),
-    [sortMovies, moviesToUse]
-  );
+  const displayMovies = useMemo(() => {
+    const moviesToDisplay = sortMovies.length > 0 ? sortMovies : moviesToUse;
+    console.log("Total movies to display:", moviesToDisplay?.length);
+    console.log("Movies being displayed:", moviesToDisplay?.slice(0, 3));
+    return moviesToDisplay;
+  }, [sortMovies, moviesToUse]);
 
-  // For mobile, limit the number of movies displayed at once
+  // Initialize optimizedMovies state with proper typing
+  const [optimizedMovies, setOptimizedMovies] = useState<Movie[]>([]);
+
+  // Add logging for optimizedDisplayMovies
   const optimizedDisplayMovies = useMemo(() => {
-    // On mobile, start with a smaller batch size
-    const initialBatchSize = isMobile ? 10 : 20;
-    return displayMovies.slice(0, initialBatchSize);
+    // Only limit initial batch size on mobile
+    if (isMobile) {
+      const initialBatchSize = 10;
+      const result = displayMovies.slice(0, initialBatchSize);
+      console.log("Mobile: Optimized display movies count:", result?.length);
+      return result;
+    }
+
+    // On desktop, show all movies
+    console.log("Desktop: Showing all movies:", displayMovies?.length);
+    return displayMovies;
   }, [displayMovies, isMobile]);
 
-  // Lazy load more movies as the user scrolls
+  // Update optimizedMovies when displayMovies changes
+  useEffect(() => {
+    setOptimizedMovies(optimizedDisplayMovies);
+  }, [optimizedDisplayMovies]);
+
+  // Lazy load more movies as the user scrolls (only on mobile)
   useEffect(() => {
     if (!isMobile) return;
 
@@ -527,10 +549,11 @@ function Movies({ movies: propMovies }: MoviesProps) {
         document.body.offsetHeight - 500
       ) {
         // Load more movies when user is near the bottom
-        const currentCount = optimizedDisplayMovies.length;
+        const currentCount = optimizedMovies.length;
         const nextBatch = displayMovies.slice(0, currentCount + 10);
         if (nextBatch.length > currentCount) {
           // Only update if there are more movies to show
+          console.log("Loading more movies. New count:", nextBatch.length);
           setOptimizedMovies(nextBatch);
         }
       }
@@ -538,16 +561,7 @@ function Movies({ movies: propMovies }: MoviesProps) {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [isMobile, displayMovies, optimizedDisplayMovies]);
-
-  const [optimizedMovies, setOptimizedMovies] = useState(
-    optimizedDisplayMovies
-  );
-
-  // Update optimizedMovies when displayMovies changes
-  useEffect(() => {
-    setOptimizedMovies(optimizedDisplayMovies);
-  }, [optimizedDisplayMovies]);
+  }, [isMobile, displayMovies, optimizedMovies]);
 
   // Determine the overall loading state
   const isPageLoading =
