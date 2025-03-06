@@ -276,13 +276,8 @@ function Movies({ movies: propMovies }: MoviesProps) {
     data,
   } = useQuery({
     queryKey: ["movies"],
-    queryFn: () => {
-      console.log("Fetching movies from Sanity...");
-      return client.fetch(moviesQuery);
-    },
+    queryFn: () => client.fetch(moviesQuery),
     onSuccess: (data) => {
-      console.log("Movies fetched successfully. Total count:", data?.length);
-      console.log("First few movies:", data?.slice(0, 3));
       // Only update if we don't have propMovies
       if (!propMovies || propMovies.length === 0) {
         setMovies(data);
@@ -290,7 +285,6 @@ function Movies({ movies: propMovies }: MoviesProps) {
       }
       setIsContentLoaded(true);
     },
-    // Disable the query when propMovies is provided
     enabled: !propMovies || propMovies.length === 0,
     refetchOnWindowFocus: false,
     refetchOnMount: true,
@@ -511,8 +505,6 @@ function Movies({ movies: propMovies }: MoviesProps) {
 
   const displayMovies = useMemo(() => {
     const moviesToDisplay = sortMovies.length > 0 ? sortMovies : moviesToUse;
-    console.log("Total movies to display:", moviesToDisplay?.length);
-    console.log("Movies being displayed:", moviesToDisplay?.slice(0, 3));
     return moviesToDisplay;
   }, [sortMovies, moviesToUse]);
 
@@ -524,13 +516,10 @@ function Movies({ movies: propMovies }: MoviesProps) {
     // Only limit initial batch size on mobile
     if (isMobile) {
       const initialBatchSize = 10;
-      const result = displayMovies.slice(0, initialBatchSize);
-      console.log("Mobile: Optimized display movies count:", result?.length);
-      return result;
+      return displayMovies.slice(0, initialBatchSize);
     }
 
     // On desktop, show all movies
-    console.log("Desktop: Showing all movies:", displayMovies?.length);
     return displayMovies;
   }, [displayMovies, isMobile]);
 
@@ -553,7 +542,6 @@ function Movies({ movies: propMovies }: MoviesProps) {
         const nextBatch = displayMovies.slice(0, currentCount + 10);
         if (nextBatch.length > currentCount) {
           // Only update if there are more movies to show
-          console.log("Loading more movies. New count:", nextBatch.length);
           setOptimizedMovies(nextBatch);
         }
       }
