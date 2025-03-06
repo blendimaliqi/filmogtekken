@@ -112,51 +112,68 @@ export function useMovie(
           // Always ensure plot field is available regardless of overview format
           if (!result.plot || result.plot === "") {
             if (result.overview) {
-              // Handle different types of overview field (string or BlockContent)
-              if (typeof result.overview === "string") {
-                result.plot = result.overview;
-              } else if (Array.isArray(result.overview)) {
-                // Handle array format (sometimes used for rich text)
-                try {
+              try {
+                // Handle different types of overview field (string or BlockContent)
+                if (typeof result.overview === "string") {
+                  result.plot = result.overview;
+                } else if (Array.isArray(result.overview)) {
+                  // Handle array format (sometimes used for rich text)
                   result.plot = result.overview
                     .map((block: any) => {
                       if (typeof block === "string") return block;
-                      if (block.children) {
+                      if (block && block.children) {
                         return block.children
-                          .map((child: any) => child.text || "")
+                          .map((child: any) => child?.text || "")
                           .join("");
                       }
-                      return block.text || "";
+                      return block?.text || "";
                     })
                     .join("\n")
                     .trim();
-                } catch (e) {
-                  console.error("Error processing overview array:", e);
-                  result.plot = "No description available";
-                }
-              } else if (
-                result.overview._type &&
-                result.overview.children &&
-                Array.isArray(result.overview.children)
-              ) {
-                // Try to extract text from blockContent if possible
-                try {
+                } else if (
+                  result.overview &&
+                  result.overview._type &&
+                  result.overview.children &&
+                  Array.isArray(result.overview.children)
+                ) {
+                  // Try to extract text from blockContent if possible
                   const blocks = result.overview.children || [];
                   result.plot = blocks
-                    .map((block: any) => block.text || "")
+                    .map((block: any) => block?.text || "")
                     .join("\n")
                     .trim();
-                } catch (e) {
-                  console.error("Error extracting text from blockContent:", e);
-                  result.plot = "No description available";
+                } else {
+                  // Fallback for other object structures - safely stringify
+                  try {
+                    if (typeof result.overview === "object") {
+                      // Try to find any text property in the overview object
+                      const overviewObj = result.overview;
+                      if (overviewObj.text) {
+                        result.plot = overviewObj.text;
+                      } else if (overviewObj.content) {
+                        if (typeof overviewObj.content === "string") {
+                          result.plot = overviewObj.content;
+                        } else if (Array.isArray(overviewObj.content)) {
+                          result.plot = overviewObj.content
+                            .map((item: any) =>
+                              typeof item === "string" ? item : item?.text || ""
+                            )
+                            .join("\n");
+                        }
+                      } else {
+                        result.plot = "No description available";
+                      }
+                    } else {
+                      result.plot = "No description available";
+                    }
+                  } catch (e) {
+                    console.error("Error processing overview object:", e);
+                    result.plot = "No description available";
+                  }
                 }
-              } else {
-                // Fallback for other object structures
-                try {
-                  result.plot = JSON.stringify(result.overview);
-                } catch (e) {
-                  result.plot = "No description available";
-                }
+              } catch (e) {
+                console.error("Error processing overview:", e);
+                result.plot = "No description available";
               }
             } else {
               // No overview available

@@ -11,7 +11,7 @@ import { useSession, signIn } from "next-auth/react";
 import Head from "next/head";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { AiFillStar } from "react-icons/ai";
 import { Movie } from "../typings";
 import CommentForm from "@/components/CommentForm";
@@ -115,12 +115,12 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
               initialMovieData.plot = initialMovieData.overview
                 .map((block: any) => {
                   if (typeof block === "string") return block;
-                  if (block.children) {
+                  if (block && block.children) {
                     return block.children
-                      .map((child: any) => child.text || "")
+                      .map((child: any) => child?.text || "")
                       .join("");
                   }
-                  return block.text || "";
+                  return block?.text || "";
                 })
                 .join("\n")
                 .trim();
@@ -137,7 +137,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
             try {
               const blocks = initialMovieData.overview.children || [];
               initialMovieData.plot = blocks
-                .map((block: any) => block.text || "")
+                .map((block: any) => block?.text || "")
                 .join("\n")
                 .trim();
             } catch (e) {
@@ -159,7 +159,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
                   } else if (Array.isArray(overviewObj.content)) {
                     initialMovieData.plot = overviewObj.content
                       .map((item: any) =>
-                        typeof item === "string" ? item : item.text || ""
+                        typeof item === "string" ? item : item?.text || ""
                       )
                       .join("\n");
                   }
@@ -197,6 +197,26 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
     isLoading,
     refetch,
   } = useMovie(slug as string, initialMovieData || undefined);
+
+  // Create a safe movieData object that combines initial data and fetched data
+  const movieData = useMemo(() => {
+    // Use fetched data if available, otherwise fall back to initial data
+    const data = movie || initialMovieData || ({} as Partial<Movie>);
+
+    // Ensure essential properties exist to prevent runtime errors
+    return {
+      ...data,
+      title: data.title || "Untitled Movie",
+      plot: data.plot || "No description available",
+      ratings: data.ratings || [],
+      genres: data.genres || [],
+      poster: data.poster || null,
+      _id: data._id || "",
+      overview: data.overview || null,
+      length: data.length || 0,
+      comments: data.comments || [],
+    } as Movie;
+  }, [movie, initialMovieData]);
 
   // Pre-populate the cache with the initial data
   useEffect(() => {
@@ -327,9 +347,6 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
       }
     }
   }, [session, personData, updateProfileImageIfChanged]);
-
-  // Movie data combining initial data with fetched data
-  const movieData = movie || initialMovieData || ({} as Movie);
 
   // Ensure plot is available for rendering
   useEffect(() => {
@@ -769,22 +786,30 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
         <div className="px-4 pt-0 pb-12">
           <div className="flex flex-col items-center mx-auto">
             <div className="w-[280px] h-[420px] shadow-xl rounded-lg overflow-hidden border border-gray-800 mx-auto">
-              <Image
-                width={280}
-                height={420}
-                src={urlFor(movieData.poster).url()}
-                alt={movieData.title}
-                className="w-full h-full object-cover"
-                priority
-              />
+              {movieData && movieData.poster ? (
+                <Image
+                  width={280}
+                  height={420}
+                  src={urlFor(movieData.poster).url()}
+                  alt={movieData.title || "Movie poster"}
+                  className="w-full h-full object-cover"
+                  priority
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                  <span className="text-gray-500">No poster available</span>
+                </div>
+              )}
             </div>
             <div className="mt-8 w-[280px] text-center mx-auto">
               {/* Plot - Mobile */}
               <p className="text-gray-300 text-base leading-relaxed mb-6">
-                {movieData.plot ||
-                  (movieData.overview && typeof movieData.overview === "string"
-                    ? movieData.overview
-                    : "No description available")}
+                {movieData &&
+                  (movieData.plot ||
+                    (movieData.overview &&
+                    typeof movieData.overview === "string"
+                      ? movieData.overview
+                      : "No description available"))}
               </p>
             </div>
           </div>
