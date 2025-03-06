@@ -1,8 +1,13 @@
-import React, { useEffect, useState, useCallback } from "react";
-import MovieComponent from "./Movie";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  lazy,
+  Suspense,
+} from "react";
+import dynamic from "next/dynamic";
 import { client, createPost } from "@/config/client";
-import { Modal } from "./modal/Modal";
-import ModalMovie from "./modal/ModalMovie";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
@@ -19,6 +24,28 @@ import { uploadExternalImage, uuidv4 } from "@/utils/helperFunctions";
 import type { Movie } from "@/typings";
 import { movieKeys } from "@/hooks/useMovie";
 import CustomToast from "./ui/CustomToast";
+
+// Dynamically import the Modal and ModalMovie components to reduce initial load time
+const ModalComponent = dynamic(
+  () => import("./modal/Modal").then((mod) => mod.Modal),
+  { ssr: false }
+);
+const ModalMovie = dynamic(() => import("./modal/ModalMovie"), { ssr: false });
+// Use dynamic import for MovieComponent with SSR disabled for better mobile performance
+const MovieComponent = dynamic(() => import("./Movie"), { ssr: false });
+
+// Debounce function for search input
+function debounce(func: Function, wait: number) {
+  let timeout: ReturnType<typeof setTimeout>;
+  return function executedFunction(...args: any[]) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
 
 interface MovieWithAverageRating extends Movie {
   averageRating: number;
@@ -46,125 +73,152 @@ function Movies({ movies: propMovies }: MoviesProps) {
   const [input, setInput] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
   const queryClient = useQueryClient();
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Use propMovies if provided, otherwise use the movies from the atom
   const moviesToUse = propMovies || movies;
 
-  // Search functionality
-  const getMovieRequest = useCallback(() => {
-    try {
-      // For regular search in the main page
-      if (!isModalOpen) {
-        if (searchTerm !== "") {
-          const searchResults = moviesToUse.filter((movie: Movie) =>
-            movie.title.toLowerCase().includes(searchTerm.toLowerCase())
-          );
-          setSortedMovies(searchResults);
-        } else {
-          setSortedMovies([]);
+  // Search functionality - memoized and debounced for performance
+  const getMovieRequest = useCallback(
+    debounce(() => {
+      try {
+        // For regular search in the main page
+        if (!isModalOpen) {
+          if (searchTerm !== "") {
+            const searchResults = moviesToUse.filter((movie: Movie) =>
+              movie.title.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            setSortedMovies(searchResults);
+          } else {
+            setSortedMovies([]);
+          }
+          return;
         }
-        return;
-      }
 
-      // For TMDB search in the modal
-      if (isModalOpen) {
-        // Only set hasSearched to true, indicating a search was performed
-        setHasSearched(true);
+        // For TMDB search in the modal
+        if (isModalOpen) {
+          // Only set hasSearched to true, indicating a search was performed
+          setHasSearched(true);
 
-        if (input !== "") {
-          setIsLoading(true);
-          // Call TMDB API to search for movies
-          fetch(
-            `https://api.themoviedb.org/3/search/movie?api_key=${process.env.TMDB_API_KEY}&language=en-US&query=${input}&page=1&include_adult=false`
-          )
-            .then((response) => response.json())
-            .then((data) => {
-              setTmdbMovies(data.results);
-              setIsLoading(false);
-            })
-            .catch((error) => {
-              console.error("Error searching TMDB:", error);
-              setIsLoading(false);
-            });
-        } else {
-          // Only clear results if the user explicitly searches with empty input
-          setTmdbMovies([]);
+          if (input !== "") {
+            setIsLoading(true);
+            // Call TMDB API to search for movies
+            fetch(
+              `https://api.themoviedb.org/3/search/movie?api_key=${process.env.TMDB_API_KEY}&language=en-US&query=${input}&page=1&include_adult=false`
+            )
+              .then((response) => response.json())
+              .then((data) => {
+                // Limit results to improve performance on mobile
+                const limitedResults = isMobile
+                  ? data.results.slice(0, 10)
+                  : data.results;
+                setTmdbMovies(limitedResults);
+                setIsLoading(false);
+              })
+              .catch((error) => {
+                console.error("Error searching TMDB:", error);
+                setIsLoading(false);
+              });
+          } else {
+            // Only clear results if the user explicitly searches with empty input
+            setTmdbMovies([]);
+          }
         }
+      } catch (error) {
+        console.error("Error searching movies:", error);
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Error searching movies:", error);
-      setIsLoading(false);
-    }
-  }, [
-    searchTerm,
-    moviesToUse,
-    setSortedMovies,
-    isModalOpen,
-    input,
-    setTmdbMovies,
-    setIsLoading,
-    setHasSearched,
-  ]);
+    }, 300), // 300ms debounce delay
+    [
+      searchTerm,
+      moviesToUse,
+      setSortedMovies,
+      isModalOpen,
+      input,
+      setTmdbMovies,
+      setIsLoading,
+      setHasSearched,
+      isMobile,
+    ]
+  );
 
   const [allMovies, setAllMovies] = useState<Movie[]>([]);
   const [isContentLoaded, setIsContentLoaded] = useState(false);
 
-  // Define filter functions
-  function filterMoviesByHighestAverageRating(
-    moviesToFilter: Movie[]
-  ): MovieWithAverageRating[] {
-    return moviesToFilter
-      .map((movie) => {
-        const ratings = movie.ratings || [];
-        const totalRatings = ratings.length;
-        const sumRatings = ratings.reduce(
-          (sum, rating) => sum + rating.rating,
-          0
-        );
-        const averageRating = totalRatings > 0 ? sumRatings / totalRatings : 0;
+  // Memoize filter functions for better performance
+  const filterMoviesByHighestAverageRating = useMemo(
+    () =>
+      (moviesToFilter: Movie[]): MovieWithAverageRating[] => {
+        return moviesToFilter
+          .map((movie) => {
+            const ratings = movie.ratings || [];
+            const totalRatings = ratings.length;
+            const sumRatings = ratings.reduce(
+              (sum, rating) => sum + rating.rating,
+              0
+            );
+            const averageRating =
+              totalRatings > 0 ? sumRatings / totalRatings : 0;
 
-        return {
-          ...movie,
-          averageRating,
-        };
-      })
-      .sort((a, b) => b.averageRating - a.averageRating);
-  }
+            return {
+              ...movie,
+              averageRating,
+            };
+          })
+          .sort((a, b) => b.averageRating - a.averageRating);
+      },
+    []
+  );
 
-  function filterMoviesByLowestAverageRating(
-    moviesToFilter: Movie[]
-  ): MovieWithAverageRating[] {
-    return moviesToFilter
-      .map((movie) => {
-        const ratings = movie.ratings || [];
-        const totalRatings = ratings.length;
-        const sumRatings = ratings.reduce(
-          (sum, rating) => sum + rating.rating,
-          0
-        );
-        const averageRating = totalRatings > 0 ? sumRatings / totalRatings : 0;
+  const filterMoviesByLowestAverageRating = useMemo(
+    () =>
+      (moviesToFilter: Movie[]): MovieWithAverageRating[] => {
+        return moviesToFilter
+          .map((movie) => {
+            const ratings = movie.ratings || [];
+            const totalRatings = ratings.length;
+            const sumRatings = ratings.reduce(
+              (sum, rating) => sum + rating.rating,
+              0
+            );
+            const averageRating =
+              totalRatings > 0 ? sumRatings / totalRatings : 0;
 
-        return {
-          ...movie,
-          averageRating,
-        };
-      })
-      .sort((a, b) => a.averageRating - b.averageRating);
-  }
+            return {
+              ...movie,
+              averageRating,
+            };
+          })
+          .sort((a, b) => a.averageRating - b.averageRating);
+      },
+    []
+  );
 
-  function filterMoviesByHighestTotalComments(
-    moviesToFilter: Movie[]
-  ): MovieWithTotalComments[] {
-    return moviesToFilter
-      .map((movie) => {
-        const totalComments = movie.comments ? movie.comments.length : 0;
-        return {
-          ...movie,
-          totalComments,
-        };
-      })
-      .sort((a, b) => b.totalComments - a.totalComments);
-  }
+  const filterMoviesByHighestTotalComments = useMemo(
+    () =>
+      (moviesToFilter: Movie[]): MovieWithTotalComments[] => {
+        return moviesToFilter
+          .map((movie) => {
+            const totalComments = movie.comments ? movie.comments.length : 0;
+            return {
+              ...movie,
+              totalComments,
+            };
+          })
+          .sort((a, b) => b.totalComments - a.totalComments);
+      },
+    []
+  );
 
   // Memoize the handleSortByAverageRating function
   const handleSortByAverageRating = useCallback(
@@ -188,7 +242,14 @@ function Movies({ movies: propMovies }: MoviesProps) {
         setSortedMovies([]);
       }
     },
-    [moviesToUse, setSortedMovies, setMoviesFiltered]
+    [
+      moviesToUse,
+      setSortedMovies,
+      setMoviesFiltered,
+      filterMoviesByHighestAverageRating,
+      filterMoviesByLowestAverageRating,
+      filterMoviesByHighestTotalComments,
+    ]
   );
 
   // Add useEffect to trigger search when searchTerm changes
@@ -207,6 +268,7 @@ function Movies({ movies: propMovies }: MoviesProps) {
     }
   }, [moviesToUse, moviesFiltered, handleSortByAverageRating]);
 
+  // Optimize data fetching with React Query
   const {
     isLoading: queryLoading,
     error,
@@ -224,8 +286,9 @@ function Movies({ movies: propMovies }: MoviesProps) {
     },
     // Disable the query when propMovies is provided
     enabled: !propMovies || propMovies.length === 0,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
     refetchOnMount: true,
+    staleTime: 1000 * 60 * 10, // 10 minutes cache
   });
 
   const [selectValue, setSelectValue] = useAtom(moviesFilteredAtom);
@@ -236,6 +299,7 @@ function Movies({ movies: propMovies }: MoviesProps) {
     setInput("");
     setTmdbMovies([]);
   };
+
   const closeModal = () => {
     setIsModalOpen(false);
     setInput("");
@@ -439,6 +503,51 @@ function Movies({ movies: propMovies }: MoviesProps) {
     }
   }
 
+  // Memoize displayMovies to prevent unnecessary calculations
+  const displayMovies = useMemo(
+    () => (sortMovies.length > 0 ? sortMovies : moviesToUse),
+    [sortMovies, moviesToUse]
+  );
+
+  // For mobile, limit the number of movies displayed at once
+  const optimizedDisplayMovies = useMemo(() => {
+    // On mobile, start with a smaller batch size
+    const initialBatchSize = isMobile ? 10 : 20;
+    return displayMovies.slice(0, initialBatchSize);
+  }, [displayMovies, isMobile]);
+
+  // Lazy load more movies as the user scrolls
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const handleScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >=
+        document.body.offsetHeight - 500
+      ) {
+        // Load more movies when user is near the bottom
+        const currentCount = optimizedDisplayMovies.length;
+        const nextBatch = displayMovies.slice(0, currentCount + 10);
+        if (nextBatch.length > currentCount) {
+          // Only update if there are more movies to show
+          setOptimizedMovies(nextBatch);
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isMobile, displayMovies, optimizedDisplayMovies]);
+
+  const [optimizedMovies, setOptimizedMovies] = useState(
+    optimizedDisplayMovies
+  );
+
+  // Update optimizedMovies when displayMovies changes
+  useEffect(() => {
+    setOptimizedMovies(optimizedDisplayMovies);
+  }, [optimizedDisplayMovies]);
+
   // Determine the overall loading state
   const isPageLoading =
     queryLoading && (!propMovies || propMovies.length === 0);
@@ -454,9 +563,6 @@ function Movies({ movies: propMovies }: MoviesProps) {
     );
   }
 
-  // Create a displayMovies variable to simplify the rendering logic
-  const displayMovies = sortMovies.length > 0 ? sortMovies : moviesToUse;
-
   return (
     <div className="bg-black min-h-screen">
       <div className="container mx-auto py-4 md:py-8">
@@ -471,6 +577,7 @@ function Movies({ movies: propMovies }: MoviesProps) {
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
+                // We're using the debounced getMovieRequest so no need to call it here
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -594,11 +701,11 @@ function Movies({ movies: propMovies }: MoviesProps) {
           </div>
         </div>
 
-        {/* Movie grid */}
+        {/* Movie grid - optimize for mobile */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 px-4 md:px-8 pb-8">
-          {displayMovies.map((movie: any) => (
+          {optimizedMovies.map((movie: any) => (
             <MovieComponent
-              key={uuidv4()}
+              key={movie._id || uuidv4()}
               title={movie.title}
               year={movie.year}
               poster={movie.poster.asset}
@@ -606,111 +713,52 @@ function Movies({ movies: propMovies }: MoviesProps) {
             />
           ))}
         </div>
-      </div>
 
-      {/* Modal for adding movies */}
-      <Modal isOpen={isModalOpen} onClose={closeModal}>
-        <div className="flex flex-col justify-center items-center z-50 p-8 bg-gradient-to-b from-gray-900 to-black">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-600 to-yellow-700 flex items-center justify-center shadow-lg">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-            </div>
-            <h2 className="text-3xl font-bold text-white">Legg til film</h2>
-          </div>
-
-          <div className="relative w-full max-w-lg mb-10">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
-            <input
-              type="text"
-              placeholder="Søk etter film..."
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  getMovieRequest();
-                }
-              }}
-              onChange={(e) => {
-                const value = e.target.value;
-                setInput(value);
-                // Don't clear results when input is emptied
-              }}
-              className="w-full pl-12 pr-14 py-4 bg-gray-800/80 backdrop-blur-sm text-white rounded-xl border border-gray-700/50 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200 shadow-lg"
-            />
+        {/* Show load more button on mobile if there are more movies to display */}
+        {isMobile && optimizedMovies.length < displayMovies.length && (
+          <div className="flex justify-center pb-8">
             <button
-              onClick={getMovieRequest}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-yellow-600 hover:bg-yellow-500 text-white p-2.5 rounded-lg transition-all duration-200 flex items-center justify-center"
+              onClick={() => {
+                const currentCount = optimizedMovies.length;
+                setOptimizedMovies(displayMovies.slice(0, currentCount + 10));
+              }}
+              className="bg-gray-800 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-colors"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
+              Vis flere filmer
             </button>
           </div>
+        )}
+      </div>
 
-          <div className="w-full border-t border-gray-800 mb-6"></div>
-
-          <div className="w-full">
-            <div className="flex justify-between items-center mb-4 px-2">
-              <h3 className="text-lg font-medium text-white">Søkeresultater</h3>
-              {tmdbMovies && tmdbMovies.length > 0 && (
-                <span className="text-sm text-gray-400">
-                  {tmdbMovies.length} filmer funnet
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 px-8 pb-8 max-h-[60vh] overflow-y-auto">
-          {isLoading ? (
-            <div className="fixed inset-0 flex justify-center items-center bg-black/70 backdrop-blur-sm z-50">
-              <div className="flex flex-col items-center">
-                <div className="animate-spin rounded-full h-16 w-16 border-[6px] border-gray-600 border-t-yellow-500"></div>
-              </div>
-            </div>
-          ) : !hasSearched ? (
-            <div className="col-span-full flex flex-col items-center justify-center py-16 px-4 text-center">
-              <div className="bg-yellow-600/20 p-4 rounded-full mb-4">
+      {/* Modal for adding movies - only render when open for performance */}
+      {isModalOpen && (
+        <ModalComponent isOpen={isModalOpen} onClose={closeModal}>
+          <div className="flex flex-col justify-center items-center z-50 p-8 bg-gradient-to-b from-gray-900 to-black">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-600 to-yellow-700 flex items-center justify-center shadow-lg">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-10 w-10 text-yellow-500"
+                  className="h-6 w-6 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+              </div>
+              <h2 className="text-3xl font-bold text-white">Legg til film</h2>
+            </div>
+
+            <div className="relative w-full max-w-lg mb-10">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-gray-400"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -723,36 +771,29 @@ function Movies({ movies: propMovies }: MoviesProps) {
                   />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-white">
-                Søk etter filmer
-              </h2>
-              <p className="text-gray-400 mt-2 max-w-md">
-                Skriv inn tittel på filmen du vil legge til i samlingen din
-              </p>
-            </div>
-          ) : tmdbMovies && tmdbMovies.length > 0 ? (
-            tmdbMovies.map((movie: any) => (
-              <div
-                key={uuidv4()}
-                onClick={() => addMovie(movie)}
-                className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl rounded-lg overflow-hidden group"
+              <input
+                type="text"
+                placeholder="Søk etter film..."
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    getMovieRequest();
+                  }
+                }}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setInput(value);
+                  // The debounced search will automatically trigger
+                }}
+                className="w-full pl-12 pr-14 py-4 bg-gray-800/80 backdrop-blur-sm text-white rounded-xl border border-gray-700/50 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200 shadow-lg"
+                value={input}
+              />
+              <button
+                onClick={getMovieRequest}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-yellow-600 hover:bg-yellow-500 text-white p-2.5 rounded-lg transition-all duration-200 flex items-center justify-center"
               >
-                <ModalMovie
-                  key={uuidv4()}
-                  title={movie.title}
-                  year={movie.release_date}
-                  id={movie.id}
-                  poster={movie.poster_path}
-                  movie={movie}
-                />
-              </div>
-            ))
-          ) : (
-            <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
-              <div className="w-16 h-16 rounded-full bg-gray-800/80 flex items-center justify-center mb-4">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-8 w-8 text-gray-400"
+                  className="h-5 w-5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -761,20 +802,105 @@ function Movies({ movies: propMovies }: MoviesProps) {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                   />
                 </svg>
-              </div>
-              <p className="text-xl font-medium text-white mb-2">
-                Ingen filmer funnet
-              </p>
-              <p className="text-gray-400">Prøv å søke etter noe annet</p>
+              </button>
             </div>
-          )}
-        </div>
-      </Modal>
 
-      <ToastContainer />
+            <div className="w-full border-t border-gray-800 mb-6"></div>
+
+            <div className="w-full">
+              <div className="flex justify-between items-center mb-4 px-2">
+                <h3 className="text-lg font-medium text-white">
+                  Søkeresultater
+                </h3>
+                {tmdbMovies && tmdbMovies.length > 0 && (
+                  <span className="text-sm text-gray-400">
+                    {tmdbMovies.length} filmer funnet
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-4 px-2 pb-8 max-h-[60vh] overflow-y-auto">
+                {isLoading ? (
+                  <div className="col-span-full flex justify-center items-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-[4px] border-gray-600 border-t-yellow-500"></div>
+                  </div>
+                ) : !hasSearched ? (
+                  <div className="col-span-full flex flex-col items-center justify-center py-16 px-4 text-center">
+                    <div className="bg-yellow-600/20 p-4 rounded-full mb-4">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-10 w-10 text-yellow-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                    </div>
+                    <h2 className="text-2xl font-bold text-white">
+                      Søk etter filmer
+                    </h2>
+                    <p className="text-gray-400 mt-2 max-w-md">
+                      Skriv inn tittel på filmen du vil legge til i samlingen
+                      din
+                    </p>
+                  </div>
+                ) : tmdbMovies && tmdbMovies.length > 0 ? (
+                  tmdbMovies.map((movie: any) => (
+                    <div
+                      key={movie.id || uuidv4()}
+                      onClick={() => addMovie(movie)}
+                      className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl rounded-lg overflow-hidden group"
+                    >
+                      <ModalMovie
+                        key={movie.id || uuidv4()}
+                        title={movie.title}
+                        year={movie.release_date}
+                        id={movie.id}
+                        poster={movie.poster_path}
+                        movie={movie}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
+                    <div className="w-16 h-16 rounded-full bg-gray-800/80 flex items-center justify-center mb-4">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-8 w-8 text-gray-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-xl font-medium text-white mb-2">
+                      Ingen filmer funnet
+                    </p>
+                    <p className="text-gray-400">Prøv å søke etter noe annet</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </ModalComponent>
+      )}
+
+      <ToastContainer limit={3} />
     </div>
   );
 }

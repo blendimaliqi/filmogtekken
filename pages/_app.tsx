@@ -142,18 +142,26 @@ export default function App({
       return;
     }
 
+    // Check if we're navigating back to the homepage
+    const isNavigatingToHome = url === "/" || url === "";
+
     // Don't show loading for quick navigations (using cached data)
     const hasMoviesCache = queryClient.getQueryData([
       "movies",
       "list",
       { filters: "all" },
     ]);
+
     const targetSlug = url.split("/").pop();
     const hasTargetMovieCache =
       targetSlug && queryClient.getQueryData(["movies", "detail", targetSlug]);
 
     // Only show loading for uncached routes or initial load
-    if (!hasMoviesCache || (targetSlug && !hasTargetMovieCache)) {
+    // Skip loading indicator when navigating back to home if we have cache
+    if (
+      (!isNavigatingToHome || !hasMoviesCache) &&
+      (!hasMoviesCache || (targetSlug && !hasTargetMovieCache))
+    ) {
       setIsLoading(true);
       setLoadingText("Loading...");
     }

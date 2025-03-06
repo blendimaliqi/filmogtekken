@@ -34,44 +34,87 @@ export function useComments(movieIdOrSlug: string) {
             console.log(`Using cached comments for movie: ${movieIdOrSlug}`);
           }
 
-          // Even for cached comments, ensure person data is expanded
-          const commentsWithExpandedPerson = await Promise.all(
-            movieCache.comments.map(async (comment: any) => {
-              // If person is just a reference without name, fetch the person data
-              if (
-                comment.person &&
-                comment.person._ref &&
-                !comment.person.name
-              ) {
-                try {
-                  const personQuery = `*[_type == "person" && _id == $personId][0]{
-                    _id,
-                    name,
-                    image
-                  }`;
-                  const person = await client.fetch(personQuery, {
-                    personId: comment.person._ref,
-                  });
-
-                  if (person) {
-                    return {
-                      ...comment,
-                      _id: comment._key || comment._id,
-                      person: person,
-                    };
-                  }
-                } catch (error) {
-                  console.error(
-                    "Error fetching person for cached comment:",
-                    error
-                  );
-                }
-              }
-              return comment;
-            })
+          // Check if comments already have expanded person data
+          const allCommentsHavePersonData = movieCache.comments.every(
+            (comment: any) =>
+              comment.person &&
+              comment.person.name &&
+              (!comment.person._ref ||
+                (comment.person._ref && comment.person.name))
           );
 
-          return commentsWithExpandedPerson;
+          // If all comments already have person data, return them directly
+          if (allCommentsHavePersonData) {
+            return movieCache.comments;
+          }
+
+          // For comments without person data, fetch it in a single batch instead of one by one
+          const personRefs = movieCache.comments
+            .filter(
+              (comment: any) =>
+                comment.person && comment.person._ref && !comment.person.name
+            )
+            .map((comment: any) => comment.person._ref);
+
+          if (personRefs.length === 0) {
+            return movieCache.comments.map((comment: any) => ({
+              ...comment,
+              _id: comment._key || comment._id,
+              person: comment.person || { name: "Ukjent bruker" },
+            }));
+          }
+
+          try {
+            // Fetch all needed persons in a single query
+            const personsQuery = `*[_type == "person" && _id in $personIds]{
+              _id,
+              name,
+              image
+            }`;
+
+            const persons = await client.fetch(personsQuery, {
+              personIds: personRefs,
+            });
+
+            // Create a lookup map for quick access
+            const personsMap = persons.reduce((acc: any, person: any) => {
+              acc[person._id] = person;
+              return acc;
+            }, {});
+
+            // Map comments with person data
+            const commentsWithExpandedPerson = movieCache.comments.map(
+              (comment: any) => {
+                if (
+                  comment.person &&
+                  comment.person._ref &&
+                  !comment.person.name &&
+                  personsMap[comment.person._ref]
+                ) {
+                  return {
+                    ...comment,
+                    _id: comment._key || comment._id,
+                    person: personsMap[comment.person._ref],
+                  };
+                }
+                return {
+                  ...comment,
+                  _id: comment._key || comment._id,
+                  person: comment.person || { name: "Ukjent bruker" },
+                };
+              }
+            );
+
+            return commentsWithExpandedPerson;
+          } catch (error) {
+            console.error("Error fetching person data:", error);
+            // Return comments with fallback person data
+            return movieCache.comments.map((comment: any) => ({
+              ...comment,
+              _id: comment._key || comment._id,
+              person: comment.person || { name: "Ukjent bruker" },
+            }));
+          }
         }
 
         // Only log in development
@@ -79,14 +122,14 @@ export function useComments(movieIdOrSlug: string) {
           console.log("Fetching comments for movie:", movieIdOrSlug);
         }
 
-        // First try to get the movie by ID with expanded person references
-        let movieQuery = `*[_type == "movie" && _id == $identifier][0]{
-          comments[] {
+        // Use a more efficient query that directly expands person references
+        const commentsQuery = `*[_type == "movie" && (slug.current == $identifier || _id == $identifier)][0]{
+          "comments": comments[] {
             _key,
             comment,
             createdAt,
             _createdAt,
-            person-> {
+            "person": person-> {
               _id,
               name,
               image
@@ -94,115 +137,39 @@ export function useComments(movieIdOrSlug: string) {
           }
         }`;
 
-        let movie = await client.fetch(movieQuery, {
+        const result = await client.fetch(commentsQuery, {
           identifier: movieIdOrSlug,
         });
 
-        // If not found by ID, try by slug
-        if (!movie) {
-          if (process.env.NODE_ENV !== "production") {
-            console.log("No movie found with ID, trying slug:", movieIdOrSlug);
-          }
-
-          movieQuery = `*[_type == "movie" && slug.current == $identifier][0]{
-            comments[] {
-              _key,
-              comment,
-              createdAt,
-              _createdAt,
-              person-> {
-                _id,
-                name,
-                image
-              }
-            }
-          }`;
-          movie = await client.fetch(movieQuery, { identifier: movieIdOrSlug });
+        if (!result || !result.comments) {
+          return [];
         }
 
-        if (movie && movie.comments && movie.comments.length > 0) {
-          if (process.env.NODE_ENV !== "production") {
-            console.log(`Found ${movie.comments.length} comments`);
-          }
+        // Ensure each comment has an _id property and handle missing person data
+        const processedComments = result.comments.map((comment: any) => ({
+          ...comment,
+          _id: comment._key || comment._id,
+          person: comment.person || { name: "Ukjent bruker" },
+        }));
 
-          // For each comment, ensure person data is properly expanded
-          const commentsWithPerson = await Promise.all(
-            movie.comments.map(async (comment: any) => {
-              // If person is still just a reference without name, fetch the person data
-              if (
-                comment.person &&
-                comment.person._ref &&
-                !comment.person.name
-              ) {
-                try {
-                  const personQuery = `*[_type == "person" && _id == $personId][0]{
-                    _id,
-                    name,
-                    image
-                  }`;
-                  const person = await client.fetch(personQuery, {
-                    personId: comment.person._ref,
-                  });
-
-                  return {
-                    ...comment,
-                    _id: comment._key, // Use _key as _id for consistency
-                    person: person || {
-                      name: "Unknown",
-                      _id: comment.person._ref,
-                    },
-                  };
-                } catch (error) {
-                  console.error("Error fetching person for comment:", error);
-                  return {
-                    ...comment,
-                    _id: comment._key,
-                    person: { name: "Unknown", _id: comment.person._ref },
-                  };
-                }
-              }
-
-              // Ensure each comment has an _id property
-              return {
-                ...comment,
-                _id: comment._key || comment._id,
-              };
-            })
-          );
-
-          if (process.env.NODE_ENV !== "production") {
-            console.log("Processed comments:", commentsWithPerson);
-          }
-
-          return commentsWithPerson;
+        // Cache the processed comments
+        if (movieCache) {
+          queryClient.setQueryData(movieKeys.detail(movieIdOrSlug), {
+            ...movieCache,
+            comments: processedComments,
+          });
         }
 
-        // If no comments found in the movie, try to get regular comments
-        const commentsQuery = `*[_type == "comment" && movie._ref == $movieId]{
-          ...,
-          person->{
-            name,
-            image
-          }
-        } | order(_createdAt desc)`;
-
-        const comments = await client.fetch(commentsQuery, {
-          movieId: movieIdOrSlug,
-        });
-
-        if (process.env.NODE_ENV !== "production") {
-          console.log(`Found ${comments.length} standalone comments`);
-        }
-
-        return comments;
+        return processedComments;
       } catch (error) {
         console.error("Error fetching comments:", error);
         return [];
       }
     },
-    staleTime: 1000 * 60 * 15, // 15 minutes
-    cacheTime: 1000 * 60 * 60, // 60 minutes
+    staleTime: 1000 * 60 * 30, // 30 minutes (increased from 15)
+    cacheTime: 1000 * 60 * 120, // 120 minutes (increased from 60)
     refetchOnMount: false,
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 }
 

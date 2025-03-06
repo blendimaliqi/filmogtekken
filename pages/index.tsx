@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import HomepageImage from "@/components/HomepageImage";
@@ -13,6 +13,7 @@ import { Movie } from "@/typings";
 import { uuidv4 } from "@/utils/helperFunctions";
 import { useMovies } from "@/hooks";
 import { useRouter } from "next/router";
+import dynamic from "next/dynamic";
 
 export const centerStyle = {
   display: "flex",
@@ -25,20 +26,44 @@ export const moviesAtom = atom<Movie[]>([]);
 export const moviesSortedAtom = atom<Movie[]>([]);
 export const moviesFilteredAtom = atom("default");
 
+// Detect if we're on a mobile device
+const isMobile = () => {
+  if (typeof window === "undefined") return false;
+  return window.innerWidth < 768;
+};
+
 export default function Home() {
   const [movies, setMovies] = useAtom(moviesAtom);
   const [contentVisible, setContentVisible] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
   const queryClient = useQueryClient();
 
   const { isLoading, error, data, refetch } = useMovies();
   const router = useRouter();
+
+  // Check for mobile view on mount and window resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobileView(isMobile());
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => {
+      window.removeEventListener("resize", checkMobile);
+    };
+  }, []);
 
   useEffect(() => {
     if (data) {
       setMovies(data);
 
       // Pre-populate individual movie cache entries to avoid refetching
-      data.forEach((movie) => {
+      // On mobile, limit the number of movies we cache to reduce memory usage
+      const moviesToCache = isMobileView ? data.slice(0, 10) : data;
+
+      moviesToCache.forEach((movie) => {
         const movieId = movie._id;
         const slug = movie.slug?.current;
 
@@ -53,7 +78,7 @@ export default function Home() {
         }
       });
     }
-  }, [data, setMovies, queryClient]);
+  }, [data, setMovies, queryClient, isMobileView]);
 
   // Add fade-in effect when component mounts or data loads
   useEffect(() => {
@@ -77,6 +102,21 @@ export default function Home() {
       router.events.off("routeChangeStart", handleRouteChange);
     };
   }, [router.events]);
+
+  // Memoize the sorted movies to avoid unnecessary re-renders
+  const sortedMovies = useMemo(() => {
+    if (!data) return [];
+    return [...data].sort((a: Movie, b: Movie) => {
+      return (
+        new Date(b._createdAt).getTime() - new Date(a._createdAt).getTime()
+      );
+    });
+  }, [data]);
+
+  // Memoize the movies to display in the carousel
+  const moviesToDisplay = useMemo(() => {
+    return sortedMovies.slice(0, isMobileView ? 3 : 5);
+  }, [sortedMovies, isMobileView]);
 
   if (isLoading) {
     return (
@@ -114,12 +154,6 @@ export default function Home() {
       </div>
     );
   }
-
-  const sortedMovies = [...data].sort((a: Movie, b: Movie) => {
-    return new Date(b._createdAt).getTime() - new Date(a._createdAt).getTime();
-  });
-
-  const moviesToDisplay = sortedMovies.slice(0, 5);
 
   return (
     <main className="bg-black">

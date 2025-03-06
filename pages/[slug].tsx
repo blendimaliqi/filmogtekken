@@ -30,7 +30,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const { slug } = context.params!;
 
   try {
-    // Use a simpler query for initial load to improve performance
     // We'll fetch comments and ratings client-side
     const movie = await client.fetch(
       `*[_type == "movie" && (slug.current == $movieId || _id == $movieId)][0]{
@@ -40,6 +39,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         poster,
         poster_backdrop,
         overview,
+        plot,
         releaseDate,
         genres,
         cast,
@@ -48,6 +48,17 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       }`,
       { movieId: slug }
     );
+
+    // Log the movie data to help debug
+    if (process.env.NODE_ENV !== "production") {
+      console.log("Movie data from getServerSideProps:", {
+        title: movie?.title,
+        hasOverview: !!movie?.overview,
+        overviewType: movie?.overview ? typeof movie.overview : "undefined",
+        hasPlot: !!movie?.plot,
+        plotLength: movie?.plot ? movie.plot.length : 0,
+      });
+    }
 
     return {
       props: {
@@ -66,28 +77,136 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
 function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { slug } = router.query;
   const [open, setOpen] = useState(false);
-  const [contentVisible, setContentVisible] = useState(false);
   const [showLocalLoader, setShowLocalLoader] = useState(false);
+  const [contentVisible, setContentVisible] = useState(false);
+  const { data: session } = useSession();
   const queryClient = useQueryClient();
 
+  // If initialMovieData is provided, ensure the plot field is set from overview if needed
+  useEffect(() => {
+    if (initialMovieData) {
+      console.log(
+        "Initial movie data:",
+        JSON.stringify({
+          title: initialMovieData.title,
+          hasPlot: !!initialMovieData.plot,
+          plotLength: initialMovieData.plot ? initialMovieData.plot.length : 0,
+          hasOverview: !!initialMovieData.overview,
+          overviewType: initialMovieData.overview
+            ? typeof initialMovieData.overview
+            : "undefined",
+          overviewValue: initialMovieData.overview
+            ? JSON.stringify(initialMovieData.overview).substring(0, 100)
+            : "none",
+        })
+      );
+
+      // Always ensure a plot field exists and is not empty
+      if (!initialMovieData.plot || initialMovieData.plot === "") {
+        if (initialMovieData.overview) {
+          // Handle different types of overview field (string or BlockContent)
+          if (typeof initialMovieData.overview === "string") {
+            initialMovieData.plot = initialMovieData.overview;
+          } else if (Array.isArray(initialMovieData.overview)) {
+            // Handle array format (sometimes used for rich text)
+            try {
+              initialMovieData.plot = initialMovieData.overview
+                .map((block: any) => {
+                  if (typeof block === "string") return block;
+                  if (block.children) {
+                    return block.children
+                      .map((child: any) => child.text || "")
+                      .join("");
+                  }
+                  return block.text || "";
+                })
+                .join("\n")
+                .trim();
+            } catch (e) {
+              console.error("Error processing overview array:", e);
+              initialMovieData.plot = "No description available";
+            }
+          } else if (
+            initialMovieData.overview._type &&
+            initialMovieData.overview.children &&
+            Array.isArray(initialMovieData.overview.children)
+          ) {
+            // Try to extract text from blockContent if possible
+            try {
+              const blocks = initialMovieData.overview.children || [];
+              initialMovieData.plot = blocks
+                .map((block: any) => block.text || "")
+                .join("\n")
+                .trim();
+            } catch (e) {
+              console.error("Error extracting text from blockContent:", e);
+              initialMovieData.plot = "No description available";
+            }
+          } else {
+            // Fallback for other object structures - try to extract any text we can find
+            try {
+              // Try to find any text property in the overview object
+              const overviewObj = initialMovieData.overview as any;
+              if (overviewObj && typeof overviewObj === "object") {
+                // Look for common text properties
+                if (overviewObj.text) {
+                  initialMovieData.plot = overviewObj.text;
+                } else if (overviewObj.content) {
+                  if (typeof overviewObj.content === "string") {
+                    initialMovieData.plot = overviewObj.content;
+                  } else if (Array.isArray(overviewObj.content)) {
+                    initialMovieData.plot = overviewObj.content
+                      .map((item: any) =>
+                        typeof item === "string" ? item : item.text || ""
+                      )
+                      .join("\n");
+                  }
+                } else {
+                  // Last resort - stringify but clean it up
+                  const stringified = JSON.stringify(overviewObj);
+                  initialMovieData.plot = stringified
+                    .replace(/[{}"\\]/g, "")
+                    .replace(/,/g, ". ")
+                    .replace(/:/g, ": ");
+                }
+              } else {
+                initialMovieData.plot = "No description available";
+              }
+            } catch (e) {
+              console.error("Error processing overview object:", e);
+              initialMovieData.plot = "No description available";
+            }
+          }
+        } else {
+          initialMovieData.plot = "No description available";
+        }
+      }
+
+      // Also handle the case where the plot exists but is empty
+      if (initialMovieData.plot === "") {
+        initialMovieData.plot = "No description available";
+      }
+    }
+  }, [initialMovieData]);
+
+  // Fetch the movie using our custom hook
   const {
-    isLoading,
-    error,
     data: movie,
+    isLoading,
     refetch,
-  } = useMovie(router.query.slug as string, initialMovieData || undefined);
+  } = useMovie(slug as string, initialMovieData || undefined);
 
   // Pre-populate the cache with the initial data
   useEffect(() => {
-    if (initialMovieData && router.query.slug) {
+    if (initialMovieData && slug) {
       queryClient.setQueryData(
-        ["movies", "detail", router.query.slug as string],
+        ["movies", "detail", slug as string],
         initialMovieData
       );
     }
-  }, [initialMovieData, queryClient, router.query.slug]);
+  }, [initialMovieData, queryClient, slug]);
 
   // Handle loading state
   useEffect(() => {
@@ -209,6 +328,72 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
     }
   }, [session, personData, updateProfileImageIfChanged]);
 
+  // Movie data combining initial data with fetched data
+  const movieData = movie || initialMovieData || ({} as Movie);
+
+  // Ensure plot is available for rendering
+  useEffect(() => {
+    if (movieData && (!movieData.plot || movieData.plot === "")) {
+      if (movieData.overview) {
+        console.log("Setting plot from overview in render component");
+        // Use any available overview data
+        if (typeof movieData.overview === "string") {
+          movieData.plot = movieData.overview;
+        } else {
+          // Try to extract text from complex overview
+          try {
+            const overview = movieData.overview as any;
+            if (Array.isArray(overview)) {
+              movieData.plot = overview
+                .map((block: any) => {
+                  if (typeof block === "string") return block;
+                  return block.text || "";
+                })
+                .join("\n");
+            } else if (overview && typeof overview === "object") {
+              if (overview.text) {
+                movieData.plot = overview.text;
+              } else {
+                movieData.plot = JSON.stringify(overview)
+                  .replace(/[{}"\\]/g, "")
+                  .replace(/,/g, ". ");
+              }
+            }
+          } catch (e) {
+            console.error("Error processing overview in render:", e);
+            movieData.plot = "No description available";
+          }
+        }
+      } else {
+        movieData.plot = "No description available";
+      }
+    }
+  }, [movieData]);
+
+  // Debug logging for movieData
+  useEffect(() => {
+    if (movieData) {
+      console.log(
+        "Rendered movie data:",
+        JSON.stringify({
+          title: movieData.title,
+          hasPlot: !!movieData.plot,
+          plotLength: movieData.plot ? movieData.plot.length : 0,
+          plotPreview: movieData.plot
+            ? movieData.plot.substring(0, 50) + "..."
+            : "none",
+          hasOverview: !!movieData.overview,
+          plotValue: movieData.plot,
+        })
+      );
+    }
+  }, [movieData]);
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   if (!movie) {
     return (
       <div className="fixed inset-0 flex justify-center items-center bg-black z-50">
@@ -219,9 +404,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
     );
   }
 
-  const movieData = movie || {};
-
-  if (isLoading || status === "loading")
+  if (isLoading || session === null)
     return (
       <div style={centerStyle}>
         <div className="flex flex-col items-center">
@@ -230,7 +413,15 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
       </div>
     );
 
-  if (error) return "An error has occurred: ";
+  if (session === null) {
+    return (
+      <div className="fixed inset-0 flex justify-center items-center bg-black z-50">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-[6px] border-gray-600 border-t-yellow-500"></div>
+        </div>
+      </div>
+    );
+  }
 
   async function rateMovie(movieId: string, rating: number) {
     try {
@@ -523,7 +714,11 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
 
                 {/* Plot - Desktop */}
                 <p className="mt-6 text-gray-300 text-lg leading-relaxed max-w-3xl">
-                  {movieData.plot}
+                  {movieData.plot ||
+                    (movieData.overview &&
+                    typeof movieData.overview === "string"
+                      ? movieData.overview
+                      : "No description available")}
                 </p>
 
                 {/* Rate button - Desktop */}
@@ -586,7 +781,10 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
             <div className="mt-8 w-[280px] text-center mx-auto">
               {/* Plot - Mobile */}
               <p className="text-gray-300 text-base leading-relaxed mb-6">
-                {movieData.plot}
+                {movieData.plot ||
+                  (movieData.overview && typeof movieData.overview === "string"
+                    ? movieData.overview
+                    : "No description available")}
               </p>
             </div>
           </div>
@@ -668,6 +866,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
               session={session}
               movieData={movieData}
               refetch={refetch}
+              hideHeading={true}
             />
           </div>
         </section>

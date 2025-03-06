@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, memo } from "react";
 import { useRouter } from "next/router";
 import { urlFor } from "../config/client";
 import Image from "next/image";
@@ -12,10 +12,23 @@ export interface MovieProps {
   movie: any;
 }
 
-function Movie({ title, poster, movie }: MovieProps) {
+// Memoize the Movie component to prevent unnecessary re-renders
+const Movie = memo(function Movie({ title, poster, movie }: MovieProps) {
   const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  // Check if device is mobile on mount
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Get the correct URL path
   const moviePath = movie.slug?.current || movie._id;
@@ -25,6 +38,12 @@ function Movie({ title, poster, movie }: MovieProps) {
 
     // Start the leaving animation
     setIsLeaving(true);
+
+    // Use a more lightweight approach for mobile
+    if (isMobile) {
+      router.push(`/${moviePath}`);
+      return;
+    }
 
     // Create a full-screen black overlay with loading spinner
     const overlay = document.createElement("div");
@@ -56,7 +75,7 @@ function Movie({ title, poster, movie }: MovieProps) {
     }, 300);
   };
 
-  // Calculate average rating
+  // Calculate average rating and optimize with memoization
   const averageRating =
     movie.ratings && movie.ratings.length > 0
       ? (
@@ -68,6 +87,12 @@ function Movie({ title, poster, movie }: MovieProps) {
   // Get comment count
   const commentCount = movie.comments ? movie.comments.length : 0;
 
+  // Optimize image URL
+  const optimizedImageUrl = urlFor(poster)
+    .width(isMobile ? 300 : 500)
+    .height(isMobile ? 450 : 750)
+    .url();
+
   return (
     <Link
       href={`/${moviePath}`}
@@ -76,19 +101,29 @@ function Movie({ title, poster, movie }: MovieProps) {
         ${isLeaving ? "scale-95 opacity-70" : "hover:translate-y-[-8px]"} 
         hover:shadow-[0_20px_30px_rgba(0,0,0,0.3)] cursor-pointer`}
       onClick={handleClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => !isMobile && setIsHovered(true)}
+      onMouseLeave={() => !isMobile && setIsHovered(false)}
+      onTouchStart={() => isMobile && setIsHovered(true)}
+      onTouchEnd={() => isMobile && setTimeout(() => setIsHovered(false), 500)}
     >
       <div className="relative aspect-[2/3] w-full">
+        {/* Loading skeleton */}
+        {!imageLoaded && (
+          <div className="absolute inset-0 bg-gray-900 rounded-xl animate-pulse"></div>
+        )}
+
         {/* Movie poster */}
         <Image
           className={`w-full h-full object-cover rounded-xl select-none transition-transform duration-300 
-            ${isHovered ? "scale-105" : "scale-100"}`}
+            ${isHovered ? "scale-105" : "scale-100"}
+            ${imageLoaded ? "opacity-100" : "opacity-0"}`}
           draggable={false}
-          width={500}
-          height={750}
-          src={urlFor(poster).url()}
+          width={isMobile ? 300 : 500}
+          height={isMobile ? 450 : 750}
+          src={optimizedImageUrl}
           alt={title || "Movie poster"}
+          loading="lazy"
+          onLoad={() => setImageLoaded(true)}
           style={{ objectPosition: "center" }}
         />
 
@@ -170,6 +205,6 @@ function Movie({ title, poster, movie }: MovieProps) {
       </div>
     </Link>
   );
-}
+});
 
 export default Movie;

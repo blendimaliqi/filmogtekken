@@ -29,6 +29,10 @@ export function useMovie(
       if (!slugOrId) throw new Error("No slug or ID provided");
 
       try {
+        // Check if we have the device type in localStorage
+        const isMobile =
+          typeof window !== "undefined" && window.innerWidth < 768;
+
         // Check if we already have this movie in the cache from the list query
         const allMoviesCache = queryClient.getQueryData<Movie[]>(
           movieKeys.list(undefined)
@@ -51,30 +55,41 @@ export function useMovie(
           console.log("Fetching movie with slug or ID:", slugOrId);
         }
 
-        // Try to get by slug or ID
-        const movieQuery = `*[_type == "movie" && (slug.current == $identifier || _id == $identifier)][0]{
-          ...,
-          comments[] {
-            person-> {
-              name,
-              image,
-              _id,
-              _key,
-            },
-            comment,
-            _key,
-            _createdAt,
-            createdAt
-          },
-          ratings[] {
-            person-> {
-              name,
-              image,
-              _id,
-            },
-            rating
-          }
-        }`;
+        // Try to get by slug or ID with optimized query for mobile
+        const movieQuery = isMobile
+          ? `*[_type == "movie" && (slug.current == $identifier || _id == $identifier)][0]{
+              ...,
+              overview,
+              plot,
+              "ratings": ratings[] {
+                _key,
+                rating,
+                "person": person._ref
+              }
+            }`
+          : `*[_type == "movie" && (slug.current == $identifier || _id == $identifier)][0]{
+              ...,
+              comments[] {
+                person-> {
+                  name,
+                  image,
+                  _id,
+                  _key,
+                },
+                comment,
+                _key,
+                _createdAt,
+                createdAt
+              },
+              ratings[] {
+                person-> {
+                  name,
+                  image,
+                  _id,
+                },
+                rating
+              }
+            }`;
 
         const result = await client.fetch(movieQuery, { identifier: slugOrId });
 
@@ -83,10 +98,99 @@ export function useMovie(
           throw new Error("Movie not found");
         }
 
+        // For mobile, process the comments to reduce memory footprint and ensure plot field is available
+        if (isMobile) {
+          // Ensure we only keep essential data for ratings
+          if (result.ratings) {
+            result.ratings = result.ratings.map((rating: any) => ({
+              _key: rating._key,
+              rating: rating.rating,
+              person: rating.person ? { _ref: rating.person } : null,
+            }));
+          }
+
+          // Always ensure plot field is available regardless of overview format
+          if (!result.plot || result.plot === "") {
+            if (result.overview) {
+              // Handle different types of overview field (string or BlockContent)
+              if (typeof result.overview === "string") {
+                result.plot = result.overview;
+              } else if (Array.isArray(result.overview)) {
+                // Handle array format (sometimes used for rich text)
+                try {
+                  result.plot = result.overview
+                    .map((block: any) => {
+                      if (typeof block === "string") return block;
+                      if (block.children) {
+                        return block.children
+                          .map((child: any) => child.text || "")
+                          .join("");
+                      }
+                      return block.text || "";
+                    })
+                    .join("\n")
+                    .trim();
+                } catch (e) {
+                  console.error("Error processing overview array:", e);
+                  result.plot = "No description available";
+                }
+              } else if (
+                result.overview._type &&
+                result.overview.children &&
+                Array.isArray(result.overview.children)
+              ) {
+                // Try to extract text from blockContent if possible
+                try {
+                  const blocks = result.overview.children || [];
+                  result.plot = blocks
+                    .map((block: any) => block.text || "")
+                    .join("\n")
+                    .trim();
+                } catch (e) {
+                  console.error("Error extracting text from blockContent:", e);
+                  result.plot = "No description available";
+                }
+              } else {
+                // Fallback for other object structures
+                try {
+                  result.plot = JSON.stringify(result.overview);
+                } catch (e) {
+                  result.plot = "No description available";
+                }
+              }
+            } else {
+              // No overview available
+              result.plot = "No description available";
+            }
+          }
+        } else {
+          // For desktop, ensure plot field is available from overview if needed
+          if (!result.plot && result.overview) {
+            // Handle different types of overview field (string or BlockContent)
+            if (typeof result.overview === "string") {
+              result.plot = result.overview;
+            } else if (result.overview._type === "blockContent") {
+              // Try to extract text from blockContent if possible
+              try {
+                const blocks = result.overview.children || [];
+                result.plot = blocks
+                  .map((block: any) => block.text || "")
+                  .join("\n");
+              } catch (e) {
+                console.error("Error extracting text from blockContent:", e);
+                result.plot = "No description available";
+              }
+            } else {
+              // Fallback
+              result.plot = "No description available";
+            }
+          }
+        }
+
         // Only log in development
         if (process.env.NODE_ENV !== "production") {
-          // Log the raw data to help debug
-          console.log("Raw movie data:", JSON.stringify(result, null, 2));
+          // Log the raw data to help debug, but only in dev mode
+          console.log("Raw movie data:", result);
 
           // Check if the movie has comments
           if (result.comments && result.comments.length > 0) {
@@ -107,13 +211,17 @@ export function useMovie(
     },
     enabled: !!slugOrId,
     initialData,
-    staleTime: 1000 * 60 * 15, // 15 minutes
+    staleTime: 1000 * 60 * 30, // 30 minutes (increased from 15)
     refetchOnMount: false, // Don't refetch when component mounts if data exists
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    cacheTime: 1000 * 60 * 60, // 60 minutes
   });
 }
 
 // Fetch all movies
 export function useMovies(filters?: string): UseQueryResult<Movie[], Error> {
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
   return useQuery({
     queryKey: movieKeys.list(filters),
     queryFn: async () => {
@@ -123,6 +231,55 @@ export function useMovies(filters?: string): UseQueryResult<Movie[], Error> {
           console.log("Fetching movies with filters:", filters || "none");
         }
 
+        // Use an optimized query for mobile that returns less data
+        if (isMobile) {
+          const mobileQuery = filters
+            ? `*[_type == "movie" && $genre in genres] | order(releaseDate desc) {
+                _id,
+                title,
+                slug,
+                year,
+                releaseDate,
+                poster,
+                genres,
+                "ratings": ratings[].rating,
+                "commentCount": count(comments)
+              }`
+            : `*[_type == "movie"] | order(releaseDate desc) {
+                _id,
+                title,
+                slug,
+                year,
+                releaseDate,
+                poster,
+                genres,
+                "ratings": ratings[].rating,
+                "commentCount": count(comments)
+              }`;
+
+          const result = filters
+            ? await client.fetch(mobileQuery, { genre: filters })
+            : await client.fetch(mobileQuery);
+
+          if (process.env.NODE_ENV !== "production") {
+            console.log(
+              `Fetched ${result.length} movies for mobile with ${
+                filters ? `genre ${filters}` : "no filters"
+              }`
+            );
+          }
+
+          // Process the results to match the expected interface but with less data
+          return result.map((movie: any) => ({
+            ...movie,
+            comments: [],
+            ratings: movie.ratings
+              ? movie.ratings.map((rating: number) => ({ rating }))
+              : [],
+          }));
+        }
+
+        // Regular query for desktop with full data
         // Use a simple query without parameters when no filters are provided
         if (!filters) {
           const result = await client.fetch(
@@ -152,8 +309,8 @@ export function useMovies(filters?: string): UseQueryResult<Movie[], Error> {
         throw error;
       }
     },
-    staleTime: 1000 * 60 * 15, // 15 minutes (increased from 5)
-    cacheTime: 1000 * 60 * 60, // 60 minutes (increased from 30)
+    staleTime: 1000 * 60 * 30, // 30 minutes (increased from 15)
+    cacheTime: 1000 * 60 * 60, // 60 minutes
     retry: 2,
     retryDelay: 1000,
     refetchOnMount: false, // Don't refetch when component mounts if data exists
