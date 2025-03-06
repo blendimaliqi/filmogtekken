@@ -355,8 +355,21 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
         >
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col lg:flex-row items-center lg:items-start gap-8">
-              {/* Movie poster */}
-              <div className="flex-shrink-0">
+              {/* Movie poster with added date */}
+              <div className="flex-shrink-0 flex flex-col gap-4">
+                {movieData._createdAt && (
+                  <div className="text-gray-400 text-sm">
+                    Lagt til{" "}
+                    {new Date(movieData._createdAt).toLocaleDateString(
+                      "no-NO",
+                      {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      }
+                    )}
+                  </div>
+                )}
                 {movieData.poster && movieData.poster.asset ? (
                   <Image
                     width={300}
@@ -380,16 +393,6 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
                 </h1>
 
                 <div className="flex flex-wrap items-center gap-4 mb-6 text-lg text-gray-300">
-                  {/* Added date */}
-                  {movieData._createdAt && (
-                    <div className="flex items-center">
-                      <span className="text-gray-400">
-                        Lagt til{" "}
-                        {new Date(movieData._createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                  )}
-
                   {/* Release year */}
                   {movieData.releaseDate && (
                     <div className="flex items-center">
