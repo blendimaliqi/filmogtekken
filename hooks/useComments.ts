@@ -241,38 +241,41 @@ export function useAddComment() {
       );
 
       if (movieCache) {
-        // Get the person data
-        const personCache = queryClient.getQueryData<any>([
-          "person",
-          variables.personId,
-        ]);
+        // Get the person data from the cache
+        const personQuery = `*[_type == "person" && _id == $personId][0]{
+          _id,
+          name,
+          image
+        }`;
 
-        // Create a new comment with person data if available
-        const newComment = {
-          ...result.addedComment,
-          person: personCache || {
-            _id: variables.personId,
-            _ref: variables.personId,
-          },
-        };
+        // Fetch the person data immediately
+        client
+          .fetch(personQuery, { personId: variables.personId })
+          .then((personData) => {
+            // Create a new comment with person data
+            const newComment = {
+              ...result.addedComment,
+              person: personData || { name: "Ukjent bruker" },
+            };
 
-        // Update the movie cache with the new comment
-        queryClient.setQueryData(movieKeys.detail(variables.movieId), {
-          ...movieCache,
-          comments: [...(movieCache.comments || []), newComment],
-        });
+            // Update the movie cache with the new comment
+            queryClient.setQueryData(movieKeys.detail(variables.movieId), {
+              ...movieCache,
+              comments: [...(movieCache.comments || []), newComment],
+            });
 
-        // Also update the comments cache
-        const commentsCache = queryClient.getQueryData<any[]>(
-          commentKeys.list(variables.movieId)
-        );
+            // Also update the comments cache
+            const commentsCache = queryClient.getQueryData<any[]>(
+              commentKeys.list(variables.movieId)
+            );
 
-        if (commentsCache) {
-          queryClient.setQueryData(commentKeys.list(variables.movieId), [
-            ...commentsCache,
-            newComment,
-          ]);
-        }
+            if (commentsCache) {
+              queryClient.setQueryData(commentKeys.list(variables.movieId), [
+                ...commentsCache,
+                newComment,
+              ]);
+            }
+          });
       } else {
         // If we don't have the movie in cache, invalidate to refetch
         queryClient.invalidateQueries({
