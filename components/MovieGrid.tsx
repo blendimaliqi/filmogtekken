@@ -11,11 +11,6 @@ interface MovieGridProps {
 }
 
 export function MovieGrid({ movies, isMobile }: MovieGridProps) {
-  // Debug logs
-  console.log("MovieGrid - movies:", movies);
-  console.log("MovieGrid - isMobile:", isMobile);
-
-  // If no movies, show a message
   if (!movies || movies.length === 0) {
     return (
       <div className="text-center text-white py-8">
@@ -26,18 +21,12 @@ export function MovieGrid({ movies, isMobile }: MovieGridProps) {
 
   const initialBatchSize = isMobile ? 10 : movies.length;
   const [displayCount, setDisplayCount] = useState(initialBatchSize);
-  console.log("MovieGrid - initialBatchSize:", initialBatchSize);
-  console.log("MovieGrid - displayCount:", displayCount);
 
   const displayedMovies = useMemo(() => {
     if (!movies || !Array.isArray(movies)) return [];
     const sliced = movies.slice(0, displayCount);
-    console.log("MovieGrid - sliced movies:", sliced);
     return sliced;
   }, [movies, displayCount]);
-
-  // Debug logs for displayed movies
-  console.log("MovieGrid - displayedMovies:", displayedMovies);
 
   useEffect(() => {
     if (!isMobile) return;
@@ -62,17 +51,7 @@ export function MovieGrid({ movies, isMobile }: MovieGridProps) {
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 px-4 md:px-8 pb-8">
       {displayedMovies.map((movie) => {
         try {
-          // Debug log for each movie
-          console.log("MovieGrid - processing movie:", {
-            id: movie._id,
-            title: movie.title,
-            poster: movie.poster,
-          });
-
-          // Generate poster URL
           const posterUrl = urlFor(movie.poster).url();
-          console.log("MovieGrid - generated posterUrl:", posterUrl);
-
           return (
             <MovieComponent
               key={movie._id}

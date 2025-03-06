@@ -21,14 +21,6 @@ const Movie = memo(function Movie({ title, poster, movie }: MovieProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  // Debug logs
-  console.log("Movie component - rendering:", {
-    title,
-    poster,
-    movieId: movie?._id,
-    slug: movie?.slug?.current,
-  });
-
   // Check if device is mobile on mount
   useEffect(() => {
     const checkMobile = () => {
@@ -67,7 +59,6 @@ const Movie = memo(function Movie({ title, poster, movie }: MovieProps) {
       .width(isMobile ? 300 : 500)
       .height(isMobile ? 450 : 750)
       .url();
-    console.log("Movie component - optimizedImageUrl:", optimizedImageUrl);
   } catch (error) {
     console.error("Error generating image URL:", error);
     optimizedImageUrl = "";
@@ -113,7 +104,6 @@ const Movie = memo(function Movie({ title, poster, movie }: MovieProps) {
           alt={title || "Movie poster"}
           loading="lazy"
           onLoad={() => {
-            console.log("Movie component - image loaded:", title);
             setImageLoaded(true);
           }}
           onError={() => {

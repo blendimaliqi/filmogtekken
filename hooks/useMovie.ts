@@ -50,11 +50,6 @@ export function useMovie(
           }
         }
 
-        // Only log in development
-        if (process.env.NODE_ENV !== "production") {
-          console.log("Fetching movie with slug or ID:", slugOrId);
-        }
-
         // Try to get by slug or ID with optimized query for mobile
         const movieQuery = isMobile
           ? `*[_type == "movie" && (slug.current == $identifier || _id == $identifier)][0]{
@@ -244,22 +239,6 @@ export function useMovie(
           }
         }
 
-        // Only log in development
-        if (process.env.NODE_ENV !== "production") {
-          // Log the raw data to help debug, but only in dev mode
-          console.log("Raw movie data:", safeResult);
-
-          // Check if the movie has comments
-          if (safeResult.comments && safeResult.comments.length > 0) {
-            console.log(`Movie has ${safeResult.comments.length} comments`);
-          }
-
-          // Check if the movie has ratings
-          if (safeResult.ratings && safeResult.ratings.length > 0) {
-            console.log(`Movie has ${safeResult.ratings.length} ratings`);
-          }
-        }
-
         return safeResult;
       } catch (error) {
         console.error("Error fetching movie:", error);
@@ -316,11 +295,6 @@ export function useMovies(filters?: string): UseQueryResult<Movie[], Error> {
     queryKey: movieKeys.list(filters),
     queryFn: async () => {
       try {
-        // Only log in development
-        if (process.env.NODE_ENV !== "production") {
-          console.log("Fetching movies with filters:", filters || "none");
-        }
-
         // Use an optimized query for mobile that returns less data
         if (isMobile) {
           const mobileQuery = filters
@@ -351,14 +325,6 @@ export function useMovies(filters?: string): UseQueryResult<Movie[], Error> {
             ? await client.fetch(mobileQuery, { genre: filters })
             : await client.fetch(mobileQuery);
 
-          if (process.env.NODE_ENV !== "production") {
-            console.log(
-              `Fetched ${result.length} movies for mobile with ${
-                filters ? `genre ${filters}` : "no filters"
-              }`
-            );
-          }
-
           // Process the results to match the expected interface but with less data
           return result.map((movie: any) => ({
             ...movie,
@@ -376,10 +342,6 @@ export function useMovies(filters?: string): UseQueryResult<Movie[], Error> {
             `*[_type == "movie"] | order(releaseDate desc)`
           );
 
-          if (process.env.NODE_ENV !== "production") {
-            console.log(`Fetched ${result.length} movies`);
-          }
-
           return result;
         }
 
@@ -388,10 +350,6 @@ export function useMovies(filters?: string): UseQueryResult<Movie[], Error> {
           `*[_type == "movie" && $genre in genres] | order(releaseDate desc)`,
           { genre: filters }
         );
-
-        if (process.env.NODE_ENV !== "production") {
-          console.log(`Fetched ${result.length} movies with genre ${filters}`);
-        }
 
         return result;
       } catch (error) {

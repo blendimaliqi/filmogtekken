@@ -25,15 +25,8 @@ function Movies({ movies: propMovies }: MoviesProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { data: session } = useSession();
 
-  // Debug logs for incoming props
-  console.log("Movies component - propMovies:", propMovies?.length);
-
   const { movies, sortedMovies, isLoading, handleSortByAverageRating } =
     useMovieManagement(propMovies);
-
-  // Debug logs for movies and sortedMovies
-  console.log("Movies component - movies:", movies?.length);
-  console.log("Movies component - sortedMovies:", sortedMovies?.length);
 
   // Check if device is mobile
   useEffect(() => {
@@ -57,7 +50,6 @@ function Movies({ movies: propMovies }: MoviesProps) {
   }
 
   const moviesToDisplay = sortedMovies.length > 0 ? sortedMovies : movies;
-  console.log("Movies component - moviesToDisplay:", moviesToDisplay?.length);
 
   return (
     <div className="bg-black min-h-screen">

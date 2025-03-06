@@ -27,19 +27,9 @@ export function useMovieManagement(
   const [sortedMovies, setSortedMovies] = useAtom(moviesSortedAtom);
   const [moviesFiltered, setMoviesFiltered] = useAtom(moviesFilteredAtom);
 
-  // Debug logs
-  console.log("useMovieManagement - propMovies:", propMovies?.length);
-  console.log("useMovieManagement - movies:", movies?.length);
-  console.log("useMovieManagement - sortedMovies:", sortedMovies?.length);
-  console.log("useMovieManagement - moviesFiltered:", moviesFiltered);
-
   // Set movies from propMovies if they exist
   useEffect(() => {
     if (propMovies && propMovies.length > 0) {
-      console.log(
-        "useMovieManagement - Setting movies from propMovies:",
-        propMovies.length
-      );
       setMovies(propMovies);
     }
   }, [propMovies, setMovies]);
@@ -48,7 +38,6 @@ export function useMovieManagement(
     queryKey: ["movies"],
     queryFn: () => client.fetch(moviesQuery),
     onSuccess: (data) => {
-      console.log("useMovieManagement - query success data:", data?.length);
       if (!propMovies || propMovies.length === 0) {
         setMovies(data);
       }

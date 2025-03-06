@@ -152,8 +152,6 @@ function CommentForm({
 
   async function deleteCommentFromMovie(commentKey: string) {
     if (window.confirm("Are you sure you want to delete this comment?")) {
-      console.log("Deleting comment with key:", commentKey);
-
       deleteComment.mutate(
         {
           commentKey,
@@ -161,7 +159,6 @@ function CommentForm({
         },
         {
           onSuccess: () => {
-            console.log("Comment deleted successfully");
             refetch();
           },
           onError: (error) => {

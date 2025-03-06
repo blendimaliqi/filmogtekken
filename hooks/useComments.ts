@@ -30,11 +30,6 @@ export function useComments(movieIdOrSlug: string) {
           movieCache.comments &&
           movieCache.comments.length > 0
         ) {
-          if (process.env.NODE_ENV !== "production") {
-            console.log(`Using cached comments for movie: ${movieIdOrSlug}`);
-          }
-
-          // Check if comments already have expanded person data
           const allCommentsHavePersonData = movieCache.comments.every(
             (comment: any) =>
               comment.person &&
@@ -117,11 +112,6 @@ export function useComments(movieIdOrSlug: string) {
           }
         }
 
-        // Only log in development
-        if (process.env.NODE_ENV !== "production") {
-          console.log("Fetching comments for movie:", movieIdOrSlug);
-        }
-
         // Use a more efficient query that directly expands person references
         const commentsQuery = `*[_type == "movie" && (slug.current == $identifier || _id == $identifier)][0]{
           "comments": comments[] {
@@ -188,13 +178,6 @@ export function useAddComment() {
       comment: string;
     }) => {
       try {
-        // Only log in development
-        if (process.env.NODE_ENV !== "production") {
-          console.log(
-            `Adding comment to movie ${movieId} from person ${personId}`
-          );
-        }
-
         const commentKey = `comment-${uuidv4()}`;
         const now = new Date().toISOString();
 
@@ -303,11 +286,6 @@ export function useDeleteComment() {
       commentKey: string;
     }) => {
       try {
-        // Only log in development
-        if (process.env.NODE_ENV !== "production") {
-          console.log(`Deleting comment ${commentKey} from movie ${movieId}`);
-        }
-
         // Delete the comment from the movie
         return await clientWithToken
           .patch(movieId)
