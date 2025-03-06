@@ -411,12 +411,12 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
 
                   {/* Average rating - enhanced visibility */}
                   {averageRating && (
-                    <div className="flex items-center gap-2 bg-yellow-600/20 px-4 py-1 rounded-full">
-                      <span className="text-yellow-500 text-xl font-bold">
+                    <div className="flex items-center gap-1 bg-yellow-600/80 px-3 py-1 rounded-full">
+                      <span className="text-white font-medium">
                         {averageRating}
                       </span>
-                      <AiFillStar className="text-yellow-500 text-xl" />
-                      <span className="text-sm text-yellow-500/80">
+                      <AiFillStar className="text-white text-sm" />
+                      <span className="text-white/90 text-sm ml-1">
                         ({movieData.ratings.length}{" "}
                         {movieData.ratings.length === 1 ? "rating" : "ratings"})
                       </span>
@@ -481,10 +481,10 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
         {/* Individual ratings section */}
         {movieData.ratings && movieData.ratings.length > 0 && (
           <div className="mt-0 mb-12">
-            <h2 className="text-2xl font-bold text-white mb-6 border-b border-yellow-600/50 pb-2">
+            <h2 className="text-2xl font-bold text-white mb-6">
               Individuell Rating
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-12 gap-y-8 justify-items-start">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {movieData.ratings.map((rating: any, index: number) => {
                 // Get the person safely
                 const person =
@@ -494,33 +494,43 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
                 return (
                   <div
                     key={rating._key || `rating-${index}`}
-                    className="flex flex-col items-center w-fit"
+                    className="flex items-center gap-4 bg-zinc-900/50 rounded-xl p-4 backdrop-blur-sm border border-zinc-800/50 hover:border-yellow-600/30 transition-all duration-300"
                   >
                     {hasImage ? (
                       <Image
-                        width={80}
-                        height={80}
+                        width={50}
+                        height={50}
                         src={urlFor(person.image).url()}
                         alt={person.name || "Ukjent"}
-                        className="rounded-full object-cover mb-3"
+                        className="rounded-full object-cover"
                       />
                     ) : (
-                      <div className="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center mb-3">
+                      <div className="w-[50px] h-[50px] rounded-full bg-zinc-800 flex items-center justify-center">
                         <span className="text-gray-400 text-xl">?</span>
                       </div>
                     )}
-                    <div className="flex flex-col items-center">
-                      <div className="bg-yellow-600 rounded-full w-12 h-12 flex items-center justify-center mb-2 border-2 border-yellow-800">
-                        <span className="text-white font-bold text-xl">
-                          {rating.rating}
+                    <div className="flex flex-col flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-white font-medium">
+                          {person?.name || "Ukjent"}
                         </span>
+                        <div className="flex items-center gap-1 bg-yellow-600/80 px-3 py-1 rounded-full">
+                          <span className="text-white font-medium">
+                            {rating.rating}
+                          </span>
+                          <AiFillStar className="text-white text-sm" />
+                        </div>
                       </div>
-                      <span className="text-white text-base font-medium">
-                        {person?.name || "Ukjent"}
-                      </span>
                       {rating._createdAt && (
                         <span className="text-gray-400 text-xs mt-1">
-                          {new Date(rating._createdAt).toLocaleDateString()}
+                          {new Date(rating._createdAt).toLocaleDateString(
+                            "no-NO",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            }
+                          )}
                         </span>
                       )}
                     </div>
