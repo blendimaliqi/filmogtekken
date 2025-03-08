@@ -54,11 +54,142 @@ export function uuidv4() {
   });
 }
 
-export async function uploadExternalImage(url: string) {
-  const response = await fetch(url);
-  const blob = await response.blob();
-  const contentType = response.headers.get("content-type") || "image/jpeg"; // Provide a default value
+// In-memory cache for recently uploaded images
+const imageCache = new Map();
 
-  const asset = await clientWithToken.assets.upload("image", blob, { contentType });
-  return asset;
+export async function uploadExternalImage(url: string) {
+  if (!url) {
+    throw new Error("No URL provided for image upload");
+  }
+
+  // Normalize the URL by removing query parameters for consistent caching
+  const normalizedUrl = url.split("?")[0];
+
+  // Check if we have this image in our in-memory cache
+  if (imageCache.has(normalizedUrl)) {
+    console.log("Using cached image asset from memory:", normalizedUrl);
+    return imageCache.get(normalizedUrl);
+  }
+
+  // Check if we have this image in localStorage
+  const storageKey = `image_upload_${normalizedUrl}`;
+  const cachedAssetId = localStorage.getItem(storageKey);
+
+  if (cachedAssetId) {
+    try {
+      // The cached value might be a full asset object or just the ID
+      let assetId: string;
+
+      try {
+        // Try to parse as JSON first
+        const parsedCache = JSON.parse(cachedAssetId);
+        // If it's an object with _id, use that
+        if (typeof parsedCache === "object" && parsedCache._id) {
+          assetId = String(parsedCache._id);
+        } else if (typeof parsedCache === "string") {
+          // Otherwise use the parsed value directly
+          assetId = parsedCache;
+        } else if (parsedCache) {
+          // Handle any other type by converting to string
+          assetId = String(parsedCache);
+        } else {
+          throw new Error("Invalid cached asset data");
+        }
+      } catch (e) {
+        // If not valid JSON, use as is
+        assetId = String(cachedAssetId);
+      }
+
+      // Try to fetch the asset info from Sanity to verify it exists
+      if (assetId) {
+        try {
+          const asset = await clientWithToken.getDocument(assetId);
+          if (asset) {
+            console.log(
+              "Using cached image asset from storage:",
+              normalizedUrl
+            );
+            // Update in-memory cache
+            imageCache.set(normalizedUrl, asset);
+            return asset;
+          }
+        } catch (fetchError) {
+          console.log(
+            "Error fetching cached asset, will upload new one:",
+            fetchError
+          );
+          // Continue with upload if asset fetch fails
+        }
+      }
+    } catch (error) {
+      console.log("Error processing cached asset, will upload new one:", error);
+      // Continue with upload if asset doesn't exist
+    }
+  }
+
+  // Add rate limiting to prevent too many requests
+  await new Promise((resolve) => setTimeout(resolve, 500)); // 500ms delay between uploads
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch image: ${response.status} ${response.statusText}`
+      );
+    }
+
+    const blob = await response.blob();
+    const contentType = response.headers.get("content-type") || "image/jpeg"; // Provide a default value
+
+    const asset = await clientWithToken.assets.upload("image", blob, {
+      contentType,
+    });
+
+    if (!asset || !asset._id) {
+      throw new Error("Failed to get valid asset from upload");
+    }
+
+    // Store in caches - only store the string ID in localStorage
+    imageCache.set(normalizedUrl, asset);
+    localStorage.setItem(storageKey, String(asset._id));
+    localStorage.setItem(`${storageKey}_timestamp`, Date.now().toString());
+
+    return asset;
+  } catch (error: any) {
+    console.error("Error uploading image to Sanity:", error);
+    // If we get a rate limit error, wait longer and try again once
+    if (error.message && error.message.includes("Too Many Requests")) {
+      console.log("Rate limited, waiting and retrying once...");
+      await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait 3 seconds
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch image on retry: ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const contentType =
+          response.headers.get("content-type") || "image/jpeg";
+        const asset = await clientWithToken.assets.upload("image", blob, {
+          contentType,
+        });
+
+        if (!asset || !asset._id) {
+          throw new Error("Failed to get valid asset from retry upload");
+        }
+
+        // Store in caches - only store the string ID in localStorage
+        imageCache.set(normalizedUrl, asset);
+        localStorage.setItem(storageKey, String(asset._id));
+
+        return asset;
+      } catch (retryError) {
+        console.error("Retry failed, returning error:", retryError);
+        throw retryError;
+      }
+    }
+
+    throw error;
+  }
 }

@@ -1,6 +1,4 @@
-import React from "react";
-import { Dialog, Transition } from "@headlessui/react";
-import { Fragment } from "react";
+import React, { useEffect } from "react";
 
 interface ModalProps {
   isOpen: boolean;
@@ -9,47 +7,64 @@ interface ModalProps {
 }
 
 export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
-  return (
-    <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={onClose}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" />
-        </Transition.Child>
+  // Prevent scrolling when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
 
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <Dialog.Panel className="w-full max-w-5xl transform overflow-hidden rounded-2xl bg-gradient-to-b from-gray-900 to-black border border-gray-800/30 shadow-xl transition-all">
-                <button
-                  onClick={onClose}
-                  className="absolute top-4 right-4 z-50 rounded-full bg-gray-800/70 backdrop-blur-sm p-2 text-gray-400 hover:text-white hover:bg-gray-700 transition-all duration-200"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-                {children}
-              </Dialog.Panel>
-            </Transition.Child>
-          </div>
-        </div>
-      </Dialog>
-    </Transition>
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 flex items-center justify-center z-[9999]"
+      style={{ pointerEvents: "auto" }}
+    >
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+        onClick={onClose}
+        style={{ pointerEvents: "auto" }}
+      />
+
+      {/* Modal content */}
+      <div
+        className="relative z-[10000] bg-gradient-to-b from-gray-900 to-black p-6 rounded-xl border border-gray-800/50 shadow-xl max-w-3xl w-full mx-4"
+        onClick={(e) => e.stopPropagation()}
+        style={{ pointerEvents: "auto" }}
+      >
+        {/* Close button */}
+        <button
+          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+          onClick={onClose}
+          style={{ pointerEvents: "auto" }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+
+        {/* Modal content */}
+        <div>{children}</div>
+      </div>
+    </div>
   );
 };

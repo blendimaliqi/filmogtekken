@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import HomepageImage from "@/components/HomepageImage";
 import MovieTitle from "@/components/MovieTitle";
-import { client, urlFor } from "../config/client";
+import { urlFor } from "../config/client";
 import { ColorRing } from "react-loader-spinner";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { atom, useAtom } from "jotai";
+import { useQueryClient } from "@tanstack/react-query";
 import Movies from "@/components/Movies";
-import { moviesQuery } from "@/utils/groqQueries";
 import { Movie } from "@/typings";
 import { uuidv4 } from "@/utils/helperFunctions";
 import { useMovies } from "@/hooks";
@@ -22,24 +20,58 @@ export const centerStyle = {
   height: "100vh",
 };
 
-export const moviesAtom = atom<Movie[]>([]);
-export const moviesSortedAtom = atom<Movie[]>([]);
-export const moviesFilteredAtom = atom("default");
-
 // Detect if we're on a mobile device
 const isMobile = () => {
   if (typeof window === "undefined") return false;
   return window.innerWidth < 768;
 };
 
+// Component to render just the add movie functionality
+const StandaloneAddMovieButton = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const refreshMovies = useCallback(() => {
+    // Invalidate the movies query to trigger a refetch
+    queryClient.invalidateQueries({ queryKey: ["movies"] });
+
+    // Force a page refresh after a short delay to ensure we get fresh data
+    setTimeout(() => {
+      router.reload();
+    }, 500);
+  }, [queryClient, router]);
+
+  return (
+    <>
+      <button
+        onClick={() => setIsOpen(true)}
+        className="w-full bg-gradient-to-r from-yellow-600 to-yellow-700 text-white font-bold py-4 px-6 rounded-lg hover:from-yellow-500 hover:to-yellow-600 transition-all duration-300 cursor-pointer"
+      >
+        Add Your First Movie
+      </button>
+
+      {isOpen && (
+        <Movies isAddMovieModalOpen={true} onMovieAdded={refreshMovies} />
+      )}
+    </>
+  );
+};
+
 export default function Home() {
-  const [movies, setMovies] = useAtom(moviesAtom);
   const [contentVisible, setContentVisible] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
   const queryClient = useQueryClient();
-
-  const { isLoading, error, data, refetch } = useMovies();
   const router = useRouter();
+
+  const { isLoading, error, data: movies, refetch } = useMovies();
+
+  // Function to refresh the page after adding a movie
+  const refreshAfterMovieAdded = useCallback(() => {
+    refetch().then(() => {
+      router.reload();
+    });
+  }, [refetch, router]);
 
   // Check for mobile view on mount and window resize
   useEffect(() => {
@@ -56,12 +88,10 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (data) {
-      setMovies(data);
-
+    if (movies) {
       // Pre-populate individual movie cache entries to avoid refetching
       // On mobile, limit the number of movies we cache to reduce memory usage
-      const moviesToCache = isMobileView ? data.slice(0, 10) : data;
+      const moviesToCache = isMobileView ? movies.slice(0, 10) : movies;
 
       moviesToCache.forEach((movie) => {
         const movieId = movie._id;
@@ -78,18 +108,18 @@ export default function Home() {
         }
       });
     }
-  }, [data, setMovies, queryClient, isMobileView]);
+  }, [movies, queryClient, isMobileView]);
 
   // Add fade-in effect when component mounts or data loads
   useEffect(() => {
-    if (!isLoading && data) {
+    if (!isLoading && movies) {
       // Small delay for smooth animation
       const timer = setTimeout(() => {
         setContentVisible(true);
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [isLoading, data]);
+  }, [isLoading, movies]);
 
   // Hide content when navigating away
   useEffect(() => {
@@ -105,13 +135,13 @@ export default function Home() {
 
   // Memoize the sorted movies to avoid unnecessary re-renders
   const sortedMovies = useMemo(() => {
-    if (!data) return [];
-    return [...data].sort((a: Movie, b: Movie) => {
+    if (!movies) return [];
+    return [...movies].sort((a: Movie, b: Movie) => {
       return (
         new Date(b._createdAt).getTime() - new Date(a._createdAt).getTime()
       );
     });
-  }, [data]);
+  }, [movies]);
 
   // Memoize the movies to display in the carousel
   const moviesToDisplay = useMemo(() => {
@@ -146,12 +176,37 @@ export default function Home() {
     );
   }
 
-  if (!data || data.length === 0) {
+  if (!movies || movies.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 text-white">
-        <h2 className="text-2xl font-bold mb-4">No Movies Found</h2>
-        <p>There are currently no movies in the database.</p>
-      </div>
+      <main className="bg-black min-h-screen">
+        <div className="flex flex-col items-center justify-center min-h-screen text-white">
+          <div className="bg-black p-8 rounded-lg max-w-md w-full mx-auto text-center">
+            <div className="w-20 h-20 mx-auto bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center mb-6">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-10 w-10 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"
+                />
+              </svg>
+            </div>
+
+            <h1 className="text-3xl font-bold mb-4">No Movies Found</h1>
+            <p className="text-gray-400 mb-8">
+              Your collection is empty. Add your first movie to get started.
+            </p>
+
+            <StandaloneAddMovieButton />
+          </div>
+        </div>
+      </main>
     );
   }
 
@@ -256,13 +311,13 @@ export default function Home() {
           <div className="hidden md:block absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-black to-transparent"></div>
         </div>
 
-        {/* Pass the sortedMovies to the Movies component */}
+        {/* Pass movies directly to the Movies component and include refresh handler */}
         <div
           className={`transition-opacity duration-300 ${
             contentVisible ? "opacity-100 animate-pureFade" : "opacity-0"
           }`}
         >
-          <Movies movies={sortedMovies} />
+          <Movies movies={movies} onMovieAdded={refreshAfterMovieAdded} />
         </div>
       </div>
     </main>

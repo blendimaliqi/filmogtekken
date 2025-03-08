@@ -10,14 +10,8 @@ import dynamic from "next/dynamic";
 import { client, createPost } from "@/config/client";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import {
-  centerStyle,
-  moviesAtom,
-  moviesSortedAtom,
-  moviesFilteredAtom,
-} from "@/pages";
+import { centerStyle } from "@/pages";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { atom, useAtom } from "jotai";
 import { signIn, useSession } from "next-auth/react";
 import { moviesQuery } from "@/utils/groqQueries";
 import { uploadExternalImage, uuidv4 } from "@/utils/helperFunctions";
@@ -55,18 +49,22 @@ interface MovieWithTotalComments extends Movie {
   totalComments: number;
 }
 
-export const searchTermJotai = atom("");
-
 interface MoviesProps {
   movies?: Movie[];
+  isAddMovieModalOpen?: boolean;
+  onMovieAdded?: () => void;
 }
 
-function Movies({ movies: propMovies }: MoviesProps) {
-  const [movies, setMovies] = useAtom(moviesAtom);
-  const [sortMovies, setSortedMovies] = useAtom(moviesSortedAtom);
-  const [moviesFiltered, setMoviesFiltered] = useAtom(moviesFilteredAtom);
-  const [searchTerm, setSearchTerm] = useAtom(searchTermJotai);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+function Movies({
+  movies: propMovies,
+  isAddMovieModalOpen = false,
+  onMovieAdded,
+}: MoviesProps) {
+  // Local state to replace Jotai atoms
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
+  const [activeFilter, setActiveFilter] = useState("default");
+  const [isModalOpen, setIsModalOpen] = useState(isAddMovieModalOpen);
   const [isLoading, setIsLoading] = useState(false);
   const { data: session } = useSession();
   const [tmdbMovies, setTmdbMovies] = useState<any[]>([]);
@@ -74,6 +72,13 @@ function Movies({ movies: propMovies }: MoviesProps) {
   const [hasSearched, setHasSearched] = useState(false);
   const queryClient = useQueryClient();
   const [isMobile, setIsMobile] = useState(false);
+
+  // Open the modal if isAddMovieModalOpen prop changes
+  useEffect(() => {
+    if (isAddMovieModalOpen) {
+      setIsModalOpen(true);
+    }
+  }, [isAddMovieModalOpen]);
 
   // Check if device is mobile
   useEffect(() => {
@@ -85,75 +90,62 @@ function Movies({ movies: propMovies }: MoviesProps) {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Use propMovies if provided, otherwise use the movies from the atom
-  const moviesToUse = propMovies || movies;
+  // Use movies directly from props or get them from React Query cache if not provided
+  const moviesToUse = useMemo(() => {
+    return propMovies || [];
+  }, [propMovies]);
 
-  // Search functionality - memoized and debounced for performance
+  // Search functionality - only called on demand, not on every keystroke
   const getMovieRequest = useCallback(() => {
-    const debouncedFunction = debounce(() => {
-      try {
-        // For regular search in the main page
-        if (!isModalOpen) {
-          if (searchTerm !== "") {
-            const searchResults = moviesToUse.filter((movie: Movie) =>
-              movie.title.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-            setSortedMovies(searchResults);
-          } else {
-            setSortedMovies([]);
-          }
-          return;
+    try {
+      // For regular search in the main page
+      if (!isModalOpen) {
+        if (searchTerm !== "") {
+          const searchResults = moviesToUse.filter((movie: Movie) =>
+            movie.title.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+          setFilteredMovies(searchResults);
+        } else {
+          setFilteredMovies([]);
         }
-
-        // For TMDB search in the modal
-        if (isModalOpen) {
-          // Only set hasSearched to true, indicating a search was performed
-          setHasSearched(true);
-
-          if (input !== "") {
-            setIsLoading(true);
-            // Call TMDB API to search for movies
-            fetch(
-              `https://api.themoviedb.org/3/search/movie?api_key=${process.env.TMDB_API_KEY}&language=en-US&query=${input}&page=1&include_adult=false`
-            )
-              .then((response) => response.json())
-              .then((data) => {
-                // Limit results to improve performance on mobile
-                const limitedResults = isMobile
-                  ? data.results.slice(0, 10)
-                  : data.results;
-                setTmdbMovies(limitedResults);
-                setIsLoading(false);
-              })
-              .catch((error) => {
-                console.error("Error searching TMDB:", error);
-                setIsLoading(false);
-              });
-          } else {
-            // Only clear results if the user explicitly searches with empty input
-            setTmdbMovies([]);
-          }
-        }
-      } catch (error) {
-        console.error("Error searching movies:", error);
-        setIsLoading(false);
+        return;
       }
-    }, 300);
 
-    debouncedFunction();
-  }, [
-    searchTerm,
-    moviesToUse,
-    setSortedMovies,
-    isModalOpen,
-    input,
-    setTmdbMovies,
-    setIsLoading,
-    setHasSearched,
-    isMobile,
-  ]);
+      // For TMDB search in the modal
+      if (isModalOpen) {
+        // Only set hasSearched to true, indicating a search was performed
+        setHasSearched(true);
 
-  const [allMovies, setAllMovies] = useState<Movie[]>([]);
+        if (input !== "") {
+          setIsLoading(true);
+          // Call TMDB API to search for movies
+          fetch(
+            `https://api.themoviedb.org/3/search/movie?api_key=${process.env.TMDB_API_KEY}&language=en-US&query=${input}&page=1&include_adult=false`
+          )
+            .then((response) => response.json())
+            .then((data) => {
+              // Limit results to improve performance on mobile
+              const limitedResults = isMobile
+                ? data.results.slice(0, 10)
+                : data.results;
+              setTmdbMovies(limitedResults);
+              setIsLoading(false);
+            })
+            .catch((error) => {
+              console.error("Error searching TMDB:", error);
+              setIsLoading(false);
+            });
+        } else {
+          // Only clear results if the user explicitly searches with empty input
+          setTmdbMovies([]);
+        }
+      }
+    } catch (error) {
+      console.error("Error searching movies:", error);
+      setIsLoading(false);
+    }
+  }, [searchTerm, moviesToUse, isModalOpen, input, isMobile]);
+
   const [isContentLoaded, setIsContentLoaded] = useState(false);
 
   // Memoize filter functions for better performance
@@ -224,109 +216,116 @@ function Movies({ movies: propMovies }: MoviesProps) {
   // Memoize the handleSortByAverageRating function
   const handleSortByAverageRating = useCallback(
     (filter: string) => {
-      // Update the Jotai atom to persist the filter selection
-      setMoviesFiltered(filter);
+      // Update the filter state
+      setActiveFilter(filter);
 
       if (filter === "highest") {
         const sortedByHighestRating =
           filterMoviesByHighestAverageRating(moviesToUse);
-        setSortedMovies(sortedByHighestRating);
+        setFilteredMovies(sortedByHighestRating);
       } else if (filter === "lowest") {
         const sortedByLowestRating =
           filterMoviesByLowestAverageRating(moviesToUse);
-        setSortedMovies(sortedByLowestRating);
+        setFilteredMovies(sortedByLowestRating);
       } else if (filter === "comments") {
         const sortedByComments =
           filterMoviesByHighestTotalComments(moviesToUse);
-        setSortedMovies(sortedByComments);
+        setFilteredMovies(sortedByComments);
       } else if (filter === "default") {
-        setSortedMovies([]);
+        setFilteredMovies([]);
       }
     },
     [
       moviesToUse,
-      setSortedMovies,
-      setMoviesFiltered,
       filterMoviesByHighestAverageRating,
       filterMoviesByLowestAverageRating,
       filterMoviesByHighestTotalComments,
     ]
   );
 
-  // Add useEffect to trigger search when searchTerm changes
+  // Call getMovieRequest only from explicit user actions
+
+  // Apply active filter when movies change
   useEffect(() => {
-    if (searchTerm !== "") {
-      getMovieRequest();
-    } else if (searchTerm === "" && !isModalOpen) {
-      setSortedMovies([]);
+    if (activeFilter !== "default") {
+      handleSortByAverageRating(activeFilter);
     }
-  }, [searchTerm, getMovieRequest, isModalOpen, setSortedMovies]);
+  }, [moviesToUse, activeFilter, handleSortByAverageRating]);
 
-  // Add useEffect to apply the filter when component mounts or movies data changes
+  // Display loading state while content is loading
   useEffect(() => {
-    if (moviesToUse.length > 0 && moviesFiltered !== "default") {
-      handleSortByAverageRating(moviesFiltered);
+    setIsContentLoaded(true);
+  }, []);
+
+  // Function to get the correct movies to display
+  const getMoviesToDisplay = (): Movie[] => {
+    // If we have filtered movies, show them
+    if (filteredMovies.length > 0) {
+      return filteredMovies;
     }
-  }, [moviesToUse, moviesFiltered, handleSortByAverageRating]);
+    // Otherwise show all movies (might be empty array)
+    return moviesToUse;
+  };
 
-  // Optimize data fetching with React Query
-  const {
-    isLoading: queryLoading,
-    error,
-    data,
-  } = useQuery({
-    queryKey: ["movies"],
-    queryFn: () => client.fetch(moviesQuery),
-    onSuccess: (data) => {
-      // Only update if we don't have propMovies
-      if (!propMovies || propMovies.length === 0) {
-        setMovies(data);
-        setAllMovies(data);
-      }
-      setIsContentLoaded(true);
-    },
-    enabled: !propMovies || propMovies.length === 0,
-    refetchOnWindowFocus: false,
-    refetchOnMount: true,
-    staleTime: 1000 * 60 * 10, // 10 minutes cache
-  });
+  // Get the final list of movies to display
+  const moviesToDisplay = getMoviesToDisplay();
 
-  const [selectValue, setSelectValue] = useAtom(moviesFilteredAtom);
-
+  // Modal functions
   const openModal = () => {
     setIsModalOpen(true);
-    setHasSearched(false);
-    setInput("");
-    setTmdbMovies([]);
   };
 
   const closeModal = () => {
-    setIsModalOpen(false);
     setInput("");
     setTmdbMovies([]);
     setHasSearched(false);
+    setIsModalOpen(false);
   };
 
-  async function refetchMovies() {
-    try {
-      const refetchedData = await client.fetch(moviesQuery);
-      setMovies(refetchedData);
-      setAllMovies(refetchedData);
-      // Reset sorted movies to show the newly added movie
-      setSortedMovies([]);
-      return refetchedData;
-    } catch (error) {
-      console.log("error", error);
-      throw error;
-    }
-  }
-
+  // Function to add a new movie from TMDB
   async function addMovie(mov: any) {
     try {
       setIsLoading(true);
       const movieDetails = `https://api.themoviedb.org/3/movie/${mov.id}?api_key=${process.env.TMDB_API_KEY}`;
       const fetchDetails = await fetch(movieDetails);
       const responeDetails = await fetchDetails.json();
+
+      // Check if this movie already exists before uploading images
+      const movieExists = moviesToUse.some(
+        (movie: any) => movie.title === mov.title
+      );
+
+      if (movieExists) {
+        toast.error(
+          ({ closeToast }) => (
+            <CustomToast
+              title="Film finnes allerede"
+              message={`${mov.title} er allerede i din samling`}
+              type="error"
+              closeToast={closeToast}
+              posterUrl={mov.poster}
+            />
+          ),
+          {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: true,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            theme: "dark",
+            className:
+              "!bg-transparent !shadow-none !p-0 !rounded-none !max-w-sm",
+            bodyClassName: "!p-0 !m-0",
+            icon: false,
+          }
+        );
+        setIsLoading(false);
+        closeModal();
+        return;
+      }
+
+      // Only upload images if movie doesn't exist
       const imageUrl = `https://image.tmdb.org/t/p/original${mov.poster_path}`;
       const imageAsset = await uploadExternalImage(imageUrl);
       const imageAssetId = imageAsset._id;
@@ -364,126 +363,16 @@ function Movies({ movies: propMovies }: MoviesProps) {
         },
       };
 
-      const movieExists = movies.some(
-        (movie: any) => movie.title === mov.title
-      );
+      console.log("Created movie:", mov);
 
-      if (!movieExists) {
-        console.log("Created movie:", mov);
-
-        toast.success(
-          ({ closeToast }) => (
-            <CustomToast
-              title="Film lagt til"
-              message={`${mov.title} er nå lagt til i din samling`}
-              type="success"
-              closeToast={closeToast}
-              posterUrl={mov.poster}
-            />
-          ),
-          {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: true,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            theme: "dark",
-            className:
-              "!bg-transparent !shadow-none !p-0 !rounded-none !max-w-sm",
-            bodyClassName: "!p-0 !m-0",
-            icon: false,
-          }
-        );
-
-        // Create the movie in Sanity
-        const createdMovie = await createPost(movieData);
-
-        // Add the created movie to both state arrays with the _id from Sanity
-        const newMovieWithId = {
-          ...movieData,
-          _id: createdMovie._id,
-          _createdAt: new Date().toISOString(),
-          _rev: "",
-          _updatedAt: new Date().toISOString(),
-          comments: [],
-          ratings: [],
-          year: new Date(mov.release_date).getFullYear().toString(),
-          director: "",
-          cast: [],
-          overview: { _type: "block", children: [] },
-          externalId: mov.id,
-          popularity: mov.popularity || 0,
-        } as unknown as Movie;
-
-        // Update all state variables that affect the UI
-        const updatedMovies = [newMovieWithId, ...movies];
-        setMovies(updatedMovies);
-        setAllMovies([newMovieWithId, ...allMovies]);
-
-        // Reset the sorted movies to show the newly added movie
-        setSortedMovies([]);
-
-        // Clear the search results
-        setTmdbMovies([]);
-        setInput("");
-
-        // Invalidate the React Query cache
-        queryClient.invalidateQueries(movieKeys.all);
-
-        // Refetch the movies query
-        queryClient.refetchQueries(movieKeys.lists());
-
-        // Also directly refetch movies to update the UI
-        refetchMovies()
-          .then(() => {
-            console.log("Movies refetched successfully");
-          })
-          .catch((error) => {
-            console.error("Error refetching movies:", error);
-          });
-
-        // Close the modal and reset loading state
-        closeModal();
-        setIsLoading(false);
-      } else {
-        toast.error(
-          ({ closeToast }) => (
-            <CustomToast
-              title="Film finnes allerede"
-              message={`${mov.title} er allerede i din samling`}
-              type="error"
-              closeToast={closeToast}
-              posterUrl={mov.poster}
-            />
-          ),
-          {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: true,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            theme: "dark",
-            className:
-              "!bg-transparent !shadow-none !p-0 !rounded-none !max-w-sm",
-            bodyClassName: "!p-0 !m-0",
-            icon: false,
-          }
-        );
-        setIsLoading(false);
-        closeModal();
-      }
-    } catch (error) {
-      console.log("error", error);
-      setIsLoading(false);
-      toast.error(
+      toast.success(
         ({ closeToast }) => (
           <CustomToast
-            title="Feil"
-            message="Det oppstod en feil ved tillegging av filmen. Prøv igjen senere."
-            type="error"
+            title="Film lagt til"
+            message={`${mov.title} er nå lagt til i din samling`}
+            type="success"
             closeToast={closeToast}
+            posterUrl={mov.poster}
           />
         ),
         {
@@ -500,13 +389,93 @@ function Movies({ movies: propMovies }: MoviesProps) {
           icon: false,
         }
       );
+
+      // Create the movie in Sanity
+      const createdMovie = await createPost(movieData);
+
+      // Add the created movie to both state arrays with the _id from Sanity
+      const newMovieWithId = {
+        ...movieData,
+        _id: createdMovie._id,
+        _createdAt: new Date().toISOString(),
+        _rev: "",
+        _updatedAt: new Date().toISOString(),
+        comments: [],
+        ratings: [],
+        year: new Date(mov.release_date).getFullYear().toString(),
+        director: "",
+        cast: [],
+        overview: { _type: "block", children: [] },
+        externalId: mov.id,
+        popularity: mov.popularity || 0,
+      } as unknown as Movie;
+
+      // Update all state variables that affect the UI
+      const updatedMovies = [newMovieWithId, ...moviesToUse];
+      setFilteredMovies(updatedMovies);
+
+      // Clear the search results
+      setTmdbMovies([]);
+      setInput("");
+
+      // Use queryClient to update the cache directly instead of refetching
+      queryClient.setQueryData(movieKeys.lists(), (oldData: any) => {
+        return oldData ? [newMovieWithId, ...oldData] : [newMovieWithId];
+      });
+
+      // Invalidate queries but don't refetch immediately to prevent loops
+      queryClient.invalidateQueries({
+        queryKey: movieKeys.all,
+        refetchType: "none",
+      });
+
+      // Close the modal and reset loading state
+      closeModal();
+      setIsLoading(false);
+
+      // Call the onMovieAdded callback if provided
+      if (onMovieAdded) {
+        setTimeout(() => {
+          onMovieAdded();
+        }, 500);
+      }
+    } catch (error) {
+      console.error("Error adding movie:", error);
+      toast.error(
+        "Det oppstod en feil ved legge til filmen. Prøv igjen senere.",
+        {
+          position: "bottom-right",
+        }
+      );
+      setIsLoading(false);
+      closeModal();
     }
   }
 
-  const displayMovies = useMemo(() => {
-    const moviesToDisplay = sortMovies.length > 0 ? sortMovies : moviesToUse;
-    return moviesToDisplay;
-  }, [sortMovies, moviesToUse]);
+  // Functions to refetch movies - this implementation is much more efficient
+  async function refetchMovies() {
+    try {
+      await queryClient.invalidateQueries({
+        queryKey: movieKeys.all,
+        refetchType: "none", // Don't refetch immediately
+      });
+
+      // Schedule a refetch after a delay to prevent looping
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: movieKeys.lists() });
+
+        // Display success message
+        toast.success("Movie list updated successfully!", {
+          position: "bottom-right",
+        });
+      }, 1000);
+    } catch (error) {
+      console.error("Error refetching movies:", error);
+      toast.error("Failed to update movie list.", {
+        position: "bottom-right",
+      });
+    }
+  }
 
   // Initialize optimizedMovies state with proper typing
   const [optimizedMovies, setOptimizedMovies] = useState<Movie[]>([]);
@@ -516,12 +485,12 @@ function Movies({ movies: propMovies }: MoviesProps) {
     // Only limit initial batch size on mobile
     if (isMobile) {
       const initialBatchSize = 10;
-      return displayMovies.slice(0, initialBatchSize);
+      return moviesToDisplay.slice(0, initialBatchSize);
     }
 
     // On desktop, show all movies
-    return displayMovies;
-  }, [displayMovies, isMobile]);
+    return moviesToDisplay;
+  }, [moviesToDisplay, isMobile]);
 
   // Update optimizedMovies when displayMovies changes
   useEffect(() => {
@@ -539,7 +508,7 @@ function Movies({ movies: propMovies }: MoviesProps) {
       ) {
         // Load more movies when user is near the bottom
         const currentCount = optimizedMovies.length;
-        const nextBatch = displayMovies.slice(0, currentCount + 10);
+        const nextBatch = moviesToDisplay.slice(0, currentCount + 10);
         if (nextBatch.length > currentCount) {
           // Only update if there are more movies to show
           setOptimizedMovies(nextBatch);
@@ -549,11 +518,18 @@ function Movies({ movies: propMovies }: MoviesProps) {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [isMobile, displayMovies, optimizedMovies]);
+  }, [isMobile, moviesToDisplay, optimizedMovies]);
+
+  // Make sure to initialize optimizedMovies even when moviesToUse is empty
+  useEffect(() => {
+    // Initialize optimizedMovies with an empty array at minimum
+    setOptimizedMovies(
+      moviesToDisplay.slice(0, isMobile ? 10 : moviesToDisplay.length)
+    );
+  }, [moviesToDisplay, isMobile]);
 
   // Determine the overall loading state
-  const isPageLoading =
-    queryLoading && (!propMovies || propMovies.length === 0);
+  const isPageLoading = isLoading && (!propMovies || propMovies.length === 0);
 
   // Show loading spinner if loading and no propMovies
   if (isPageLoading) {
@@ -569,7 +545,7 @@ function Movies({ movies: propMovies }: MoviesProps) {
   return (
     <div className="bg-black min-h-screen">
       <div className="container mx-auto py-4 md:py-8">
-        {/* Search and filter section */}
+        {/* Search and filter section - always visible regardless of movie count */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 px-4 md:px-8 space-y-4 md:space-y-0 pt-2 md:pt-0">
           {/* Search input */}
           <div className="relative w-full md:w-96 mb-2 md:mb-0">
@@ -580,7 +556,6 @@ function Movies({ movies: propMovies }: MoviesProps) {
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
-                // We're using the debounced getMovieRequest so no need to call it here
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -625,12 +600,12 @@ function Movies({ movies: propMovies }: MoviesProps) {
             </button>
           </div>
 
-          {/* Filter dropdown */}
+          {/* Filter dropdown and Add Movie button */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
-            <div className="relative w-full sm:w-auto">
+            <div className="relative w-full sm:w-auto z-10">
               <select
                 className="appearance-none w-full sm:w-auto bg-gray-800 text-white border border-gray-700 rounded-lg py-3 px-4 pr-8 focus:outline-none focus:ring-2 focus:ring-yellow-600 focus:border-transparent"
-                value={moviesFiltered}
+                value={activeFilter}
                 onChange={(e) => handleSortByAverageRating(e.target.value)}
               >
                 <option value="default">Sist lagt til</option>
@@ -654,11 +629,13 @@ function Movies({ movies: propMovies }: MoviesProps) {
               </div>
             </div>
 
-            {/* Add movie button */}
+            {/* Add movie button - make it fully interactive with improved styling */}
             {session ? (
               <button
                 onClick={openModal}
-                className="w-full sm:w-auto bg-gradient-to-r from-yellow-600 to-yellow-700 text-white font-medium py-3 px-6 rounded-lg hover:from-yellow-500 hover:to-yellow-600 transition-all duration-300 flex items-center justify-center"
+                className="z-50 w-full sm:w-auto bg-gradient-to-r from-yellow-600 to-yellow-700 text-white font-medium py-3 px-6 rounded-lg hover:from-yellow-500 hover:to-yellow-600 transition-all duration-300 flex items-center justify-center cursor-pointer relative hover:scale-105 active:scale-95"
+                style={{ position: "relative", pointerEvents: "auto" }}
+                type="button"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -679,7 +656,9 @@ function Movies({ movies: propMovies }: MoviesProps) {
             ) : (
               <button
                 onClick={() => signIn("discord")}
-                className="w-full sm:w-auto bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 flex flex-col items-center"
+                className="z-50 w-full sm:w-auto bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 flex flex-col items-center cursor-pointer relative hover:scale-105 active:scale-95"
+                style={{ position: "relative", pointerEvents: "auto" }}
+                type="button"
               >
                 <div className="flex items-center mb-1">
                   <svg
@@ -718,12 +697,12 @@ function Movies({ movies: propMovies }: MoviesProps) {
         </div>
 
         {/* Show load more button on mobile if there are more movies to display */}
-        {isMobile && optimizedMovies.length < displayMovies.length && (
+        {isMobile && optimizedMovies.length < moviesToDisplay.length && (
           <div className="flex justify-center pb-8">
             <button
               onClick={() => {
                 const currentCount = optimizedMovies.length;
-                setOptimizedMovies(displayMovies.slice(0, currentCount + 10));
+                setOptimizedMovies(moviesToDisplay.slice(0, currentCount + 10));
               }}
               className="bg-gray-800 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-colors"
             >
@@ -733,7 +712,7 @@ function Movies({ movies: propMovies }: MoviesProps) {
         )}
       </div>
 
-      {/* Modal for adding movies - only render when open for performance */}
+      {/* Modal for adding movies - implement directly without relying on external components */}
       {isModalOpen && (
         <ModalComponent isOpen={isModalOpen} onClose={closeModal}>
           <div className="flex flex-col justify-center items-center z-50 p-8 bg-gradient-to-b from-gray-900 to-black">
@@ -783,9 +762,8 @@ function Movies({ movies: propMovies }: MoviesProps) {
                   }
                 }}
                 onChange={(e) => {
-                  const value = e.target.value;
-                  setInput(value);
-                  // The debounced search will automatically trigger
+                  // Only update the input value, don't search automatically
+                  setInput(e.target.value);
                 }}
                 className="w-full pl-12 pr-14 py-4 bg-gray-800/80 backdrop-blur-sm text-white rounded-xl border border-gray-700/50 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200 shadow-lg"
                 value={input}

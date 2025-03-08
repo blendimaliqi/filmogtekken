@@ -399,12 +399,13 @@ export function useMovies(filters?: string): UseQueryResult<Movie[], Error> {
         throw error;
       }
     },
-    staleTime: 1000 * 60 * 30, // 30 minutes (increased from 15)
-    cacheTime: 1000 * 60 * 60, // 60 minutes
-    retry: 2,
-    retryDelay: 1000,
+    staleTime: 1000 * 60 * 60, // 60 minutes (increased from 30)
+    cacheTime: 1000 * 60 * 120, // 2 hours (increased from 60 minutes)
+    retry: 1, // Reduce number of retries
+    retryDelay: 3000, // Increase retry delay to 3 seconds
     refetchOnMount: false, // Don't refetch when component mounts if data exists
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnReconnect: false, // Don't refetch when reconnecting
     onError: (error) => {
       console.error("React Query error in useMovies:", error);
     },

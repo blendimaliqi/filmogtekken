@@ -52,10 +52,27 @@ function ProfileImageUpdater() {
   const { data: session } = useSession();
   const { data: personData, refetch: refetchPerson } = useCurrentPerson();
   const updateProfileImage = useUpdateProfileImage();
+  const [hasAttemptedUpdate, setHasAttemptedUpdate] = useState(false);
+
+  // Completely disable profile image updates for now to avoid further issues
+  const isProfileUpdateEnabled = false;
 
   const updateProfileImageIfChanged = useCallback(
     async (person: any, currentImageUrl: string) => {
-      if (!person || !person.image || !person.image.asset) return;
+      // Disable updates if the feature flag is off
+      if (!isProfileUpdateEnabled) {
+        console.log("Profile image updates are disabled");
+        return;
+      }
+
+      if (
+        !person ||
+        !person._id ||
+        !currentImageUrl ||
+        !person.image ||
+        !person.image.asset
+      )
+        return;
 
       try {
         const storedImageUrl = urlFor(person.image).url();
@@ -68,39 +85,101 @@ function ProfileImageUpdater() {
         if (storedImageBase !== currentImageBase) {
           console.log("Updating profile image globally...");
 
-          updateProfileImage.mutate(
-            {
-              personId: person._id,
-              imageUrl: currentImageUrl,
-            },
-            {
-              onSuccess: () => {
-                console.log("Profile image updated successfully globally");
-                localStorage.setItem(
-                  `profile_update_${person._id}`,
-                  Date.now().toString()
-                );
-                refetchPerson();
-              },
-              onError: (error) => {
-                console.error("Error updating profile image globally:", error);
-              },
-            }
+          // Check if we already have this image cached
+          const imageUrlKey = `image_upload_${currentImageBase}`;
+          const hasRecentUpdate = localStorage.getItem(
+            `profile_update_${person._id}`
           );
+          const currentTime = Date.now();
+
+          // Only proceed if we haven't updated recently (within 24 hours)
+          if (
+            !hasRecentUpdate ||
+            currentTime - parseInt(hasRecentUpdate) > 24 * 60 * 60 * 1000
+          ) {
+            updateProfileImage.mutate(
+              {
+                personId: person._id,
+                imageUrl: currentImageUrl,
+              },
+              {
+                onSuccess: () => {
+                  console.log("Profile image updated successfully globally");
+                  localStorage.setItem(
+                    `profile_update_${person._id}`,
+                    Date.now().toString()
+                  );
+                  // Don't refetch immediately to avoid potential loops
+                  setTimeout(() => refetchPerson(), 1000);
+                },
+                onError: (error) => {
+                  console.error(
+                    "Error updating profile image globally:",
+                    error
+                  );
+                  // Mark as attempted even on error to prevent repeated attempts
+                  setHasAttemptedUpdate(true);
+
+                  // Store the error in localStorage to prevent future attempts
+                  localStorage.setItem(
+                    `profile_update_error_${person._id}`,
+                    Date.now().toString()
+                  );
+                },
+              }
+            );
+          } else {
+            console.log("Skipping profile image update - updated recently");
+          }
         }
       } catch (error) {
         console.error("Error updating profile image globally:", error);
+        // Mark as attempted on error
+        setHasAttemptedUpdate(true);
       }
     },
-    [refetchPerson, updateProfileImage]
+    [
+      refetchPerson,
+      updateProfileImage,
+      setHasAttemptedUpdate,
+      isProfileUpdateEnabled,
+    ]
   );
 
   useEffect(() => {
-    if (session && session.user && personData && session.user.image) {
+    // Skip updates if the feature is disabled
+    if (!isProfileUpdateEnabled) return;
+
+    // Only attempt the update once per session to prevent infinite loops
+    if (hasAttemptedUpdate) return;
+
+    if (
+      session &&
+      session.user &&
+      personData &&
+      personData._id &&
+      session.user.image
+    ) {
       const lastUpdateTime = localStorage.getItem(
         `profile_update_${personData._id}`
       );
+
+      // Check if we've had errors updating this profile recently
+      const lastErrorTime = localStorage.getItem(
+        `profile_update_error_${personData._id}`
+      );
+
       const currentTime = Date.now();
+
+      // Skip update if we've had an error in the last 24 hours
+      if (
+        lastErrorTime &&
+        currentTime - parseInt(lastErrorTime) < 24 * 60 * 60 * 1000
+      ) {
+        console.log("Skipping profile image update - error occurred recently");
+        setHasAttemptedUpdate(true);
+        return;
+      }
 
       // Only update if it's been more than 24 hours since the last update
       if (
@@ -108,9 +187,19 @@ function ProfileImageUpdater() {
         currentTime - parseInt(lastUpdateTime) > 24 * 60 * 60 * 1000
       ) {
         updateProfileImageIfChanged(personData, session.user.image);
+        setHasAttemptedUpdate(true);
+      } else {
+        console.log("Skipping profile image update check - checked recently");
+        setHasAttemptedUpdate(true);
       }
     }
-  }, [session, personData, updateProfileImageIfChanged]);
+  }, [
+    session,
+    personData,
+    updateProfileImageIfChanged,
+    hasAttemptedUpdate,
+    isProfileUpdateEnabled,
+  ]);
 
   return null; // This component doesn't render anything
 }
