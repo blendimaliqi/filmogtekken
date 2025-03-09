@@ -77,6 +77,139 @@ function Movies({
     return moviesData || [];
   }, [moviesData]);
 
+  // Memoize filter functions for better performance
+  const filterMoviesByHighestAverageRating = useMemo(
+    () =>
+      (moviesToFilter: Movie[]): MovieWithAverageRating[] => {
+        return moviesToFilter
+          .map((movie) => {
+            const ratings = movie.ratings || [];
+            let sum = 0;
+            let count = 0;
+
+            // Calculate average rating
+            if (ratings.length > 0) {
+              sum = ratings.reduce((acc, curr) => {
+                return acc + (curr.rating || 0);
+              }, 0);
+              count = ratings.length;
+            }
+
+            const averageRating = count > 0 ? sum / count : 0;
+
+            return {
+              ...movie,
+              averageRating,
+            };
+          })
+          .sort((a, b) => b.averageRating - a.averageRating);
+      },
+    []
+  );
+
+  const filterMoviesByLowestAverageRating = useMemo(
+    () =>
+      (moviesToFilter: Movie[]): MovieWithAverageRating[] => {
+        return moviesToFilter
+          .map((movie) => {
+            const ratings = movie.ratings || [];
+            let sum = 0;
+            let count = 0;
+
+            // Calculate average rating
+            if (ratings.length > 0) {
+              sum = ratings.reduce((acc, curr) => {
+                return acc + (curr.rating || 0);
+              }, 0);
+              count = ratings.length;
+            }
+
+            const averageRating = count > 0 ? sum / count : 0;
+
+            return {
+              ...movie,
+              averageRating,
+            };
+          })
+          .sort((a, b) => a.averageRating - b.averageRating);
+      },
+    []
+  );
+
+  const filterMoviesByNewest = useMemo(
+    () =>
+      (moviesToFilter: Movie[]): Movie[] => {
+        return [...moviesToFilter].sort((a, b) => {
+          const dateA = new Date(a._createdAt).getTime();
+          const dateB = new Date(b._createdAt).getTime();
+          return dateB - dateA;
+        });
+      },
+    []
+  );
+
+  // Function to sort movies by comment count
+  const filterMoviesByHighestTotalComments = useMemo(
+    () =>
+      (moviesToFilter: Movie[]): MovieWithTotalComments[] => {
+        return moviesToFilter
+          .map((movie) => ({
+            ...movie,
+            totalComments: movie.comments?.length || 0,
+          }))
+          .sort((a, b) => b.totalComments - a.totalComments);
+      },
+    []
+  );
+
+  // Make sure local state is always synchronized with React Query data
+  useEffect(() => {
+    console.log("Movies data changed, updating local state", {
+      count: moviesData?.length || 0,
+    });
+
+    // Only update if we have valid data from the query
+    if (moviesData && Array.isArray(moviesData)) {
+      // Always update filtered movies when moviesData changes
+      let moviesToFilter = [...moviesData];
+
+      // Apply active filter if needed
+      if (activeFilter === "highest") {
+        moviesToFilter = filterMoviesByHighestAverageRating(moviesToFilter);
+      } else if (activeFilter === "lowest") {
+        moviesToFilter = filterMoviesByLowestAverageRating(moviesToFilter);
+      } else if (activeFilter === "comments") {
+        // Use the correct filter function for comments
+        const withComments = moviesToFilter.map((movie: any) => ({
+          ...movie,
+          totalComments: movie.comments?.length || 0,
+        }));
+        moviesToFilter = withComments.sort(
+          (a, b) => b.totalComments - a.totalComments
+        );
+      } else if (activeFilter === "newest") {
+        moviesToFilter = filterMoviesByNewest(moviesToFilter);
+      }
+
+      // Update both state variables
+      setFilteredMovies(moviesToFilter);
+
+      // For optimizedMovies, respect the mobile pagination
+      if (isMobile) {
+        setOptimizedMovies(moviesToFilter.slice(0, 10));
+      } else {
+        setOptimizedMovies(moviesToFilter);
+      }
+    }
+  }, [
+    moviesData,
+    activeFilter,
+    filterMoviesByHighestAverageRating,
+    filterMoviesByLowestAverageRating,
+    filterMoviesByNewest,
+    isMobile,
+  ]);
+
   // Open the modal if isAddMovieModalOpen prop changes
   useEffect(() => {
     if (isAddMovieModalOpen) {
@@ -93,133 +226,6 @@ function Movies({
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
-
-  // Memoize filter functions for better performance
-  const filterMoviesByHighestAverageRating = useMemo(
-    () =>
-      (moviesToFilter: Movie[]): MovieWithAverageRating[] => {
-        return moviesToFilter
-          .map((movie) => {
-            const ratings = movie?.ratings || [];
-            const totalRatings = ratings.length;
-
-            try {
-              // Check if ratings is an array of numbers or objects
-              const isNumberArray =
-                totalRatings > 0 && typeof ratings[0] === "number";
-
-              let sumRatings = 0;
-              if (isNumberArray) {
-                // If it's already an array of numbers, just sum them
-                sumRatings = ratings.reduce(
-                  (sum, rating: any) => sum + rating,
-                  0
-                );
-              } else {
-                // If it's an array of objects with a rating property
-                sumRatings = ratings.reduce(
-                  (sum, rating: any) => sum + (rating?.rating || 0),
-                  0
-                );
-              }
-
-              const averageRating =
-                totalRatings > 0 ? sumRatings / totalRatings : 0;
-
-              return {
-                ...movie,
-                averageRating,
-              };
-            } catch (error) {
-              console.error("Error calculating rating for sorting:", error);
-              return {
-                ...movie,
-                averageRating: 0,
-              };
-            }
-          })
-          .sort((a, b) => b.averageRating - a.averageRating);
-      },
-    []
-  );
-
-  const filterMoviesByLowestAverageRating = useMemo(
-    () =>
-      (moviesToFilter: Movie[]): MovieWithAverageRating[] => {
-        return moviesToFilter
-          .map((movie) => {
-            const ratings = movie?.ratings || [];
-            const totalRatings = ratings.length;
-
-            try {
-              // Check if ratings is an array of numbers or objects
-              const isNumberArray =
-                totalRatings > 0 && typeof ratings[0] === "number";
-
-              let sumRatings = 0;
-              if (isNumberArray) {
-                // If it's already an array of numbers, just sum them
-                sumRatings = ratings.reduce(
-                  (sum, rating: any) => sum + rating,
-                  0
-                );
-              } else {
-                // If it's an array of objects with a rating property
-                sumRatings = ratings.reduce(
-                  (sum, rating: any) => sum + (rating?.rating || 0),
-                  0
-                );
-              }
-
-              const averageRating =
-                totalRatings > 0 ? sumRatings / totalRatings : 0;
-
-              return {
-                ...movie,
-                averageRating,
-              };
-            } catch (error) {
-              console.error("Error calculating rating for sorting:", error);
-              return {
-                ...movie,
-                averageRating: 0,
-              };
-            }
-          })
-          .sort((a, b) => a.averageRating - b.averageRating);
-      },
-    []
-  );
-
-  const filterMoviesByHighestTotalComments = useMemo(
-    () =>
-      (moviesToFilter: Movie[]): MovieWithTotalComments[] => {
-        return moviesToFilter
-          .map((movie) => {
-            const totalComments = movie.comments ? movie.comments.length : 0;
-            return {
-              ...movie,
-              totalComments,
-            };
-          })
-          .sort((a, b) => b.totalComments - a.totalComments);
-      },
-    []
-  );
-
-  // Add a new filter by creation date (newest first)
-  const filterMoviesByNewest = useMemo(
-    () =>
-      (moviesToFilter: Movie[]): Movie[] => {
-        return [...moviesToFilter].sort((a, b) => {
-          // Convert strings to Date objects for proper comparison
-          const dateA = new Date(a._createdAt);
-          const dateB = new Date(b._createdAt);
-          return dateB.getTime() - dateA.getTime();
-        });
-      },
-    []
-  );
 
   // Memoize the handleSortByAverageRating function
   const handleSortByAverageRating = useCallback(
@@ -652,54 +658,6 @@ function Movies({
       </div>
     );
   }
-
-  // Make sure local state is always synchronized with React Query data
-  useEffect(() => {
-    console.log("Movies data changed, updating local state", {
-      count: moviesData?.length || 0,
-    });
-
-    // Only update if we have valid data from the query
-    if (moviesData && Array.isArray(moviesData)) {
-      // Always update filtered movies when moviesData changes
-      let moviesToFilter = [...moviesData];
-
-      // Apply active filter if needed
-      if (activeFilter === "highest") {
-        moviesToFilter = filterMoviesByHighestAverageRating(moviesToFilter);
-      } else if (activeFilter === "lowest") {
-        moviesToFilter = filterMoviesByLowestAverageRating(moviesToFilter);
-      } else if (activeFilter === "comments") {
-        // Use the correct filter function for comments
-        const withComments = moviesToFilter.map((movie: any) => ({
-          ...movie,
-          totalComments: movie.comments?.length || 0,
-        }));
-        moviesToFilter = withComments.sort(
-          (a, b) => b.totalComments - a.totalComments
-        );
-      } else if (activeFilter === "newest") {
-        moviesToFilter = filterMoviesByNewest(moviesToFilter);
-      }
-
-      // Update both state variables
-      setFilteredMovies(moviesToFilter);
-
-      // For optimizedMovies, respect the mobile pagination
-      if (isMobile) {
-        setOptimizedMovies(moviesToFilter.slice(0, 10));
-      } else {
-        setOptimizedMovies(moviesToFilter);
-      }
-    }
-  }, [
-    moviesData,
-    activeFilter,
-    filterMoviesByHighestAverageRating,
-    filterMoviesByLowestAverageRating,
-    filterMoviesByNewest,
-    isMobile,
-  ]);
 
   return (
     <div className="bg-black min-h-screen">
