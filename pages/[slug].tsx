@@ -130,6 +130,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
   const rateMovie = useCallback(
     async (movieId: string, rating: number) => {
       try {
+        console.log("Rating movie:", movieId, "with score:", rating);
         if (!session?.user?.name) return;
 
         const userName = session.user.name;
@@ -166,6 +167,50 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
           person = existingPerson;
         }
 
+        // Create a new rating object
+        const newRating = {
+          _key: uuidv4(),
+          person: { _type: "reference", _ref: person._id },
+          rating: rating,
+          _createdAt: new Date().toISOString(),
+        };
+
+        // Make a local copy of movie data to update UI immediately
+        const updatedMovieData = { ...movieData };
+
+        // Check if ratings array exists
+        if (!updatedMovieData.ratings) {
+          updatedMovieData.ratings = [];
+        }
+
+        // Check if there's an existing rating by this user
+        const existingIndex = updatedMovieData.ratings.findIndex(
+          (r: any) =>
+            r.person._ref === person._id ||
+            (r.person._id && r.person._id === person._id)
+        );
+
+        if (existingIndex > -1) {
+          // Update existing rating
+          updatedMovieData.ratings[existingIndex].rating = rating;
+        } else {
+          // Add new rating
+          updatedMovieData.ratings.push({
+            ...newRating,
+            person: {
+              ...person,
+              _ref: person._id,
+            },
+          });
+        }
+
+        // Update the cache immediately to reflect changes in UI
+        queryClient.setQueryData(
+          movieKeys.detail(slugString),
+          updatedMovieData
+        );
+
+        // Update the backend
         const movieQueryWithRating = `*[_type == "movie" && _id == "${movieId}" && defined(ratings)]`;
         const [movieWithRating] = await client.fetch(movieQueryWithRating);
 
@@ -181,12 +226,6 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
               new Date().toISOString();
             movieWithRating.ratings = updatedRatings;
           } else {
-            const newRating = {
-              _key: uuidv4(),
-              person: { _type: "reference", _ref: person._id },
-              rating: rating,
-              _createdAt: new Date().toISOString(),
-            };
             movieWithRating.ratings.push(newRating);
           }
 
@@ -195,13 +234,6 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
             .set({ ratings: movieWithRating.ratings })
             .commit({});
         } else {
-          const newRating = {
-            _key: uuidv4(),
-            person: { _type: "reference", _ref: person._id },
-            rating: rating,
-            _createdAt: new Date().toISOString(),
-          };
-
           await clientWithToken
             .patch(movieId)
             .setIfMissing({ ratings: [] })
@@ -209,17 +241,23 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
             .commit({});
         }
 
-        // Properly invalidate queries to ensure fresh data
-        queryClient.invalidateQueries({
-          queryKey: movieKeys.detail(slugString),
-        });
-        queryClient.invalidateQueries({ queryKey: movieKeys.lists() });
-        queryClient.invalidateQueries({ queryKey: movieKeys.list(undefined) });
+        // Force a refetch to ensure we have the most up-to-date data
+        setTimeout(() => {
+          refetch();
+
+          // Also invalidate other queries that might contain this movie
+          queryClient.invalidateQueries({ queryKey: movieKeys.lists() });
+          queryClient.invalidateQueries({
+            queryKey: movieKeys.list(undefined),
+          });
+        }, 500);
       } catch (error) {
         console.error("Error updating movie rating:", error);
+        // Force a refetch in case of error to ensure UI is consistent
+        refetch();
       }
     },
-    [session, slugString, queryClient]
+    [session, slugString, queryClient, movieData, refetch]
   );
 
   // Calculate average rating directly (no need for useMemo)

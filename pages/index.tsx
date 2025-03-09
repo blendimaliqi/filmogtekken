@@ -13,6 +13,8 @@ import { useMovies } from "@/hooks";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
 import { movieKeys } from "@/hooks/useMovie";
+import { client } from "@/config/client";
+import { moviesQuery } from "@/utils/groqQueries";
 
 export const centerStyle = {
   display: "flex",
@@ -187,9 +189,35 @@ export default function Home() {
 
   const { isLoading, error, data: movies } = useMovies();
 
-  // Function to refresh the movie cache
-  const refreshMovieCache = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ["movies"] });
+  // Function to refresh the movie cache after adding a movie
+  const refreshMovieCache = useCallback(async () => {
+    console.log("INDEX: Movie added, refreshing data...");
+
+    try {
+      // APPROACH 1: Reset query cache completely
+      console.log("INDEX: Resetting movie cache...");
+      await queryClient.resetQueries({ queryKey: movieKeys.all });
+
+      // APPROACH 2: Explicitly refetch all queries
+      console.log("INDEX: Forcing refetch of all movie data...");
+      const movies = await client.fetch(moviesQuery);
+
+      // APPROACH 3: Directly update state with fetched data
+      console.log("INDEX: Directly setting query data...");
+      queryClient.setQueryData(["movies", "list"], movies);
+      queryClient.setQueryData(["movies", "list", undefined], movies);
+
+      // APPROACH 4: Force React to rerender by temporarily hiding content
+      setContentVisible(false);
+      setTimeout(() => {
+        setContentVisible(true);
+        console.log("INDEX: Content visibility reset to force rerender");
+      }, 50);
+
+      console.log("INDEX: Movie cache refresh complete");
+    } catch (error) {
+      console.error("INDEX: Error refreshing movie cache:", error);
+    }
   }, [queryClient]);
 
   // Check for mobile view on mount and window resize

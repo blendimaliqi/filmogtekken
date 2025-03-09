@@ -92,7 +92,7 @@ function ModalMovie({ poster, movie }: MovieProps) {
           </div>
 
           {/* Hover overlay with add button - Only display on devices that support hover */}
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center p-2 sm:p-3 hidden sm:flex">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden sm:flex flex-col items-center justify-center p-2 sm:p-3">
             <h3 className="text-white font-semibold text-sm sm:text-base line-clamp-2 mb-1 sm:mb-2 text-center">
               {movie.title}
             </h3>

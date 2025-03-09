@@ -370,12 +370,15 @@ function Movies({
   // Function to add a new movie from TMDB
   async function addMovie(mov: any) {
     try {
+      console.log("Starting to add movie:", mov.title);
       setIsLoading(true);
+
+      // Fetch detailed movie information from TMDB
       const movieDetails = `https://api.themoviedb.org/3/movie/${mov.id}?api_key=${process.env.TMDB_API_KEY}`;
       const fetchDetails = await fetch(movieDetails);
       const responeDetails = await fetchDetails.json();
 
-      // Check if this movie already exists before uploading images
+      // Check if this movie already exists
       const movieExists = moviesToUse.some(
         (movie: any) => movie.title === mov.title
       );
@@ -410,7 +413,7 @@ function Movies({
         return;
       }
 
-      // Only upload images if movie doesn't exist
+      // Upload images to Sanity
       const imageUrl = `https://image.tmdb.org/t/p/original${mov.poster_path}`;
       const imageAsset = await uploadExternalImage(imageUrl);
       const imageAssetId = imageAsset._id;
@@ -419,6 +422,7 @@ function Movies({
       const imageAssetBackdrop = await uploadExternalImage(imageUrlBackdrop);
       const imageAssetIdBackdrop = imageAssetBackdrop._id;
 
+      // Prepare the movie data for Sanity
       const movieData = {
         _type: "movie",
         title: mov.title,
@@ -428,7 +432,6 @@ function Movies({
           current: mov.title,
         },
         genres: responeDetails.genres.map((genre: any) => genre.name),
-
         length: responeDetails.runtime,
         plot: mov.overview || responeDetails.overview || "",
         overview: {
@@ -441,7 +444,6 @@ function Movies({
             },
           ],
         },
-
         poster: {
           _type: "image",
           asset: {
@@ -456,15 +458,39 @@ function Movies({
             _type: "reference",
           },
         },
+        externalId: mov.id,
+        popularity: mov.popularity || 0,
       };
 
-      console.log("Created movie:", mov);
+      console.log("Creating movie in Sanity:", mov.title);
 
+      // Create the movie in Sanity
+      const createdMovie = await createPost(movieData);
+      console.log("Movie created in Sanity with ID:", createdMovie._id);
+
+      // Create a complete movie object for the UI
+      const newMovieWithId = {
+        ...movieData,
+        _id: createdMovie._id,
+        _createdAt: new Date().toISOString(),
+        _updatedAt: new Date().toISOString(),
+        comments: [],
+        ratings: [],
+        year: new Date(mov.release_date).getFullYear().toString(),
+      } as unknown as Movie;
+
+      // Close the modal and cleanup search
+      setTmdbMovies([]);
+      setInput("");
+      setIsLoading(false);
+      closeModal();
+
+      // Show success notification
       toast.success(
         ({ closeToast }) => (
           <CustomToast
             title="Film lagt til"
-            message={`${mov.title} er nå lagt til i din samling`}
+            message={`${mov.title} er nå lagt til i din samlingen`}
             type="success"
             closeToast={closeToast}
             posterUrl={mov.poster}
@@ -485,54 +511,31 @@ function Movies({
         }
       );
 
-      // Create the movie in Sanity
-      const createdMovie = await createPost(movieData);
+      // APPROACH #1: MANUAL STATE UPDATE
+      // Update all state variables directly with the new movie
+      setFilteredMovies((prev) => [newMovieWithId, ...(prev || [])]);
+      setOptimizedMovies((prev) => [newMovieWithId, ...(prev || [])]);
 
-      // Add the created movie to both state arrays with the _id from Sanity
-      const newMovieWithId = {
-        ...movieData,
-        _id: createdMovie._id,
-        _createdAt: new Date().toISOString(),
-        _rev: "",
-        _updatedAt: new Date().toISOString(),
-        comments: [],
-        ratings: [],
-        year: new Date(mov.release_date).getFullYear().toString(),
-        director: "",
-        cast: [],
-        externalId: mov.id,
-        popularity: mov.popularity || 0,
-      } as unknown as Movie;
+      // APPROACH #2: FORCE COMPLETE REFETCH
+      // Force a complete cache reset and refetch
+      console.log("Forcing data refetch...");
+      await queryClient.resetQueries({ queryKey: movieKeys.all });
 
-      // Update all state variables that affect the UI
-      const updatedMovies = [newMovieWithId, ...moviesToUse];
-      setFilteredMovies(updatedMovies);
-
-      // Clear the search results
-      setTmdbMovies([]);
-      setInput("");
-
-      // Use queryClient to update the cache directly instead of refetching
-      queryClient.setQueryData(movieKeys.lists(), (oldData: any) => {
-        return oldData ? [newMovieWithId, ...oldData] : [newMovieWithId];
+      // Explicitly refetch all movie data
+      console.log("Refetching all movie data...");
+      await queryClient.refetchQueries({
+        queryKey: movieKeys.lists(),
+        exact: false,
       });
 
-      // Invalidate queries but don't refetch immediately to prevent loops
-      queryClient.invalidateQueries({
-        queryKey: movieKeys.all,
-        refetchType: "none",
-      });
-
-      // Close the modal and reset loading state
-      closeModal();
-      setIsLoading(false);
-
-      // Call the onMovieAdded callback if provided
+      // APPROACH #3: NOTIFY PARENT
+      // Call the callback to trigger a refetch in the parent component
+      console.log("Notifying parent component...");
       if (onMovieAdded) {
-        setTimeout(() => {
-          onMovieAdded();
-        }, 500);
+        onMovieAdded();
       }
+
+      console.log("All add movie operations completed");
     } catch (error) {
       console.error("Error adding movie:", error);
       toast.error(
@@ -549,22 +552,36 @@ function Movies({
   // Functions to refetch movies - this implementation is much more efficient
   async function refetchMovies() {
     try {
+      // Immediately update UI with loading state
+      setIsLoading(true);
+
+      // Force refetch all movie-related queries
       await queryClient.invalidateQueries({
         queryKey: movieKeys.all,
-        refetchType: "none", // Don't refetch immediately
+        refetchType: "active", // Only refetch active queries
       });
 
-      // Schedule a refetch after a delay to prevent looping
-      setTimeout(() => {
-        queryClient.refetchQueries({ queryKey: movieKeys.lists() });
+      // Explicitly refetch the list query to ensure we get fresh data
+      await queryClient.refetchQueries({
+        queryKey: movieKeys.lists(),
+        exact: false,
+      });
 
-        // Display success message
-        toast.success("Movie list updated successfully!", {
-          position: "bottom-right",
-        });
-      }, 1000);
+      await queryClient.refetchQueries({
+        queryKey: movieKeys.list(undefined),
+        exact: false,
+      });
+
+      // Reset loading state
+      setIsLoading(false);
+
+      // Display success message
+      toast.success("Movie list updated successfully!", {
+        position: "bottom-right",
+      });
     } catch (error) {
       console.error("Error refetching movies:", error);
+      setIsLoading(false);
       toast.error("Failed to update movie list.", {
         position: "bottom-right",
       });
@@ -635,6 +652,54 @@ function Movies({
       </div>
     );
   }
+
+  // Make sure local state is always synchronized with React Query data
+  useEffect(() => {
+    console.log("Movies data changed, updating local state", {
+      count: moviesData?.length || 0,
+    });
+
+    // Only update if we have valid data from the query
+    if (moviesData && Array.isArray(moviesData)) {
+      // Always update filtered movies when moviesData changes
+      let moviesToFilter = [...moviesData];
+
+      // Apply active filter if needed
+      if (activeFilter === "highest") {
+        moviesToFilter = filterMoviesByHighestAverageRating(moviesToFilter);
+      } else if (activeFilter === "lowest") {
+        moviesToFilter = filterMoviesByLowestAverageRating(moviesToFilter);
+      } else if (activeFilter === "comments") {
+        // Use the correct filter function for comments
+        const withComments = moviesToFilter.map((movie: any) => ({
+          ...movie,
+          totalComments: movie.comments?.length || 0,
+        }));
+        moviesToFilter = withComments.sort(
+          (a, b) => b.totalComments - a.totalComments
+        );
+      } else if (activeFilter === "newest") {
+        moviesToFilter = filterMoviesByNewest(moviesToFilter);
+      }
+
+      // Update both state variables
+      setFilteredMovies(moviesToFilter);
+
+      // For optimizedMovies, respect the mobile pagination
+      if (isMobile) {
+        setOptimizedMovies(moviesToFilter.slice(0, 10));
+      } else {
+        setOptimizedMovies(moviesToFilter);
+      }
+    }
+  }, [
+    moviesData,
+    activeFilter,
+    filterMoviesByHighestAverageRating,
+    filterMoviesByLowestAverageRating,
+    filterMoviesByNewest,
+    isMobile,
+  ]);
 
   return (
     <div className="bg-black min-h-screen">
