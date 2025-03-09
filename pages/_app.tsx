@@ -13,8 +13,15 @@ import { SessionProvider, useSession } from "next-auth/react";
 import Nav from "@/components/Nav";
 import MiniNav from "@/components/MiniNav";
 import { useRouter } from "next/router";
-import { useEffect, useState, useCallback, useRef } from "react";
-import { ToastContainer } from "react-toastify";
+import {
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+  ErrorInfo,
+  Component,
+} from "react";
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ColorRing } from "react-loader-spinner";
 import { client, clientWithToken, urlFor } from "@/config/client";
@@ -46,6 +53,66 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Error boundary component to catch and display errors
+class ErrorBoundary extends Component<{
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+}> {
+  state = { hasError: false, error: null as Error | null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Log the error to an error reporting service
+    console.error("Uncaught error:", error, errorInfo);
+
+    // On mobile, errors are often not visible in the console
+    // Store error details in localStorage for debugging
+    if (typeof window !== "undefined") {
+      localStorage.setItem(
+        "lastError",
+        JSON.stringify({
+          message: error.message,
+          stack: error.stack,
+          time: new Date().toISOString(),
+        })
+      );
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      // Custom fallback UI
+      return (
+        this.props.fallback || (
+          <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4">
+            <h2 className="text-xl font-bold text-yellow-500 mb-4">
+              Something went wrong
+            </h2>
+            <p className="mb-4 text-center">
+              The application encountered an error. Please try refreshing the
+              page.
+            </p>
+            <pre className="text-xs text-gray-400 bg-gray-900 p-3 rounded max-w-full overflow-x-auto">
+              {this.state.error ? this.state.error.toString() : "Unknown error"}
+            </pre>
+            <button
+              className="mt-6 bg-yellow-600 px-4 py-2 rounded"
+              onClick={() => (window.location.href = "/")}
+            >
+              Go to Homepage
+            </button>
+          </div>
+        )
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 // Component to handle profile image updates
 function ProfileImageUpdater() {
@@ -278,81 +345,116 @@ export default function App({
     };
   }, [router.events, handleStart]);
 
+  // Add handler for unhandled errors
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      console.error("Global error caught:", event.error);
+
+      // Store error details in localStorage for debugging
+      if (typeof window !== "undefined") {
+        localStorage.setItem(
+          "lastGlobalError",
+          JSON.stringify({
+            message: event.error?.message || event.message,
+            stack: event.error?.stack,
+            time: new Date().toISOString(),
+          })
+        );
+      }
+
+      // You could also show a toast notification here
+      toast.error("An error occurred. Please try refreshing the page.");
+    };
+
+    window.addEventListener("error", handleError);
+
+    return () => {
+      window.removeEventListener("error", handleError);
+    };
+  }, []);
+
   return (
     <SessionProvider session={session}>
       <QueryClientProvider client={queryClient}>
         <Provider>
-          <ProfileImageUpdater />
-          {isLoading && (
-            <div className="fixed inset-0 flex justify-center items-center bg-black/90 z-50 animate-fadeIn">
-              <div className="flex flex-col items-center">
-                <div className="animate-spin rounded-full h-16 w-16 border-[6px] border-gray-600 border-t-yellow-500"></div>
-              </div>
-            </div>
-          )}
           <Head>
             <title>Film med Gutta</title>
+            {/* Viewport meta tag for proper mobile rendering */}
+            <meta
+              name="viewport"
+              content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+            />
           </Head>
-          <style jsx global>{`
-            body {
-              overflow-x: hidden;
-            }
-
-            @keyframes fadeIn {
-              from {
-                opacity: 0;
+          <ErrorBoundary>
+            <ProfileImageUpdater />
+            {isLoading && (
+              <div className="fixed inset-0 flex justify-center items-center bg-black/90 z-50 animate-fadeIn">
+                <div className="flex flex-col items-center">
+                  <div className="animate-spin rounded-full h-16 w-16 border-[6px] border-gray-600 border-t-yellow-500"></div>
+                </div>
+              </div>
+            )}
+            <style jsx global>{`
+              body {
+                overflow-x: hidden;
               }
-              to {
-                opacity: 1;
+
+              @keyframes fadeIn {
+                from {
+                  opacity: 0;
+                }
+                to {
+                  opacity: 1;
+                }
               }
-            }
 
-            @keyframes fadeOut {
-              from {
-                opacity: 1;
+              @keyframes fadeOut {
+                from {
+                  opacity: 1;
+                }
+                to {
+                  opacity: 0;
+                }
               }
-              to {
-                opacity: 0;
+
+              .animate-fadeIn {
+                animation: fadeIn 0.3s ease-in-out forwards;
               }
-            }
 
-            .animate-fadeIn {
-              animation: fadeIn 0.3s ease-in-out forwards;
-            }
+              .animate-fadeOut {
+                animation: fadeOut 0.3s ease-in-out forwards;
+              }
 
-            .animate-fadeOut {
-              animation: fadeOut 0.3s ease-in-out forwards;
-            }
+              .page-transition {
+                transition: opacity 0.3s ease-in-out;
+              }
+            `}</style>
 
-            .page-transition {
-              transition: opacity 0.3s ease-in-out;
-            }
-          `}</style>
+            <div
+              style={{
+                position: "absolute",
+                top: "0",
+                left: "0",
+                zIndex: "20",
+                width: "100%",
+              }}
+            >
+              <Nav />
+            </div>
+            <div className="flex flex-col justify-center items-center">
+              <MiniNav />
+            </div>
+            <div
+              className={`pt-0 md:pt-0 page-transition ${
+                !isLoading ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              <Component {...pageProps} />
+            </div>
 
-          <div
-            style={{
-              position: "absolute",
-              top: "0",
-              left: "0",
-              zIndex: "20",
-              width: "100%",
-            }}
-          >
-            <Nav />
-          </div>
-          <div className="flex flex-col justify-center items-center">
-            <MiniNav />
-          </div>
-          <div
-            className={`pt-0 md:pt-0 page-transition ${
-              !isLoading ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <Component {...pageProps} />
-          </div>
-
-          <ToastContainer />
-          <ReactQueryDevtools initialIsOpen={false} />
+            <ToastContainer />
+            <ReactQueryDevtools initialIsOpen={false} />
+          </ErrorBoundary>
         </Provider>
       </QueryClientProvider>
     </SessionProvider>
