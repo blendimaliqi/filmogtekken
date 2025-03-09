@@ -129,9 +129,10 @@ export default function Home() {
   const sortedMovies = useMemo(() => {
     if (!movies) return [];
     return [...movies].sort((a: Movie, b: Movie) => {
-      return (
-        new Date(b._createdAt).getTime() - new Date(a._createdAt).getTime()
-      );
+      // Convert strings to Date objects for proper comparison
+      const dateA = new Date(a._createdAt);
+      const dateB = new Date(b._createdAt);
+      return dateB.getTime() - dateA.getTime();
     });
   }, [movies]);
 

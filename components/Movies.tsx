@@ -29,19 +29,6 @@ const ModalMovie = dynamic(() => import("./modal/ModalMovie"), { ssr: false });
 // Use dynamic import for MovieComponent with SSR disabled for better mobile performance
 const MovieComponent = dynamic(() => import("./Movie"), { ssr: false });
 
-// Debounce function for search input
-function debounce(func: Function, wait: number) {
-  let timeout: ReturnType<typeof setTimeout>;
-  return function executedFunction(...args: any[]) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
-
 interface MovieWithAverageRating extends Movie {
   averageRating: number;
 }
@@ -62,11 +49,15 @@ function Movies({
   filterGenre,
 }: MoviesProps) {
   // Local state
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
-  const [activeFilter, setActiveFilter] = useState("default");
-  const [isModalOpen, setIsModalOpen] = useState(isAddMovieModalOpen);
+  const [isMobileView, setIsMobileView] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isContentLoaded, setIsContentLoaded] = useState(false);
+  const [totalMovies, setTotalMovies] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [activeFilter, setActiveFilter] = useState("newest");
+  const [filteredMovies, setFilteredMovies] = useState<any[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(isAddMovieModalOpen);
   const { data: session } = useSession();
   const [tmdbMovies, setTmdbMovies] = useState<any[]>([]);
   const [input, setInput] = useState("");
@@ -80,6 +71,11 @@ function Movies({
     isLoading: isMoviesLoading,
     error,
   } = useMovies(filterGenre);
+
+  // Use movies directly from React Query
+  const moviesToUse = useMemo(() => {
+    return moviesData || [];
+  }, [moviesData]);
 
   // Open the modal if isAddMovieModalOpen prop changes
   useEffect(() => {
@@ -97,64 +93,6 @@ function Movies({
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
-
-  // Use movies directly from React Query
-  const moviesToUse = useMemo(() => {
-    return moviesData || [];
-  }, [moviesData]);
-
-  // Search functionality - only called on demand, not on every keystroke
-  const getMovieRequest = useCallback(() => {
-    try {
-      // For regular search in the main page
-      if (!isModalOpen) {
-        if (searchTerm !== "") {
-          const searchResults = moviesToUse.filter((movie: Movie) =>
-            movie.title.toLowerCase().includes(searchTerm.toLowerCase())
-          );
-          setFilteredMovies(searchResults);
-        } else {
-          setFilteredMovies([]);
-        }
-        return;
-      }
-
-      // For TMDB search in the modal
-      if (isModalOpen) {
-        // Only set hasSearched to true, indicating a search was performed
-        setHasSearched(true);
-
-        if (input !== "") {
-          setIsLoading(true);
-          // Call TMDB API to search for movies
-          fetch(
-            `https://api.themoviedb.org/3/search/movie?api_key=${process.env.TMDB_API_KEY}&language=en-US&query=${input}&page=1&include_adult=false`
-          )
-            .then((response) => response.json())
-            .then((data) => {
-              // Limit results to improve performance on mobile
-              const limitedResults = isMobile
-                ? data.results.slice(0, 10)
-                : data.results;
-              setTmdbMovies(limitedResults);
-              setIsLoading(false);
-            })
-            .catch((error) => {
-              console.error("Error searching TMDB:", error);
-              setIsLoading(false);
-            });
-        } else {
-          // Only clear results if the user explicitly searches with empty input
-          setTmdbMovies([]);
-        }
-      }
-    } catch (error) {
-      console.error("Error searching movies:", error);
-      setIsLoading(false);
-    }
-  }, [searchTerm, moviesToUse, isModalOpen, input, isMobile]);
-
-  const [isContentLoaded, setIsContentLoaded] = useState(false);
 
   // Memoize filter functions for better performance
   const filterMoviesByHighestAverageRating = useMemo(
@@ -221,6 +159,20 @@ function Movies({
     []
   );
 
+  // Add a new filter by creation date (newest first)
+  const filterMoviesByNewest = useMemo(
+    () =>
+      (moviesToFilter: Movie[]): Movie[] => {
+        return [...moviesToFilter].sort((a, b) => {
+          // Convert strings to Date objects for proper comparison
+          const dateA = new Date(a._createdAt);
+          const dateB = new Date(b._createdAt);
+          return dateB.getTime() - dateA.getTime();
+        });
+      },
+    []
+  );
+
   // Memoize the handleSortByAverageRating function
   const handleSortByAverageRating = useCallback(
     (filter: string) => {
@@ -239,6 +191,9 @@ function Movies({
         const sortedByComments =
           filterMoviesByHighestTotalComments(moviesToUse);
         setFilteredMovies(sortedByComments);
+      } else if (filter === "newest") {
+        const sortedByNewest = filterMoviesByNewest(moviesToUse);
+        setFilteredMovies(sortedByNewest);
       } else if (filter === "default") {
         setFilteredMovies([]);
       }
@@ -248,17 +203,91 @@ function Movies({
       filterMoviesByHighestAverageRating,
       filterMoviesByLowestAverageRating,
       filterMoviesByHighestTotalComments,
+      filterMoviesByNewest,
     ]
   );
 
-  // Call getMovieRequest only from explicit user actions
+  // Search functionality - only called on demand, not on every keystroke
+  const getMovieRequest = useCallback(() => {
+    try {
+      // For regular search in the main page
+      if (!isModalOpen) {
+        if (searchTerm !== "") {
+          const searchResults = moviesToUse.filter((movie: Movie) =>
+            movie.title.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+          setFilteredMovies(searchResults);
+          setHasSearched(true);
+        } else {
+          setHasSearched(false);
+          if (activeFilter !== "default") {
+            // Reapply the active filter when search is cleared
+            handleSortByAverageRating(activeFilter);
+          } else {
+            // Default to newest order if no filter is selected
+            const sortedByNewest = filterMoviesByNewest(moviesToUse);
+            setFilteredMovies(sortedByNewest);
+          }
+        }
+      }
+      // For TMDB search in the modal
+      else if (isModalOpen) {
+        setHasSearched(true);
+
+        if (input !== "") {
+          setIsLoading(true);
+          // Call TMDB API to search for movies
+          fetch(
+            `https://api.themoviedb.org/3/search/movie?api_key=${process.env.TMDB_API_KEY}&language=en-US&query=${input}&page=1&include_adult=false`
+          )
+            .then((response) => response.json())
+            .then((data) => {
+              // Limit results to improve performance on mobile
+              const limitedResults = isMobile
+                ? data.results.slice(0, 10)
+                : data.results;
+              setTmdbMovies(limitedResults);
+              setIsLoading(false);
+            })
+            .catch((error) => {
+              console.error("Error searching TMDB:", error);
+              setIsLoading(false);
+            });
+        } else {
+          // Clear results if the user explicitly searches with empty input
+          setTmdbMovies([]);
+        }
+      }
+    } catch (error) {
+      console.error("Error in getMovieRequest:", error);
+      setIsLoading(false);
+    }
+  }, [
+    searchTerm,
+    moviesToUse,
+    isModalOpen,
+    activeFilter,
+    filterMoviesByNewest,
+    handleSortByAverageRating,
+    input,
+    isMobile,
+  ]);
 
   // Apply active filter when movies change
   useEffect(() => {
     if (activeFilter !== "default") {
       handleSortByAverageRating(activeFilter);
+    } else {
+      // If no filter is selected, default to the newest movies
+      const sortedByNewest = filterMoviesByNewest(moviesToUse);
+      setFilteredMovies(sortedByNewest);
     }
-  }, [moviesToUse, activeFilter, handleSortByAverageRating]);
+  }, [
+    moviesToUse,
+    activeFilter,
+    handleSortByAverageRating,
+    filterMoviesByNewest,
+  ]);
 
   // Display loading state while content is loading
   useEffect(() => {
@@ -616,7 +645,8 @@ function Movies({
                 value={activeFilter}
                 onChange={(e) => handleSortByAverageRating(e.target.value)}
               >
-                <option value="default">Sist lagt til</option>
+                <option value="default">Ingen sortering</option>
+                <option value="newest">Nyeste først</option>
                 <option value="highest">Høyest vurdering</option>
                 <option value="lowest">Lavest vurdering</option>
                 <option value="comments">Flest kommentarer</option>
@@ -723,7 +753,7 @@ function Movies({
       {/* Modal for adding movies - implement directly without relying on external components */}
       {isModalOpen && (
         <ModalComponent isOpen={isModalOpen} onClose={closeModal}>
-          <div className="flex flex-col justify-center items-center z-50 p-8 bg-gradient-to-b from-gray-900 to-black">
+          <div className="flex flex-col justify-center items-center z-[100000] p-8 bg-gradient-to-b from-gray-900 to-black">
             <div className="flex items-center gap-3 mb-8">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-600 to-yellow-700 flex items-center justify-center shadow-lg">
                 <svg

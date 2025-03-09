@@ -324,7 +324,7 @@ export function useMovies(filters?: string): UseQueryResult<Movie[], Error> {
         // Use an optimized query for mobile that returns less data
         if (isMobile) {
           const mobileQuery = filters
-            ? `*[_type == "movie" && $genre in genres] | order(releaseDate desc) {
+            ? `*[_type == "movie" && $genre in genres] | order(_createdAt desc) {
                 _id,
                 title,
                 slug,
@@ -332,10 +332,11 @@ export function useMovies(filters?: string): UseQueryResult<Movie[], Error> {
                 releaseDate,
                 poster,
                 genres,
+                _createdAt,
                 "ratings": ratings[].rating,
                 "commentCount": count(comments)
               }`
-            : `*[_type == "movie"] | order(releaseDate desc) {
+            : `*[_type == "movie"] | order(_createdAt desc) {
                 _id,
                 title,
                 slug,
@@ -343,6 +344,7 @@ export function useMovies(filters?: string): UseQueryResult<Movie[], Error> {
                 releaseDate,
                 poster,
                 genres,
+                _createdAt,
                 "ratings": ratings[].rating,
                 "commentCount": count(comments)
               }`;
@@ -373,7 +375,7 @@ export function useMovies(filters?: string): UseQueryResult<Movie[], Error> {
         // Use a simple query without parameters when no filters are provided
         if (!filters) {
           const result = await client.fetch(
-            `*[_type == "movie"] | order(releaseDate desc)`
+            `*[_type == "movie"] | order(_createdAt desc)`
           );
 
           if (process.env.NODE_ENV !== "production") {
@@ -383,9 +385,9 @@ export function useMovies(filters?: string): UseQueryResult<Movie[], Error> {
           return result;
         }
 
-        // Use parameters properly when filters are provided
+        // Use a parameterized query when filters are provided
         const result = await client.fetch(
-          `*[_type == "movie" && $genre in genres] | order(releaseDate desc)`,
+          `*[_type == "movie" && $genre in genres] | order(_createdAt desc)`,
           { genre: filters }
         );
 
@@ -399,15 +401,8 @@ export function useMovies(filters?: string): UseQueryResult<Movie[], Error> {
         throw error;
       }
     },
-    staleTime: 1000 * 60 * 60, // 60 minutes (increased from 30)
-    cacheTime: 1000 * 60 * 120, // 2 hours (increased from 60 minutes)
-    retry: 1, // Reduce number of retries
-    retryDelay: 3000, // Increase retry delay to 3 seconds
-    refetchOnMount: false, // Don't refetch when component mounts if data exists
-    refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    refetchOnReconnect: false, // Don't refetch when reconnecting
-    onError: (error) => {
-      console.error("React Query error in useMovies:", error);
-    },
+    staleTime: 1000 * 60 * 15, // 15 minutes
+    cacheTime: 1000 * 60 * 60, // 60 minutes
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 }

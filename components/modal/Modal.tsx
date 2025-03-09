@@ -24,19 +24,19 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center z-[9999]"
+      className="fixed inset-0 flex items-center justify-center z-[99999]"
       style={{ pointerEvents: "auto" }}
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[99999]"
         onClick={onClose}
         style={{ pointerEvents: "auto" }}
       />
 
       {/* Modal content */}
       <div
-        className="relative z-[10000] bg-gradient-to-b from-gray-900 to-black p-6 rounded-xl border border-gray-800/50 shadow-xl max-w-3xl w-full mx-4"
+        className="relative z-[100000] bg-gradient-to-b from-gray-900 to-black p-6 rounded-xl border border-gray-800/50 shadow-xl max-w-3xl w-full mx-4"
         onClick={(e) => e.stopPropagation()}
         style={{ pointerEvents: "auto" }}
       >
@@ -63,7 +63,7 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
         </button>
 
         {/* Modal content */}
-        <div>{children}</div>
+        <div className="z-[100000]">{children}</div>
       </div>
     </div>
   );
