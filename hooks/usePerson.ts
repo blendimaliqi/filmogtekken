@@ -64,90 +64,156 @@ export function useUpdateProfileImage() {
     }) => {
       // Check if we've recently uploaded this image to avoid redundant uploads
       const imageUrlKey = `image_upload_${imageUrl.split("?")[0]}`;
-      const cachedAssetId = localStorage.getItem(imageUrlKey);
-
       let imageAssetId: string = "";
 
-      if (cachedAssetId) {
-        try {
-          // The cached value might be the full asset object or just the ID
-          // Try to parse it as JSON first to handle both cases
-          const parsedCache = JSON.parse(cachedAssetId);
+      try {
+        // First, try to get the cached asset ID from localStorage
+        const cachedAssetId = localStorage.getItem(imageUrlKey);
 
-          // If it's the full asset object, extract just the _id
-          if (typeof parsedCache === "object" && parsedCache._id) {
-            imageAssetId = String(parsedCache._id);
-            console.log("Using cached asset ID for image:", imageAssetId);
-          } else if (typeof parsedCache === "string") {
-            // If it's already just the ID string
-            imageAssetId = parsedCache;
-          } else if (parsedCache) {
-            // Handle any other type by converting to string
-            imageAssetId = String(parsedCache);
+        if (cachedAssetId) {
+          try {
+            // Try to parse the cached value
+            const parsedValue = JSON.parse(cachedAssetId);
+
+            // Handle different types of cached values
+            if (typeof parsedValue === "object" && parsedValue !== null) {
+              if ("_id" in parsedValue) {
+                // It's an object with _id property
+                imageAssetId = String(parsedValue._id);
+                console.log(
+                  "Using parsed object _id from cache:",
+                  imageAssetId
+                );
+              } else if ("_ref" in parsedValue) {
+                // It's an object with _ref property
+                imageAssetId = String(parsedValue._ref);
+                console.log(
+                  "Using parsed object _ref from cache:",
+                  imageAssetId
+                );
+              } else {
+                // Try to stringify the object for debugging
+                console.log(
+                  "Cached object has no _id or _ref:",
+                  JSON.stringify(parsedValue)
+                );
+                // We'll need to get a new image asset
+                imageAssetId = "";
+              }
+            } else if (typeof parsedValue === "string") {
+              // It's already a string ID
+              imageAssetId = parsedValue;
+              console.log("Using string ID from cache:", imageAssetId);
+            } else {
+              // For any other value, clear it and upload a new image
+              console.log("Unexpected cached value type:", typeof parsedValue);
+              localStorage.removeItem(imageUrlKey);
+              imageAssetId = "";
+            }
+          } catch (e) {
+            // If it's not valid JSON, check if it looks like a valid Sanity ID
+            if (cachedAssetId.startsWith("image-")) {
+              imageAssetId = cachedAssetId;
+              console.log("Using cached image ID:", imageAssetId);
+            } else {
+              console.log("Invalid cached value, not using:", cachedAssetId);
+              localStorage.removeItem(imageUrlKey);
+              imageAssetId = "";
+            }
           }
-        } catch (e) {
-          // If it's not valid JSON, assume it's just the ID string
-          imageAssetId = String(cachedAssetId);
-          console.log("Using cached asset ID string:", imageAssetId);
         }
-      }
 
-      // If we don't have a valid imageAssetId from cache, upload a new one
-      if (!imageAssetId) {
-        try {
-          // Upload the image and store the asset ID in localStorage
+        // If we still don't have a valid ID, upload the image
+        if (!imageAssetId) {
+          console.log("No valid cached asset ID found, uploading image...");
           const imageAsset = await uploadExternalImage(imageUrl);
 
-          // Extract the ID from the asset and ensure it's a string
-          if (imageAsset && imageAsset._id) {
-            imageAssetId = String(imageAsset._id);
+          if (imageAsset && typeof imageAsset === "object") {
+            if ("_id" in imageAsset) {
+              imageAssetId = String(imageAsset._id);
+              console.log("Uploaded new image asset, got ID:", imageAssetId);
 
-            // Cache just the asset ID as a string for future use
-            localStorage.setItem(imageUrlKey, imageAssetId);
-            localStorage.setItem(
-              `${imageUrlKey}_timestamp`,
-              Date.now().toString()
-            );
-
-            console.log("Uploaded new image asset:", imageAssetId);
+              // Store just the ID string in localStorage for future use
+              localStorage.setItem(imageUrlKey, JSON.stringify(imageAssetId));
+              localStorage.setItem(
+                `${imageUrlKey}_timestamp`,
+                Date.now().toString()
+              );
+            } else {
+              console.error(
+                "Uploaded image asset missing _id property:",
+                imageAsset
+              );
+              throw new Error("Uploaded image asset missing _id property");
+            }
           } else {
-            throw new Error("Failed to get valid asset ID from uploaded image");
+            console.error("Invalid image asset returned:", imageAsset);
+            throw new Error("Failed to get valid image asset from upload");
           }
-        } catch (error) {
-          console.error("Error uploading image:", error);
-          throw error;
         }
+
+        // Final validation to ensure we have a string ID
+        if (!imageAssetId || typeof imageAssetId !== "string") {
+          throw new Error(`Invalid asset ID: ${JSON.stringify(imageAssetId)}`);
+        }
+
+        // Verify the imageAssetId is in the correct format (should start with 'image-')
+        if (!imageAssetId.startsWith("image-")) {
+          console.warn(
+            "Asset ID may not be in the correct format:",
+            imageAssetId
+          );
+        }
+
+        // Log the final ID being used
+        console.log(
+          "Using image asset ID for patching:",
+          imageAssetId,
+          typeof imageAssetId
+        );
+
+        // Update the person document with the image asset reference
+        return clientWithToken
+          .patch(personId)
+          .set({
+            image: {
+              _type: "image",
+              asset: {
+                _type: "reference",
+                _ref: imageAssetId,
+              },
+            },
+          })
+          .commit();
+      } catch (error) {
+        console.error("Error in profile image update:", error);
+        throw error;
       }
+    },
+    onSuccess: (data, variables) => {
+      // More careful invalidation - only replace the cached data instead of triggering a refetch
+      queryClient.setQueryData(personKeys.current(), (oldData: any) => {
+        if (!oldData) return oldData;
 
-      // Check if we have a valid imageAssetId before proceeding
-      if (!imageAssetId) {
-        throw new Error("No valid image asset ID available");
-      }
+        // Extract the asset reference from the response or use the existing one
+        const assetRef =
+          data?.image?.asset?._ref || oldData?.image?.asset?._ref;
 
-      // Log the final imageAssetId being used
-      console.log(
-        "Using image asset ID for patching:",
-        imageAssetId,
-        typeof imageAssetId
-      );
-
-      // Update the person document with the image asset reference
-      return clientWithToken
-        .patch(personId)
-        .set({
+        // Update the image in the cached data
+        return {
+          ...oldData,
           image: {
             _type: "image",
             asset: {
               _type: "reference",
-              _ref: imageAssetId,
+              _ref: assetRef,
             },
           },
-        })
-        .commit();
-    },
-    onSuccess: () => {
-      // Invalidate and refetch the current person data
-      queryClient.invalidateQueries({ queryKey: personKeys.current() });
+        };
+      });
+
+      // Log success
+      console.log("Profile image updated and cache updated manually");
     },
     onError: (error) => {
       console.error("Error in useUpdateProfileImage:", error);

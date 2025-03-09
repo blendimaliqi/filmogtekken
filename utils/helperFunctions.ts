@@ -84,7 +84,11 @@ export async function uploadExternalImage(url: string) {
         // Try to parse as JSON first
         const parsedCache = JSON.parse(cachedAssetId);
         // If it's an object with _id, use that
-        if (typeof parsedCache === "object" && parsedCache._id) {
+        if (
+          typeof parsedCache === "object" &&
+          parsedCache !== null &&
+          parsedCache._id
+        ) {
           assetId = String(parsedCache._id);
         } else if (typeof parsedCache === "string") {
           // Otherwise use the parsed value directly
@@ -96,8 +100,15 @@ export async function uploadExternalImage(url: string) {
           throw new Error("Invalid cached asset data");
         }
       } catch (e) {
-        // If not valid JSON, use as is
-        assetId = String(cachedAssetId);
+        // If not valid JSON and starts with 'image-', use as is
+        if (
+          typeof cachedAssetId === "string" &&
+          cachedAssetId.startsWith("image-")
+        ) {
+          assetId = cachedAssetId;
+        } else {
+          throw new Error("Invalid cached asset ID format");
+        }
       }
 
       // Try to fetch the asset info from Sanity to verify it exists
@@ -149,11 +160,14 @@ export async function uploadExternalImage(url: string) {
       throw new Error("Failed to get valid asset from upload");
     }
 
-    // Store in caches - only store the string ID in localStorage
+    // Store in caches
     imageCache.set(normalizedUrl, asset);
-    localStorage.setItem(storageKey, String(asset._id));
+
+    // Only store the ID string in localStorage
+    localStorage.setItem(storageKey, asset._id);
     localStorage.setItem(`${storageKey}_timestamp`, Date.now().toString());
 
+    console.log("Successfully uploaded image asset:", asset._id);
     return asset;
   } catch (error: any) {
     console.error("Error uploading image to Sanity:", error);
@@ -179,10 +193,12 @@ export async function uploadExternalImage(url: string) {
           throw new Error("Failed to get valid asset from retry upload");
         }
 
-        // Store in caches - only store the string ID in localStorage
+        // Store in caches - only store the ID string in localStorage
         imageCache.set(normalizedUrl, asset);
-        localStorage.setItem(storageKey, String(asset._id));
+        localStorage.setItem(storageKey, asset._id);
+        localStorage.setItem(`${storageKey}_timestamp`, Date.now().toString());
 
+        console.log("Successfully uploaded image asset (retry):", asset._id);
         return asset;
       } catch (retryError) {
         console.error("Retry failed, returning error:", retryError);

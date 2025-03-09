@@ -63,18 +63,23 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
   const [isRouteLoading, setIsRouteLoading] = useState(false);
   const queryClient = useQueryClient();
 
-  // Prefetch data for smoother transitions
+  // Prefetch data for smoother transitions - use a stable dependency array
+  const slugString =
+    typeof slug === "string" ? slug : Array.isArray(slug) ? slug[0] : "";
+
   useEffect(() => {
-    if (slug && typeof slug === "string") {
+    if (slugString) {
       queryClient.prefetchQuery({
-        queryKey: ["movie", slug],
+        queryKey: ["movie", slugString],
         queryFn: async () => {
-          const result = await client.fetch(movieQuery, { movieId: slug });
+          const result = await client.fetch(movieQuery, {
+            movieId: slugString,
+          });
           return result;
         },
       });
     }
-  }, [slug, queryClient]);
+  }, [slugString, queryClient]);
 
   // Reset content visibility on route change
   useEffect(() => {
@@ -83,7 +88,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
     setContentVisible(false);
     const timer = setTimeout(() => setContentVisible(true), 100);
     return () => clearTimeout(timer);
-  }, [slug, router.isReady]);
+  }, [slugString, router.isReady]);
 
   // Monitor route changes to handle loading state
   useEffect(() => {
@@ -117,15 +122,15 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["movie", slug],
-    enabled: router.isReady && !!slug && typeof slug === "string",
+    queryKey: ["movie", slugString],
+    enabled: router.isReady && !!slugString,
     initialData: initialMovieData,
     queryFn: async () => {
-      if (!slug || typeof slug !== "string") return null;
-      console.log("Fetching movie data for slug:", slug);
-      const result = await client.fetch(movieQuery, { movieId: slug });
+      if (!slugString) return null;
+      console.log("Fetching movie data for slug:", slugString);
+      const result = await client.fetch(movieQuery, { movieId: slugString });
       if (!result) {
-        throw new Error(`Movie not found for slug: ${slug}`);
+        throw new Error(`Movie not found for slug: ${slugString}`);
       }
       return result;
     },
@@ -139,7 +144,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") {
       console.log("Query state:", {
-        slug,
+        slug: slugString,
         isRouteLoading,
         isQueryLoading,
         hasMovie: !!movie,
@@ -147,7 +152,7 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
         routerReady: router.isReady,
       });
     }
-  }, [slug, isRouteLoading, isQueryLoading, movie, router.isReady]);
+  }, [slugString, isRouteLoading, isQueryLoading, movie, router.isReady]);
 
   // Determine if we're in a loading state with more precise conditions
   const isLoading =
@@ -549,7 +554,13 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
               movieId={movieData._id}
               session={session}
               movieData={movieData}
-              refetch={refetch}
+              refetch={() => {
+                // Use a more controlled approach to refetching
+                queryClient.invalidateQueries({
+                  queryKey: ["movie", slugString],
+                  exact: true,
+                });
+              }}
               hideHeading={true}
             />
           ) : (
