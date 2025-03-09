@@ -262,4 +262,15 @@ body {
 .page-exit-active {
   opacity: 0;
   transform: translateY(-10px);
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+/* Fix for carousel indicators appearing above modal */
+.carousel-container .control-dots {
+  z-index: 1 !important; /* Ensure lower z-index than modal */
+}
+
+/* Additional rule for other carousel elements */
+.carousel .control-arrow {
+  z-index: 1 !important;
 }

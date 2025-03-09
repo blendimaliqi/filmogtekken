@@ -213,7 +213,7 @@ export default function Home() {
         <div className="relative">
           {/* Desktop Carousel */}
           <Carousel
-            className="hidden md:block"
+            className="hidden md:block carousel-container"
             autoPlay={true}
             interval={10000}
             stopOnHover={false}
