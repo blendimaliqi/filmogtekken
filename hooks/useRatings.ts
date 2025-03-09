@@ -35,7 +35,7 @@ export function useRateMovie() {
           .set({
             [`ratings[${existingRatingIndex}].rating`]: rating,
           })
-          .commit();
+          .commit({});
       } else {
         // Add new rating
         return clientWithToken
@@ -52,7 +52,7 @@ export function useRateMovie() {
               rating,
             },
           ])
-          .commit();
+          .commit({});
       }
     },
     onSuccess: (result, variables) => {
@@ -135,7 +135,7 @@ export function useDeleteRating() {
       return clientWithToken
         .patch(movieId)
         .unset([`ratings[_key=="${ratingToRemove._key}"]`])
-        .commit();
+        .commit({});
     },
     onSuccess: (_, variables) => {
       // Update the cache directly instead of invalidating

@@ -2,15 +2,15 @@ export const movieQuery = `*[_type == "movie" && (slug.current == $movieId || _i
   _id,
   title,
   releaseDate,
-  poster,
-  poster_backdrop,
+  "poster": poster.asset->,
+  "poster_backdrop": poster_backdrop.asset->,
   plot,
   genres,
   castMembers,
   comments[] {
     person-> {
       name,
-      image,
+      "image": image.asset->,
       _id,
       _key,
     },
@@ -19,13 +19,15 @@ export const movieQuery = `*[_type == "movie" && (slug.current == $movieId || _i
     _createdAt,
     createdAt
   },
-  ratings[] {
+  "ratings": ratings[] {
+    _key,
+    rating,
+    _createdAt,
     person-> {
-      name,
-      image,
       _id,
-    },
-    rating
+      name,
+      "image": image.asset->
+    }
   },
   length,
   _createdAt
@@ -35,8 +37,8 @@ export const moviesQuery = `*[_type == "movie"] {
   _id,
   title,
   releaseDate,
-  poster,
-  poster_backdrop,
+  "poster": poster.asset->,
+  "poster_backdrop": poster_backdrop.asset->,
   plot,
   genres,
   castMembers,
@@ -46,7 +48,7 @@ export const moviesQuery = `*[_type == "movie"] {
   comments[] {
     person-> {
       name,
-      image,
+      "image": image.asset->,
       _key,
       _id,
     },
@@ -55,12 +57,13 @@ export const moviesQuery = `*[_type == "movie"] {
     _createdAt,
     createdAt
   },
-  ratings[] {
+  "ratings": ratings[] {
+    _key,
+    rating,
     person-> {
-      name,
-      image,
       _id,
-    },
-    rating
+      name,
+      "image": image.asset->
+    }
   }
 }`;

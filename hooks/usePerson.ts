@@ -184,7 +184,7 @@ export function useUpdateProfileImage() {
               },
             },
           })
-          .commit();
+          .commit({});
       } catch (error) {
         console.error("Error in profile image update:", error);
         throw error;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo } from "react";
+import React, { useState, useEffect, memo, useMemo } from "react";
 import { urlFor } from "../config/client";
 import Image from "next/image";
 import Link from "next/link";
@@ -32,23 +32,45 @@ const Movie = memo(function Movie({ title, poster, movie }: MovieProps) {
     setIsLeaving(true);
   };
 
-  // Calculate average rating
-  const averageRating =
-    movie.ratings && movie.ratings.length > 0
-      ? (
-          movie.ratings.reduce((acc: any, curr: any) => acc + curr.rating, 0) /
-          movie.ratings.length
-        ).toFixed(1)
-      : null;
+  // Simplify rating calculation for better consistency
+  const averageRating = useMemo(() => {
+    // Safely check for ratings existence
+    const ratings = movie?.ratings;
+
+    // More robust null/undefined check
+    if (!ratings || !Array.isArray(ratings) || ratings.length === 0) {
+      return null;
+    }
+
+    try {
+      const sum = ratings.reduce((acc: number, curr: any) => {
+        // Handle both direct number values and nested rating objects
+        if (typeof curr === "number") return acc + curr;
+        const rating = curr?.rating ? Number(curr.rating) : 0;
+        return acc + rating;
+      }, 0);
+
+      return (sum / ratings.length).toFixed(1);
+    } catch (error) {
+      console.error("Error calculating average rating:", error);
+      return null;
+    }
+  }, [movie?.ratings]);
 
   // Get comment count
-  const commentCount = movie.comments ? movie.comments.length : 0;
+  const commentCount = movie?.comments?.length || 0;
 
   // Optimize image URL
-  const optimizedImageUrl = urlFor(poster)
-    .width(isMobile ? 300 : 500)
-    .height(isMobile ? 450 : 750)
-    .url();
+  const optimizedImageUrl = movie.poster
+    ? typeof movie.poster === "string"
+      ? movie.poster
+      : movie.poster?.url
+      ? movie.poster.url
+      : urlFor(movie.poster)
+          .width(isMobile ? 300 : 500)
+          .height(isMobile ? 450 : 750)
+          .url()
+    : "/notfound.png";
 
   return (
     <div className="movie-card-wrapper mb-1 px-0.5">

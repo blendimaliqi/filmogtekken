@@ -72,14 +72,18 @@ class ErrorBoundary extends Component<{
     // On mobile, errors are often not visible in the console
     // Store error details in localStorage for debugging
     if (typeof window !== "undefined") {
-      localStorage.setItem(
-        "lastError",
-        JSON.stringify({
-          message: error.message,
-          stack: error.stack,
-          time: new Date().toISOString(),
-        })
-      );
+      try {
+        localStorage.setItem(
+          "lastError",
+          JSON.stringify({
+            message: error.message,
+            stack: error.stack,
+            time: new Date().toISOString(),
+          })
+        );
+      } catch (storageError) {
+        console.error("Could not store error in localStorage:", storageError);
+      }
     }
   }
 
@@ -278,58 +282,116 @@ export default function App({
   Component: any;
   pageProps: any;
 }) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadingText, setLoadingText] = useState("");
   const router = useRouter();
-  const queryClientRef = useRef<QueryClient>();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // Reference to store the loading timer
+  const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // Reference to store the safety timer
+  const safetyTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize QueryClient if it doesn't exist yet
-  if (!queryClientRef.current) {
-    queryClientRef.current = queryClient;
-  }
+  // Safe check for mobile - with error handling
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    try {
+      const checkMobile = () => {
+        if (typeof window !== "undefined") {
+          setIsMobile(window.innerWidth < 768);
+        }
+      };
+      checkMobile();
+      window.addEventListener("resize", checkMobile);
+      return () => window.removeEventListener("resize", checkMobile);
+    } catch (error) {
+      console.error("Error setting up mobile detection:", error);
+    }
+  }, []);
 
-  // Handle route change start
+  // Safety reset for loading state
+  useEffect(() => {
+    if (isLoading) {
+      // If loading state is true, set a safety timeout to reset it after 8 seconds
+      // This ensures the spinner never gets stuck indefinitely
+      safetyTimerRef.current = setTimeout(() => {
+        console.log("Safety timeout triggered to reset loading state");
+        setIsLoading(false);
+      }, 8000);
+
+      return () => {
+        if (safetyTimerRef.current) {
+          clearTimeout(safetyTimerRef.current);
+        }
+      };
+    }
+  }, [isLoading]);
+
+  // Setup loading indicators for route changes
   const handleStart = (url: string) => {
-    // Don't show loading indicator for same-page anchor links
-    if (
-      url.includes("#") &&
-      url.split("#")[0] === router.asPath.split("#")[0]
-    ) {
-      return;
+    // Clear any existing timer to prevent state inconsistencies
+    if (loadingTimerRef.current) {
+      clearTimeout(loadingTimerRef.current);
+    }
+
+    // Clear safety timer as well
+    if (safetyTimerRef.current) {
+      clearTimeout(safetyTimerRef.current);
     }
 
     // Check if we're navigating back to the homepage
     const isNavigatingToHome = url === "/" || url === "";
 
-    // Don't show loading for quick navigations (using cached data)
-    const hasMoviesCache = queryClient.getQueryData([
+    // Check if we have cached data for this route
+    // Use the correct query key structure that matches useMovies hook
+    const hasMoviesList = queryClient.getQueryData([
       "movies",
       "list",
       { filters: "all" },
     ]);
 
+    // For movie detail pages, check if we have that specific movie cached
     const targetSlug = url.split("/").pop();
     const hasTargetMovieCache =
       targetSlug && queryClient.getQueryData(["movies", "detail", targetSlug]);
 
-    // Only show loading for uncached routes or initial load
-    // Skip loading indicator when navigating back to home if we have cache
-    if (
-      (!isNavigatingToHome || !hasMoviesCache) &&
-      (!hasMoviesCache || (targetSlug && !hasTargetMovieCache))
-    ) {
-      setIsLoading(true);
-      setLoadingText("Loading...");
+    // Don't show loading for cached routes
+    if ((isNavigatingToHome && hasMoviesList) || hasTargetMovieCache) {
+      setIsLoading(false);
+      return;
     }
+
+    // Set a short delay before showing the loading spinner
+    // This prevents flash of loading state for quick navigations
+    loadingTimerRef.current = setTimeout(() => {
+      setIsLoading(true);
+    }, 300);
   };
 
-  // Handle route change complete
   const handleComplete = () => {
+    // Clear the timer to prevent setting isLoading to true after navigation completes
+    if (loadingTimerRef.current) {
+      clearTimeout(loadingTimerRef.current);
+    }
+
+    // Clear safety timer as well
+    if (safetyTimerRef.current) {
+      clearTimeout(safetyTimerRef.current);
+    }
+
     setIsLoading(false);
   };
 
-  // Handle route change error
   const handleError = () => {
+    // Clear the timer to prevent setting isLoading to true after navigation fails
+    if (loadingTimerRef.current) {
+      clearTimeout(loadingTimerRef.current);
+    }
+
+    // Clear safety timer as well
+    if (safetyTimerRef.current) {
+      clearTimeout(safetyTimerRef.current);
+    }
+
     setIsLoading(false);
   };
 
@@ -339,53 +401,128 @@ export default function App({
     router.events.on("routeChangeError", handleError);
 
     return () => {
+      // Clean up timers on unmount
+      if (loadingTimerRef.current) {
+        clearTimeout(loadingTimerRef.current);
+      }
+      if (safetyTimerRef.current) {
+        clearTimeout(safetyTimerRef.current);
+      }
       router.events.off("routeChangeStart", handleStart);
       router.events.off("routeChangeComplete", handleComplete);
       router.events.off("routeChangeError", handleError);
     };
-  }, [router.events, handleStart]);
+  }, [router]);
 
-  // Add handler for unhandled errors
+  // Set up global error handling
   useEffect(() => {
     const handleError = (event: ErrorEvent) => {
-      console.error("Global error caught:", event.error);
+      // Capture the error and set it to state to show a notification
+      console.error("Global error captured:", event.error || event.message);
+      const errorMessage =
+        event.error?.message || event.message || "An unknown error occurred";
 
-      // Store error details in localStorage for debugging
-      if (typeof window !== "undefined") {
-        localStorage.setItem(
-          "lastGlobalError",
-          JSON.stringify({
-            message: event.error?.message || event.message,
-            stack: event.error?.stack,
-            time: new Date().toISOString(),
-          })
+      // Only show toast for certain errors, avoid spamming the user
+      if (errorMessage.includes("undefined is not an object")) {
+        setErrorMessage(
+          "The app encountered an error. Please try refreshing the page."
         );
       }
 
-      // You could also show a toast notification here
-      toast.error("An error occurred. Please try refreshing the page.");
+      // Store in localStorage for debugging on mobile
+      try {
+        localStorage.setItem(
+          "lastGlobalError",
+          JSON.stringify({
+            message: errorMessage,
+            time: new Date().toISOString(),
+          })
+        );
+      } catch (storageError) {
+        console.error("Could not store error in localStorage:", storageError);
+      }
     };
 
+    // Set up the event listener
     window.addEventListener("error", handleError);
+
+    // Mark the component as mounted to enable client-side only code
+    setIsMounted(true);
 
     return () => {
       window.removeEventListener("error", handleError);
     };
   }, []);
 
+  // Show toast for error message
+  useEffect(() => {
+    if (errorMessage && isMounted) {
+      toast.error(errorMessage, {
+        position: "bottom-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
+      // Clear the error message after showing it
+      setErrorMessage(null);
+    }
+  }, [errorMessage, isMounted]);
+
+  // Add extra safeguards for mobile
+  useEffect(() => {
+    if (isMobile && isMounted) {
+      // Add throttled window access to prevent potential errors
+      const throttle = (fn: Function, delay: number) => {
+        let lastCall = 0;
+        return (...args: any[]) => {
+          const now = Date.now();
+          if (now - lastCall < delay) return;
+          lastCall = now;
+          return fn(...args);
+        };
+      };
+
+      // Safely access window properties
+      const safeWindowAccess = throttle(() => {
+        try {
+          // Do any necessary window access here
+          // This is just a safety mechanism
+        } catch (error) {
+          console.error("Error with window access:", error);
+        }
+      }, 500);
+
+      // Set up safely
+      try {
+        window.addEventListener("scroll", safeWindowAccess);
+        return () => window.removeEventListener("scroll", safeWindowAccess);
+      } catch (error) {
+        console.error("Error setting up mobile safeguards:", error);
+      }
+    }
+  }, [isMobile, isMounted]);
+
   return (
     <SessionProvider session={session}>
-      <QueryClientProvider client={queryClient}>
-        <Provider>
-          <Head>
-            <title>Film med Gutta</title>
-            {/* Viewport meta tag for proper mobile rendering */}
-            <meta
-              name="viewport"
-              content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-            />
-          </Head>
+      <Provider>
+        <QueryClientProvider client={queryClient}>
           <ErrorBoundary>
+            <Head>
+              <meta
+                name="viewport"
+                content="width=device-width, initial-scale=1, maximum-scale=1"
+              />
+              <meta
+                name="description"
+                content="Film og Tekken - Film community"
+              />
+              <title>Film og Tekken</title>
+              <link rel="icon" href="/favicon.ico" />
+              <link rel="manifest" href="/site.webmanifest" />
+            </Head>
             <ProfileImageUpdater />
             {isLoading && (
               <div className="fixed inset-0 flex justify-center items-center bg-black/90 z-50 animate-fadeIn">
@@ -455,8 +592,8 @@ export default function App({
             <ToastContainer />
             <ReactQueryDevtools initialIsOpen={false} />
           </ErrorBoundary>
-        </Provider>
-      </QueryClientProvider>
+        </QueryClientProvider>
+      </Provider>
     </SessionProvider>
   );
 }

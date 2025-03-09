@@ -213,7 +213,7 @@ export function useAddComment() {
               createdAt: now,
             },
           ])
-          .commit();
+          .commit({});
 
         // Return the result with additional data for the cache update
         return {
@@ -312,7 +312,7 @@ export function useDeleteComment() {
         return await clientWithToken
           .patch(movieId)
           .unset([`comments[_key=="${commentKey}"]`])
-          .commit();
+          .commit({});
       } catch (error) {
         console.error("Error deleting comment:", error);
         throw error;

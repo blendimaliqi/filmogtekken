@@ -100,19 +100,43 @@ function Movies({
       (moviesToFilter: Movie[]): MovieWithAverageRating[] => {
         return moviesToFilter
           .map((movie) => {
-            const ratings = movie.ratings || [];
+            const ratings = movie?.ratings || [];
             const totalRatings = ratings.length;
-            const sumRatings = ratings.reduce(
-              (sum, rating) => sum + rating.rating,
-              0
-            );
-            const averageRating =
-              totalRatings > 0 ? sumRatings / totalRatings : 0;
 
-            return {
-              ...movie,
-              averageRating,
-            };
+            try {
+              // Check if ratings is an array of numbers or objects
+              const isNumberArray =
+                totalRatings > 0 && typeof ratings[0] === "number";
+
+              let sumRatings = 0;
+              if (isNumberArray) {
+                // If it's already an array of numbers, just sum them
+                sumRatings = ratings.reduce(
+                  (sum, rating: any) => sum + rating,
+                  0
+                );
+              } else {
+                // If it's an array of objects with a rating property
+                sumRatings = ratings.reduce(
+                  (sum, rating: any) => sum + (rating?.rating || 0),
+                  0
+                );
+              }
+
+              const averageRating =
+                totalRatings > 0 ? sumRatings / totalRatings : 0;
+
+              return {
+                ...movie,
+                averageRating,
+              };
+            } catch (error) {
+              console.error("Error calculating rating for sorting:", error);
+              return {
+                ...movie,
+                averageRating: 0,
+              };
+            }
           })
           .sort((a, b) => b.averageRating - a.averageRating);
       },
@@ -124,19 +148,43 @@ function Movies({
       (moviesToFilter: Movie[]): MovieWithAverageRating[] => {
         return moviesToFilter
           .map((movie) => {
-            const ratings = movie.ratings || [];
+            const ratings = movie?.ratings || [];
             const totalRatings = ratings.length;
-            const sumRatings = ratings.reduce(
-              (sum, rating) => sum + rating.rating,
-              0
-            );
-            const averageRating =
-              totalRatings > 0 ? sumRatings / totalRatings : 0;
 
-            return {
-              ...movie,
-              averageRating,
-            };
+            try {
+              // Check if ratings is an array of numbers or objects
+              const isNumberArray =
+                totalRatings > 0 && typeof ratings[0] === "number";
+
+              let sumRatings = 0;
+              if (isNumberArray) {
+                // If it's already an array of numbers, just sum them
+                sumRatings = ratings.reduce(
+                  (sum, rating: any) => sum + rating,
+                  0
+                );
+              } else {
+                // If it's an array of objects with a rating property
+                sumRatings = ratings.reduce(
+                  (sum, rating: any) => sum + (rating?.rating || 0),
+                  0
+                );
+              }
+
+              const averageRating =
+                totalRatings > 0 ? sumRatings / totalRatings : 0;
+
+              return {
+                ...movie,
+                averageRating,
+              };
+            } catch (error) {
+              console.error("Error calculating rating for sorting:", error);
+              return {
+                ...movie,
+                averageRating: 0,
+              };
+            }
           })
           .sort((a, b) => a.averageRating - b.averageRating);
       },

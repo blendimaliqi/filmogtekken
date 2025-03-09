@@ -1,51 +1,48 @@
-import RatingModal from "@/components/modal/RatingModal";
-import { client, urlFor, clientWithToken } from "@/config/client";
+import {
+  GetServerSideProps,
+  InferGetServerSidePropsType,
+  NextPage,
+} from "next";
+import { client, clientWithToken, urlFor } from "@/config/client";
 import { movieQuery } from "@/utils/groqQueries";
-import { uploadExternalImage, uuidv4 } from "@/utils/helperFunctions";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSession, signIn } from "next-auth/react";
+import { centerStyle } from ".";
+import { Movie } from "@/typings";
 import Head from "next/head";
+import { useSession, signIn } from "next-auth/react";
+import { uploadExternalImage, uuidv4 } from "@/utils/helperFunctions";
+import CommentForm from "@/components/CommentForm";
+import { AiFillStar } from "react-icons/ai";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
-import { AiFillStar } from "react-icons/ai";
+import { useState, useEffect, useCallback } from "react";
 import { ColorRing } from "react-loader-spinner";
-import { Movie } from "../typings";
-import CommentForm from "@/components/CommentForm";
-import { GetServerSideProps } from "next";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import RatingModal from "@/components/modal/RatingModal";
+import { movieKeys } from "@/hooks/useMovie";
 
-const centerStyle = {
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  height: "100vh",
-};
-
+// Server-side props to get initial movie data
 export const getServerSideProps: GetServerSideProps = async (context) => {
   try {
-    const { slug } = context.params!;
-
-    // We'll fetch comments and ratings client-side
-    const movie = await client.fetch(movieQuery, { movieId: slug });
-
-    // Log the movie data to help debug
-    if (process.env.NODE_ENV !== "production") {
-      console.log("Movie data from getServerSideProps:", {
-        id: movie?._id,
-        title: movie?.title,
-        hasOverview: !!movie?.overview,
-        hasPlot: !!movie?.plot,
-        slug: movie?.slug?.current,
-      });
+    const { slug } = context.params || {};
+    if (!slug) {
+      return {
+        props: {
+          initialMovieData: null,
+        },
+      };
     }
+
+    const initialMovieData = await client.fetch(movieQuery, {
+      movieId: slug,
+    });
 
     return {
       props: {
-        initialMovieData: movie || null,
+        initialMovieData: initialMovieData || null,
       },
     };
   } catch (error) {
-    console.error("Error in getServerSideProps:", error);
+    console.error("Error fetching movie:", error);
     return {
       props: {
         initialMovieData: null,
@@ -63,34 +60,44 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
   const [isRouteLoading, setIsRouteLoading] = useState(false);
   const queryClient = useQueryClient();
 
-  // Prefetch data for smoother transitions - use a stable dependency array
   const slugString =
     typeof slug === "string" ? slug : Array.isArray(slug) ? slug[0] : "";
 
-  useEffect(() => {
-    if (slugString) {
-      queryClient.prefetchQuery({
-        queryKey: ["movie", slugString],
-        queryFn: async () => {
-          const result = await client.fetch(movieQuery, {
-            movieId: slugString,
-          });
-          return result;
-        },
-      });
-    }
-  }, [slugString, queryClient]);
+  // Use TanStack Query to fetch movie data
+  const {
+    data: movieData,
+    isLoading: isQueryLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: movieKeys.detail(slugString),
+    queryFn: async () => {
+      if (!slugString) return null;
+      // Use the same query as in getServerSideProps
+      const result = await client.fetch(movieQuery, { movieId: slugString });
 
-  // Reset content visibility on route change
+      // Add proper null check
+      if (!result) throw new Error(`Movie not found: ${slugString}`);
+
+      return result;
+    },
+    initialData: initialMovieData,
+    enabled: !!slugString,
+    staleTime: 1000 * 30, // 30 seconds stale time to balance performance and freshness
+  });
+
+  // Handle page visibility to ensure fresh data
   useEffect(() => {
     if (!router.isReady) return;
 
+    // Fade in content when movie data is loaded
     setContentVisible(false);
     const timer = setTimeout(() => setContentVisible(true), 100);
+
     return () => clearTimeout(timer);
   }, [slugString, router.isReady]);
 
-  // Monitor route changes to handle loading state
+  // Monitor route changes
   useEffect(() => {
     const handleStart = (url: string) => {
       setIsRouteLoading(true);
@@ -112,56 +119,125 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
     };
   }, [router]);
 
-  // Store the movie ID for consistent reference
-  const movieId = initialMovieData?._id || "";
+  // Rate movie function
+  const rateMovie = useCallback(
+    async (movieId: string, rating: number) => {
+      try {
+        if (!session?.user?.name) return;
 
-  // Fetch the movie using tanstack query with improved configuration
-  const {
-    data: movie,
-    isLoading: isQueryLoading,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["movie", slugString],
-    enabled: router.isReady && !!slugString,
-    initialData: initialMovieData,
-    queryFn: async () => {
-      if (!slugString) return null;
-      console.log("Fetching movie data for slug:", slugString);
-      const result = await client.fetch(movieQuery, { movieId: slugString });
-      if (!result) {
-        throw new Error(`Movie not found for slug: ${slugString}`);
+        const userName = session.user.name;
+        const personQuery = `*[_type == "person" && name == "${userName}"]`;
+        const [existingPerson] = await client.fetch(personQuery);
+
+        let person: any;
+
+        if (!existingPerson) {
+          // Create a new person if not found
+          const imageAsset = await uploadExternalImage(
+            session.user.image ?? ""
+          );
+          const imageAssetId = imageAsset._id;
+
+          const newPerson = {
+            _type: "person",
+            _id: uuidv4(),
+            name: userName,
+            image: {
+              _type: "image",
+              asset: {
+                _ref: imageAssetId,
+              },
+            },
+            slug: {
+              _type: "slug",
+              current: userName?.toLowerCase().replace(/\s+/g, "-"),
+            },
+          };
+
+          person = await clientWithToken.create(newPerson);
+        } else {
+          person = existingPerson;
+        }
+
+        const movieQueryWithRating = `*[_type == "movie" && _id == "${movieId}" && defined(ratings)]`;
+        const [movieWithRating] = await client.fetch(movieQueryWithRating);
+
+        if (movieWithRating) {
+          const existingRatingIndex = movieWithRating.ratings.findIndex(
+            (rating: any) => rating.person._ref === person._id
+          );
+
+          if (existingRatingIndex > -1) {
+            const updatedRatings = [...movieWithRating.ratings];
+            updatedRatings[existingRatingIndex].rating = rating;
+            updatedRatings[existingRatingIndex]._createdAt =
+              new Date().toISOString();
+            movieWithRating.ratings = updatedRatings;
+          } else {
+            const newRating = {
+              _key: uuidv4(),
+              person: { _type: "reference", _ref: person._id },
+              rating: rating,
+              _createdAt: new Date().toISOString(),
+            };
+            movieWithRating.ratings.push(newRating);
+          }
+
+          await clientWithToken
+            .patch(movieId)
+            .set({ ratings: movieWithRating.ratings })
+            .commit({});
+        } else {
+          const newRating = {
+            _key: uuidv4(),
+            person: { _type: "reference", _ref: person._id },
+            rating: rating,
+            _createdAt: new Date().toISOString(),
+          };
+
+          await clientWithToken
+            .patch(movieId)
+            .setIfMissing({ ratings: [] })
+            .append("ratings", [newRating])
+            .commit({});
+        }
+
+        // Properly invalidate queries to ensure fresh data
+        queryClient.invalidateQueries({
+          queryKey: movieKeys.detail(slugString),
+        });
+        queryClient.invalidateQueries({ queryKey: movieKeys.lists() });
+        queryClient.invalidateQueries({ queryKey: movieKeys.list(undefined) });
+      } catch (error) {
+        console.error("Error updating movie rating:", error);
       }
-      return result;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    retry: 1, // Only retry once to avoid infinite loading on real errors
-    refetchOnWindowFocus: false, // Prevent unnecessary refetches
-    cacheTime: 1000 * 60 * 30, // Cache for 30 minutes
-  });
+    [session, slugString, queryClient]
+  );
 
-  // Debug log the movie data and query state
-  useEffect(() => {
-    if (process.env.NODE_ENV !== "production") {
-      console.log("Query state:", {
-        slug: slugString,
-        isRouteLoading,
-        isQueryLoading,
-        hasMovie: !!movie,
-        movieId: movie?._id,
-        routerReady: router.isReady,
-      });
+  // Calculate average rating directly (no need for useMemo)
+  function calculateAverageRating(ratings: any[] | null = []) {
+    // More robust null/undefined check to prevent "Cannot read properties of null" error
+    if (!ratings || !Array.isArray(ratings) || ratings.length === 0) {
+      return null;
     }
-  }, [slugString, isRouteLoading, isQueryLoading, movie, router.isReady]);
 
-  // Determine if we're in a loading state with more precise conditions
+    try {
+      const sum = ratings.reduce((acc, curr) => {
+        const rating = curr?.rating ? Number(curr.rating) : 0;
+        return acc + rating;
+      }, 0);
+      return (sum / ratings.length).toFixed(1);
+    } catch (error) {
+      console.error("Error calculating rating:", error);
+      return null;
+    }
+  }
+
+  // Loading state
   const isLoading =
-    !router.isReady ||
-    isRouteLoading ||
-    (isQueryLoading && !movie) ||
-    (!movie && !!slug);
+    !router.isReady || isRouteLoading || (isQueryLoading && !movieData);
 
-  // Handle loading state
   if (isLoading) {
     return (
       <div style={centerStyle}>
@@ -178,7 +254,6 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
     );
   }
 
-  // Handle error state
   if (error) {
     console.error("Error loading movie:", error);
     return (
@@ -199,9 +274,6 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
     );
   }
 
-  const movieData = movie;
-
-  // Safeguard against undefined data
   if (!movieData) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-black p-4 text-white">
@@ -219,113 +291,8 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
     );
   }
 
-  // Function to rate a movie
-  async function rateMovie(movieId: string, rating: number) {
-    try {
-      if (!session?.user?.name) return;
-
-      console.log(`Rating movie with ID: ${movieId}, rating value: ${rating}`);
-
-      const userName = session.user.name;
-      const personQuery = `*[_type == "person" && name == "${userName}"]`;
-      const [existingPerson] = await client.fetch(personQuery);
-
-      let person: any;
-
-      if (!existingPerson) {
-        // Create a new person if not found
-        const imageAsset = await uploadExternalImage(session.user.image ?? "");
-        const imageAssetId = imageAsset._id;
-
-        const newPerson = {
-          _type: "person",
-          _id: uuidv4(),
-          name: userName,
-          image: {
-            _type: "image",
-            asset: {
-              _ref: imageAssetId,
-            },
-          },
-          slug: {
-            _type: "slug",
-            current: userName?.toLowerCase().replace(/\s+/g, "-"),
-          },
-        };
-
-        person = await client.create(newPerson);
-      } else {
-        person = existingPerson;
-      }
-
-      // Log the person for debugging
-      if (process.env.NODE_ENV !== "production") {
-        console.log("Rating from person:", {
-          id: person._id,
-          name: person.name,
-        });
-      }
-
-      const movieQueryWithRating = `*[_type == "movie" && _id == "${movieId}" && defined(ratings)]`;
-      const [movieWithRating] = await client.fetch(movieQueryWithRating);
-
-      if (movieWithRating) {
-        const existingRatingIndex = movieWithRating.ratings.findIndex(
-          (rating: any) => rating.person._ref === person._id
-        );
-
-        if (existingRatingIndex > -1) {
-          const updatedRatings = [...movieWithRating.ratings];
-          updatedRatings[existingRatingIndex].rating = rating;
-          updatedRatings[existingRatingIndex]._createdAt =
-            new Date().toISOString();
-          movieWithRating.ratings = updatedRatings;
-        } else {
-          const newRating = {
-            _key: uuidv4(),
-            person: { _type: "reference", _ref: person._id },
-            rating: rating,
-            _createdAt: new Date().toISOString(),
-          };
-          movieWithRating.ratings.push(newRating);
-        }
-
-        await client
-          .patch(movieId)
-          .set({ ratings: movieWithRating.ratings })
-          .commit();
-      } else {
-        const newRating = {
-          _key: uuidv4(),
-          person: { _type: "reference", _ref: person._id },
-          rating: rating,
-          _createdAt: new Date().toISOString(),
-        };
-
-        await client
-          .patch(movieId)
-          .setIfMissing({ ratings: [] })
-          .append("ratings", [newRating])
-          .commit();
-      }
-
-      // Refresh data
-      refetch();
-    } catch (error) {
-      console.error("Error updating movie rating:", error);
-    }
-  }
-
-  // Calculate average rating
-  const averageRating =
-    movieData.ratings && movieData.ratings.length > 0
-      ? (
-          movieData.ratings.reduce(
-            (acc: number, curr: any) => acc + curr.rating,
-            0
-          ) / movieData.ratings.length
-        ).toFixed(1)
-      : null;
+  // Calculate average rating for the UI
+  const averageRating = calculateAverageRating(movieData.ratings);
 
   return (
     <main className="bg-black min-h-screen">
@@ -337,11 +304,17 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
       {/* Hero section with backdrop */}
       <div className="relative">
         {/* Backdrop image */}
-        {movieData.poster_backdrop && movieData.poster_backdrop.asset && (
+        {movieData.poster_backdrop && (
           <>
             <div className="absolute inset-0 h-[100vh]">
               <Image
-                src={urlFor(movieData.poster_backdrop).url()}
+                src={
+                  typeof movieData.poster_backdrop === "string"
+                    ? movieData.poster_backdrop
+                    : movieData.poster_backdrop?.url
+                    ? movieData.poster_backdrop.url
+                    : urlFor(movieData.poster_backdrop).url()
+                }
                 alt={movieData.title || "Movie backdrop"}
                 priority
                 fill
@@ -375,11 +348,17 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
                     )}
                   </div>
                 )}
-                {movieData.poster && movieData.poster.asset ? (
+                {movieData.poster ? (
                   <Image
                     width={300}
                     height={450}
-                    src={urlFor(movieData.poster).url()}
+                    src={
+                      typeof movieData.poster === "string"
+                        ? movieData.poster
+                        : movieData.poster?.url
+                        ? movieData.poster.url
+                        : urlFor(movieData.poster).url()
+                    }
                     alt={movieData.title || "Movie poster"}
                     className="rounded-xl shadow-2xl"
                     priority
@@ -484,7 +463,9 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
         />
 
         {/* Individual ratings section */}
-        {movieData.ratings && movieData.ratings.length > 0 && (
+        {movieData.ratings &&
+        Array.isArray(movieData.ratings) &&
+        movieData.ratings.length > 0 ? (
           <div className="mt-0 mb-12">
             <h2 className="text-2xl font-bold text-white mb-6">
               Individuell Rating
@@ -494,88 +475,72 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
                 // Get the person safely
                 const person =
                   typeof rating.person === "object" ? rating.person : null;
-                const hasImage = person && person.image && person.image.asset;
+                const hasImage = person && person.image;
+                const imageUrl = hasImage
+                  ? typeof person.image === "string"
+                    ? person.image
+                    : person.image?.url
+                    ? person.image.url
+                    : urlFor(person.image).url()
+                  : null;
 
                 return (
                   <div
                     key={rating._key || `rating-${index}`}
                     className="flex items-center gap-4 bg-zinc-900/50 rounded-xl p-4 backdrop-blur-sm border border-zinc-800/50 hover:border-yellow-600/30 transition-all duration-300"
                   >
-                    {hasImage ? (
+                    {imageUrl ? (
                       <Image
                         width={50}
                         height={50}
-                        src={urlFor(person.image).url()}
-                        alt={person.name || "Ukjent"}
+                        src={imageUrl}
+                        alt={person?.name || "Ukjent"}
                         className="rounded-full object-cover"
                       />
                     ) : (
                       <div className="w-[50px] h-[50px] rounded-full bg-zinc-800 flex items-center justify-center">
-                        <span className="text-gray-400 text-xl">?</span>
+                        <span className="text-zinc-500 text-lg">
+                          {person && person.name
+                            ? person.name.charAt(0).toUpperCase()
+                            : "?"}
+                        </span>
                       </div>
                     )}
-                    <div className="flex flex-col flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-white font-medium">
-                          {person?.name || "Ukjent"}
-                        </span>
-                        <div className="flex items-center gap-1 bg-yellow-600/80 px-3 py-1 rounded-full">
-                          <span className="text-white font-medium">
-                            {rating.rating}
-                          </span>
-                          <AiFillStar className="text-white text-sm" />
-                        </div>
+                    <div className="flex-1">
+                      <div className="font-medium mb-1">
+                        {person ? person.name : "Ukjent bruker"}
                       </div>
-                      {rating._createdAt && (
-                        <span className="text-gray-400 text-xs mt-1">
-                          {new Date(rating._createdAt).toLocaleDateString(
-                            "no-NO",
-                            {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            }
-                          )}
+                      <div className="flex items-center">
+                        <span className="text-yellow-500 mr-1">
+                          {rating.rating}
                         </span>
-                      )}
+                        <AiFillStar className="text-yellow-500 text-sm" />
+                      </div>
                     </div>
                   </div>
                 );
               })}
             </div>
           </div>
+        ) : (
+          <div className="mt-0 mb-12">
+            <h2 className="text-2xl font-bold text-white mb-6">
+              Individuell Rating
+            </h2>
+            <p className="text-gray-400">
+              Ingen rangeringer ennå. Bli den første til å rangere denne filmen!
+            </p>
+          </div>
         )}
 
         {/* Comments section */}
-        <div className="py-16">
-          <h2 className="text-2xl font-bold text-white mb-8">Kommentarer</h2>
-          {session ? (
-            <CommentForm
-              movieId={movieData._id}
-              session={session}
-              movieData={movieData}
-              refetch={() => {
-                // Use a more controlled approach to refetching
-                queryClient.invalidateQueries({
-                  queryKey: ["movie", slugString],
-                  exact: true,
-                });
-              }}
-              hideHeading={true}
-            />
-          ) : (
-            <div className="flex flex-col items-center justify-center p-8 bg-zinc-900/50 rounded-xl backdrop-blur-sm border border-zinc-800/50">
-              <div className="text-gray-400 mb-4">
-                Du må være logget inn for å se og legge til kommentarer
-              </div>
-              <button
-                onClick={() => signIn()}
-                className="bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg py-2 px-4 font-medium flex items-center gap-2"
-              >
-                Logg inn
-              </button>
-            </div>
-          )}
+        <div id="comments" className="mt-20">
+          <CommentForm
+            movieId={movieData._id}
+            session={session}
+            movieData={movieData}
+            refetch={refetch}
+          />
         </div>
       </div>
     </main>

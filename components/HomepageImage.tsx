@@ -1,5 +1,6 @@
 import React from "react";
 import Image from "next/image";
+import { useState } from "react";
 
 type HomepageImageProps = {
   children: React.ReactNode;
@@ -7,6 +8,12 @@ type HomepageImageProps = {
 };
 
 function HomepageImage({ children, url }: HomepageImageProps) {
+  const [imageError, setImageError] = useState(false);
+
+  // Safely handle the URL
+  const safeUrl =
+    url && typeof url === "string" && !imageError ? url : "/notfound.png";
+
   return (
     <div
       className="relative bg-cover bg-center bg-no-repeat"
@@ -22,12 +29,13 @@ function HomepageImage({ children, url }: HomepageImageProps) {
             transform: "scale(1.05)",
           }}
           className="z-0 opacity-70"
-          src={url}
+          src={safeUrl}
           alt="Homepage background"
           width={0}
           height={0}
           sizes="100vw"
           priority
+          onError={() => setImageError(true)}
         />
       </div>
 

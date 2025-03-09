@@ -12,6 +12,7 @@ import { uuidv4 } from "@/utils/helperFunctions";
 import { useMovies } from "@/hooks";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
+import { movieKeys } from "@/hooks/useMovie";
 
 export const centerStyle = {
   display: "flex",
@@ -52,6 +53,132 @@ const StandaloneAddMovieButton = () => {
   );
 };
 
+// Create a separate carousel component to isolate any hook issues
+const MovieCarousel = ({ movies = [] }: { movies: Movie[] }) => {
+  // Safety check
+  if (!movies || movies.length === 0) {
+    return null;
+  }
+
+  return (
+    <Carousel
+      className="hidden md:block carousel-container"
+      autoPlay={true}
+      interval={10000}
+      stopOnHover={false}
+      infiniteLoop={true}
+      showThumbs={false}
+      showStatus={false}
+      showArrows={true}
+      swipeable={true}
+      emulateTouch={true}
+      dynamicHeight={false}
+      renderIndicator={(onClickHandler, isSelected, index, label) => {
+        const indicatorClasses = isSelected
+          ? "w-12 bg-yellow-600"
+          : "w-8 bg-gray-700 hover:bg-gray-600";
+
+        return (
+          <button
+            type="button"
+            onClick={onClickHandler}
+            className={`h-1.5 rounded-full mx-1 transition-all duration-300 ${indicatorClasses}`}
+            aria-label={`Slide ${index + 1}`}
+            title={`${label} ${index + 1}`}
+          />
+        );
+      }}
+      renderArrowPrev={(onClickHandler, hasPrev) =>
+        hasPrev && (
+          <button
+            type="button"
+            onClick={onClickHandler}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300"
+            aria-label="Previous slide"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+        )
+      }
+      renderArrowNext={(onClickHandler, hasNext) =>
+        hasNext && (
+          <button
+            type="button"
+            onClick={onClickHandler}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300"
+            aria-label="Next slide"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+        )
+      }
+    >
+      {movies.map((movie: Movie) => {
+        // Handle different possible types of poster_backdrop
+        let imageUrl = "/notfound.png";
+
+        try {
+          if (movie?.poster_backdrop) {
+            // Direct string URL
+            if (typeof movie.poster_backdrop === "string") {
+              imageUrl = movie.poster_backdrop;
+            }
+            // Object with URL property
+            else if (
+              typeof movie.poster_backdrop === "object" &&
+              "url" in movie.poster_backdrop &&
+              typeof movie.poster_backdrop.url === "string"
+            ) {
+              imageUrl = movie.poster_backdrop.url;
+            }
+            // Sanity image reference
+            else if (
+              typeof movie.poster_backdrop === "object" &&
+              movie.poster_backdrop.asset
+            ) {
+              imageUrl = urlFor(movie.poster_backdrop).url();
+            }
+          }
+        } catch (error) {
+          console.error("Error getting image URL:", error);
+        }
+
+        return (
+          <HomepageImage key={movie._id || uuidv4()} url={imageUrl}>
+            <MovieTitle movie={movie} />
+          </HomepageImage>
+        );
+      })}
+    </Carousel>
+  );
+};
+
 export default function Home() {
   const [contentVisible, setContentVisible] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
@@ -79,28 +206,54 @@ export default function Home() {
     };
   }, []);
 
+  // Pre-populate movie cache to improve performance
   useEffect(() => {
-    if (movies) {
-      // Pre-populate individual movie cache entries to avoid refetching
-      // On mobile, limit the number of movies we cache to reduce memory usage
-      const moviesToCache = isMobileView ? movies.slice(0, 10) : movies;
+    if (movies && Array.isArray(movies)) {
+      try {
+        // On mobile, limit the number of movies we cache to reduce memory usage
+        const moviesToCache = isMobileView ? movies.slice(0, 10) : movies;
 
-      moviesToCache.forEach((movie) => {
-        const movieId = movie._id;
-        const slug = movie.slug?.current;
+        moviesToCache.forEach((movie) => {
+          if (!movie) return;
 
-        if (movieId) {
-          // Cache by ID
-          queryClient.setQueryData(["movies", "detail", movieId], movie);
-        }
+          const movieId = movie._id;
+          const slug = movie.slug?.current;
 
-        if (slug) {
-          // Cache by slug
-          queryClient.setQueryData(["movies", "detail", slug], movie);
-        }
-      });
+          if (movieId) {
+            // Cache by ID using consistent query keys
+            queryClient.setQueryData(movieKeys.detail(movieId), movie);
+          }
+
+          if (slug) {
+            // Cache by slug using consistent query keys
+            queryClient.setQueryData(movieKeys.detail(slug), movie);
+          }
+        });
+      } catch (error) {
+        console.error("Error populating movie cache:", error);
+      }
     }
   }, [movies, queryClient, isMobileView]);
+
+  // Always create moviesToDisplay with useMemo regardless of conditions
+  const moviesToDisplay = useMemo(() => {
+    if (!movies || !Array.isArray(movies)) return [];
+
+    // Sort movies by creation date
+    const sortedMovies = [...movies].sort((a, b) => {
+      try {
+        const dateA = new Date(a._createdAt || 0);
+        const dateB = new Date(b._createdAt || 0);
+        return dateB.getTime() - dateA.getTime();
+      } catch (error) {
+        console.error("Error sorting movies:", error);
+        return 0;
+      }
+    });
+
+    // Return a limited number of movies based on device
+    return sortedMovies.slice(0, isMobileView ? 3 : 5);
+  }, [movies, isMobileView]);
 
   // Add fade-in effect when component mounts or data loads
   useEffect(() => {
@@ -124,22 +277,6 @@ export default function Home() {
       router.events.off("routeChangeStart", handleRouteChange);
     };
   }, [router.events]);
-
-  // Memoize the sorted movies to avoid unnecessary re-renders
-  const sortedMovies = useMemo(() => {
-    if (!movies) return [];
-    return [...movies].sort((a: Movie, b: Movie) => {
-      // Convert strings to Date objects for proper comparison
-      const dateA = new Date(a._createdAt);
-      const dateB = new Date(b._createdAt);
-      return dateB.getTime() - dateA.getTime();
-    });
-  }, [movies]);
-
-  // Memoize the movies to display in the carousel
-  const moviesToDisplay = useMemo(() => {
-    return sortedMovies.slice(0, isMobileView ? 3 : 5);
-  }, [sortedMovies, isMobileView]);
 
   if (isLoading) {
     return (
@@ -211,94 +348,8 @@ export default function Home() {
         }`}
       >
         <div className="relative">
-          {/* Desktop Carousel */}
-          <Carousel
-            className="hidden md:block carousel-container"
-            autoPlay={true}
-            interval={10000}
-            stopOnHover={false}
-            infiniteLoop={true}
-            showThumbs={false}
-            showStatus={false}
-            showArrows={true}
-            swipeable={true}
-            emulateTouch={true}
-            dynamicHeight={false}
-            renderIndicator={(onClickHandler, isSelected, index, label) => {
-              const indicatorClasses = isSelected
-                ? "w-12 bg-yellow-600"
-                : "w-8 bg-gray-700 hover:bg-gray-600";
-
-              return (
-                <button
-                  type="button"
-                  onClick={onClickHandler}
-                  className={`h-1.5 rounded-full mx-1 transition-all duration-300 ${indicatorClasses}`}
-                  aria-label={`Slide ${index + 1}`}
-                  title={`${label} ${index + 1}`}
-                />
-              );
-            }}
-            renderArrowPrev={(onClickHandler, hasPrev) =>
-              hasPrev && (
-                <button
-                  type="button"
-                  onClick={onClickHandler}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300"
-                  aria-label="Previous slide"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
-                </button>
-              )
-            }
-            renderArrowNext={(onClickHandler, hasNext) =>
-              hasNext && (
-                <button
-                  type="button"
-                  onClick={onClickHandler}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300"
-                  aria-label="Next slide"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
-              )
-            }
-          >
-            {moviesToDisplay.map((movie: Movie) => (
-              <HomepageImage
-                key={uuidv4()}
-                url={urlFor(movie.poster_backdrop.asset).url() ?? ""}
-              >
-                <MovieTitle movie={movie} />
-              </HomepageImage>
-            ))}
-          </Carousel>
+          {/* Use the separated carousel component */}
+          <MovieCarousel movies={moviesToDisplay} />
 
           {/* Gradient overlay to create seamless transition to movies section */}
           <div className="hidden md:block absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-black to-transparent"></div>
