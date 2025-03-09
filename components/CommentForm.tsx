@@ -340,23 +340,28 @@ function CommentForm({
                         <TimeAgo
                           date={comment.createdAt || comment._createdAt}
                           formatter={(value, unit) => {
-                            const units: { [key: string]: string } = {
-                              second: "sekund",
-                              seconds: "sekunder",
-                              minute: "minutt",
-                              minutes: "minutter",
-                              hour: "time",
-                              hours: "timer",
-                              day: "dag",
-                              days: "dager",
-                              week: "uke",
-                              weeks: "uker",
-                              month: "måned",
-                              months: "måneder",
-                              year: "år",
-                              years: "år",
+                            // Define mapping for both singular and plural forms
+                            const unitMap: Record<string, [string, string]> = {
+                              second: ["sekund", "sekunder"],
+                              minute: ["minutt", "minutter"],
+                              hour: ["time", "timer"],
+                              day: ["dag", "dager"],
+                              week: ["uke", "uker"],
+                              month: ["måned", "måneder"],
+                              year: ["år", "år"],
                             };
-                            return `${value} ${units[unit]} siden`;
+
+                            // Remove trailing 's' if present for lookup
+                            const baseUnit = unit.replace(
+                              /s$/,
+                              ""
+                            ) as keyof typeof unitMap;
+
+                            // Select singular or plural form based on value
+                            const form = value === 1 ? 0 : 1;
+                            const unitStr = unitMap[baseUnit][form];
+
+                            return `${value} ${unitStr} siden`;
                           }}
                         />
                       </div>
@@ -369,14 +374,16 @@ function CommentForm({
                     {session &&
                       comment.person &&
                       session.user.name === comment.person.name && (
-                        <button
-                          onClick={() => deleteCommentFromMovie(comment._key)}
-                          className="mt-2 text-red-500 hover:text-red-400 text-sm flex items-center gap-1"
-                          aria-label="Delete comment"
-                        >
-                          <FaTrashAlt size={12} />
-                          <span>Slett</span>
-                        </button>
+                        <div className="flex justify-end">
+                          <button
+                            onClick={() => deleteCommentFromMovie(comment._key)}
+                            className="mt-2 text-red-500 hover:text-red-400 text-sm flex items-center gap-1"
+                            aria-label="Delete comment"
+                          >
+                            <FaTrashAlt size={12} />
+                            <span>Slett</span>
+                          </button>
+                        </div>
                       )}
                   </div>
                 </div>
