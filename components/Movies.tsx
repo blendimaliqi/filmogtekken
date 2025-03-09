@@ -18,6 +18,7 @@ import { uploadExternalImage, uuidv4 } from "@/utils/helperFunctions";
 import type { Movie } from "@/typings";
 import { movieKeys } from "@/hooks/useMovie";
 import CustomToast from "./ui/CustomToast";
+import { useMovies } from "@/hooks";
 
 // Dynamically import the Modal and ModalMovie components to reduce initial load time
 const ModalComponent = dynamic(
@@ -50,17 +51,17 @@ interface MovieWithTotalComments extends Movie {
 }
 
 interface MoviesProps {
-  movies?: Movie[];
   isAddMovieModalOpen?: boolean;
   onMovieAdded?: () => void;
+  filterGenre?: string;
 }
 
 function Movies({
-  movies: propMovies,
   isAddMovieModalOpen = false,
   onMovieAdded,
+  filterGenre,
 }: MoviesProps) {
-  // Local state to replace Jotai atoms
+  // Local state
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
   const [activeFilter, setActiveFilter] = useState("default");
@@ -72,6 +73,13 @@ function Movies({
   const [hasSearched, setHasSearched] = useState(false);
   const queryClient = useQueryClient();
   const [isMobile, setIsMobile] = useState(false);
+
+  // Fetch movies directly with React Query
+  const {
+    data: moviesData,
+    isLoading: isMoviesLoading,
+    error,
+  } = useMovies(filterGenre);
 
   // Open the modal if isAddMovieModalOpen prop changes
   useEffect(() => {
@@ -90,10 +98,10 @@ function Movies({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Use movies directly from props or get them from React Query cache if not provided
+  // Use movies directly from React Query
   const moviesToUse = useMemo(() => {
-    return propMovies || [];
-  }, [propMovies]);
+    return moviesData || [];
+  }, [moviesData]);
 
   // Search functionality - only called on demand, not on every keystroke
   const getMovieRequest = useCallback(() => {
@@ -529,7 +537,7 @@ function Movies({
   }, [moviesToDisplay, isMobile]);
 
   // Determine the overall loading state
-  const isPageLoading = isLoading && (!propMovies || propMovies.length === 0);
+  const isPageLoading = isLoading && (!moviesData || moviesData.length === 0);
 
   // Show loading spinner if loading and no propMovies
   if (isPageLoading) {

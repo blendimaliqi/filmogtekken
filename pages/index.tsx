@@ -29,18 +29,12 @@ const isMobile = () => {
 // Component to render just the add movie functionality
 const StandaloneAddMovieButton = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const router = useRouter();
   const queryClient = useQueryClient();
 
   const refreshMovies = useCallback(() => {
-    // Invalidate the movies query to trigger a refetch
+    // Just invalidate the query cache, no need to force reload
     queryClient.invalidateQueries({ queryKey: ["movies"] });
-
-    // Force a page refresh after a short delay to ensure we get fresh data
-    setTimeout(() => {
-      router.reload();
-    }, 500);
-  }, [queryClient, router]);
+  }, [queryClient]);
 
   return (
     <>
@@ -64,14 +58,12 @@ export default function Home() {
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  const { isLoading, error, data: movies, refetch } = useMovies();
+  const { isLoading, error, data: movies } = useMovies();
 
-  // Function to refresh the page after adding a movie
-  const refreshAfterMovieAdded = useCallback(() => {
-    refetch().then(() => {
-      router.reload();
-    });
-  }, [refetch, router]);
+  // Function to refresh the movie cache
+  const refreshMovieCache = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["movies"] });
+  }, [queryClient]);
 
   // Check for mobile view on mount and window resize
   useEffect(() => {
@@ -167,7 +159,7 @@ export default function Home() {
           Sorry, we couldn&apos;t load the movies. Please try again later.
         </p>
         <button
-          onClick={() => refetch()}
+          onClick={() => refreshMovieCache()}
           className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded"
         >
           Try Again
@@ -311,13 +303,13 @@ export default function Home() {
           <div className="hidden md:block absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-black to-transparent"></div>
         </div>
 
-        {/* Pass movies directly to the Movies component and include refresh handler */}
+        {/* Simply render the Movies component without passing any props */}
         <div
           className={`transition-opacity duration-300 ${
             contentVisible ? "opacity-100 animate-pureFade" : "opacity-0"
           }`}
         >
-          <Movies movies={movies} onMovieAdded={refreshAfterMovieAdded} />
+          <Movies onMovieAdded={refreshMovieCache} />
         </div>
       </div>
     </main>
