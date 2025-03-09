@@ -1,5 +1,4 @@
 import React, { useState, useEffect, memo } from "react";
-import { useRouter } from "next/router";
 import { urlFor } from "../config/client";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,15 +11,12 @@ export interface MovieProps {
   movie: any;
 }
 
-// Memoize the Movie component to prevent unnecessary re-renders
 const Movie = memo(function Movie({ title, poster, movie }: MovieProps) {
-  const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  // Check if device is mobile on mount
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -30,10 +26,8 @@ const Movie = memo(function Movie({ title, poster, movie }: MovieProps) {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Get the correct URL path
   const moviePath = movie.slug?.current || movie._id;
 
-  // Simplified click handler
   const handleClick = () => {
     setIsLeaving(true);
   };
