@@ -48,17 +48,19 @@ function CommentForm({
   }, []);
 
   // Use our custom hooks
-  const { data: personData } = useCurrentPerson();
+  const { data: personData, isLoading: isPersonLoading } = useCurrentPerson();
   const addComment = useAddComment();
   const deleteComment = useDeleteComment();
   const updateProfileImage = useUpdateProfileImage();
 
-  // Fetch comments using the useComments hook
+  // Only fetch comments if user is logged in
   const {
     data: commentsData,
     isLoading: commentsLoading,
-    isFetching: commentsFetching,
-  } = useComments(movieId);
+    error: commentsError,
+  } = useComments(movieId, {
+    enabled: !!session, // Only fetch comments when user is logged in
+  });
 
   // Use useMemo to avoid unnecessary re-renders
   const sortedComments = useMemo(() => {

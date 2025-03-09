@@ -44,13 +44,6 @@ const queryClient = new QueryClient({
         }
       },
     },
-    mutations: {
-      onError: (error) => {
-        if (process.env.NODE_ENV !== "production") {
-          console.error("Global mutation error:", error);
-        }
-      },
-    },
   },
 });
 

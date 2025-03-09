@@ -12,12 +12,15 @@ export const commentKeys = {
 };
 
 // Hook to get comments for a movie
-export function useComments(movieIdOrSlug: string) {
+export function useComments(
+  movieIdOrSlug: string,
+  options: { enabled?: boolean } = {}
+) {
   const queryClient = useQueryClient();
 
   return useQuery({
     queryKey: commentKeys.list(movieIdOrSlug),
-    enabled: !!movieIdOrSlug,
+    enabled: !!movieIdOrSlug && options.enabled !== false,
     queryFn: async () => {
       try {
         // Check if we already have this movie with comments in the cache

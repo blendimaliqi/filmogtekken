@@ -606,15 +606,17 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
           </div>
         )}
 
-        {/* Comments section */}
-        <div id="comments" className="mt-20">
-          <CommentForm
-            movieId={movieData._id}
-            session={session}
-            movieData={movieData}
-            refetch={refetch}
-          />
-        </div>
+        {/* Comments section - only show for logged in users */}
+        {session ? (
+          <div id="comments" className="mt-20">
+            <CommentForm
+              movieId={movieData._id}
+              session={session}
+              movieData={movieData}
+              refetch={refetch}
+            />
+          </div>
+        ) : null}
       </div>
     </main>
   );
