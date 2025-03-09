@@ -304,26 +304,30 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
       {/* Hero section with backdrop */}
       <div className="relative">
         {/* Backdrop image */}
-        {movieData.poster_backdrop && (
-          <>
-            <div className="absolute inset-0 h-[100vh]">
-              <Image
-                src={
-                  typeof movieData.poster_backdrop === "string"
-                    ? movieData.poster_backdrop
-                    : movieData.poster_backdrop?.url
-                    ? movieData.poster_backdrop.url
-                    : urlFor(movieData.poster_backdrop).url()
-                }
-                alt={movieData.title || "Movie backdrop"}
-                priority
-                fill
-                className="object-cover opacity-40"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent from-40% to-black" />
-            </div>
-          </>
-        )}
+        <div className="absolute inset-0 h-[100vh]">
+          <Image
+            src={
+              movieData.poster_backdrop
+                ? typeof movieData.poster_backdrop === "string"
+                  ? movieData.poster_backdrop
+                  : movieData.poster_backdrop?.url
+                  ? movieData.poster_backdrop.url
+                  : urlFor(movieData.poster_backdrop).url()
+                : movieData.poster
+                ? typeof movieData.poster === "string"
+                  ? movieData.poster
+                  : movieData.poster?.url
+                  ? movieData.poster.url
+                  : urlFor(movieData.poster).url()
+                : "/notfound.png" // Fallback image
+            }
+            alt={movieData.title || "Movie backdrop"}
+            priority
+            fill
+            className="object-cover opacity-40"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent from-40% to-black" />
+        </div>
 
         {/* Movie content */}
         <div
