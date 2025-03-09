@@ -5,6 +5,7 @@ export const movieQuery = `*[_type == "movie" && (slug.current == $movieId || _i
   "poster": poster.asset->,
   "poster_backdrop": poster_backdrop.asset->,
   plot,
+  overview,
   genres,
   castMembers,
   comments[] {

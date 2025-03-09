@@ -86,6 +86,13 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
     staleTime: 1000 * 30, // 30 seconds stale time to balance performance and freshness
   });
 
+  // Explicitly refetch data when navigating to ensure it's complete
+  useEffect(() => {
+    if (router.isReady && slugString) {
+      refetch();
+    }
+  }, [router.isReady, slugString, refetch]);
+
   // Handle page visibility to ensure fresh data
   useEffect(() => {
     if (!router.isReady) return;
@@ -426,7 +433,31 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
 
                 {/* Plot */}
                 <p className="text-gray-300 text-lg leading-relaxed mb-8">
-                  {movieData.plot || "No description available"}
+                  {(() => {
+                    // First try plot as direct string
+                    if (
+                      movieData.plot &&
+                      typeof movieData.plot === "string" &&
+                      movieData.plot.trim() !== ""
+                    ) {
+                      return movieData.plot;
+                    }
+
+                    // Then try overview structure
+                    if (
+                      movieData.overview &&
+                      typeof movieData.overview === "object" &&
+                      movieData.overview.children &&
+                      Array.isArray(movieData.overview.children) &&
+                      movieData.overview.children.length > 0 &&
+                      movieData.overview.children[0].text
+                    ) {
+                      return movieData.overview.children[0].text;
+                    }
+
+                    // Finally, fallback message
+                    return "No description available";
+                  })()}
                 </p>
 
                 {/* Rate button */}

@@ -36,13 +36,13 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
 
       {/* Modal content */}
       <div
-        className="relative z-[1000000] bg-gradient-to-b from-gray-900 to-black p-6 rounded-xl border border-gray-800/50 shadow-xl max-w-3xl w-full mx-4"
+        className="relative z-[1000000] bg-gradient-to-b from-gray-900 to-black p-4 sm:p-6 rounded-xl border border-gray-800/50 shadow-xl w-full max-w-3xl mx-2 sm:mx-4 my-2 max-h-[90vh] sm:max-h-[85vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
         style={{ pointerEvents: "auto" }}
       >
         {/* Close button */}
         <button
-          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-white transition-colors z-10"
           onClick={onClose}
           style={{ pointerEvents: "auto" }}
         >
@@ -62,8 +62,8 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
           </svg>
         </button>
 
-        {/* Modal content */}
-        <div className="z-[1000000]">{children}</div>
+        {/* Modal content wrapper with scrolling */}
+        <div className="z-[1000000] overflow-y-auto flex-1">{children}</div>
       </div>
     </div>
   );

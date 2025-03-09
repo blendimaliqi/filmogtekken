@@ -29,7 +29,7 @@ export function useMovie(
     queryFn: async () => {
       if (!slugString) throw new Error("No slug or ID provided");
 
-      // Enhanced query with proper image resolution
+      // Enhanced query with proper image resolution and ALWAYS include both plot and overview fields
       const movieQuery = `*[_type == "movie" && (slug.current == $identifier || _id == $identifier)][0]{
         _id,
         _type,
@@ -58,7 +58,6 @@ export function useMovie(
         ratings[] {
           _key,
           rating,
-          _createdAt,
           person-> {
             _id,
             name,
@@ -69,17 +68,26 @@ export function useMovie(
 
       const result = await client.fetch(movieQuery, { identifier: slugString });
 
-      if (!result) {
-        throw new Error(`Movie not found: ${slugString}`);
+      // If no data found, throw error
+      if (!result) throw new Error(`Movie not found: ${slugString}`);
+
+      // Ensure plot exists in some form for client-side rendering
+      if (
+        !result.plot &&
+        result.overview &&
+        result.overview.children &&
+        result.overview.children.length > 0
+      ) {
+        result.plot = result.overview.children[0].text;
       }
 
       return result;
     },
     initialData,
-    // Let TanStack Query handle the caching strategy
-    staleTime: 1000 * 60 * 2, // 2 minutes - shorter to ensure fresher data
-    gcTime: 1000 * 60 * 5, // 5 minutes - how long to keep in cache
-  } as any);
+    enabled: !!slugString,
+    refetchOnWindowFocus: false, // Don't refetch on window focus to avoid unnecessary requests
+    refetchOnMount: true, // Always refetch when component mounts to ensure fresh data
+  });
 }
 
 // Fetch all movies
