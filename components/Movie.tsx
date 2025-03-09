@@ -33,13 +33,12 @@ const Movie = memo(function Movie({ title, poster, movie }: MovieProps) {
   // Get the correct URL path
   const moviePath = movie.slug?.current || movie._id;
 
-  // Simplified click handler that lets Next.js handle the navigation
-  const handleClick = (e: React.MouseEvent) => {
-    // Don't prevent default - let Next.js Link handle the navigation
+  // Simplified click handler
+  const handleClick = () => {
     setIsLeaving(true);
   };
 
-  // Calculate average rating and optimize with memoization
+  // Calculate average rating
   const averageRating =
     movie.ratings && movie.ratings.length > 0
       ? (
@@ -58,52 +57,67 @@ const Movie = memo(function Movie({ title, poster, movie }: MovieProps) {
     .url();
 
   return (
-    <Link
-      href={`/${moviePath}`}
-      draggable={false}
-      className={`relative overflow-hidden rounded-xl transition-all duration-300 transform 
-        ${isLeaving ? "scale-95 opacity-70" : "hover:translate-y-[-8px]"} 
-        hover:shadow-[0_20px_30px_rgba(0,0,0,0.3)] cursor-pointer`}
-      onClick={handleClick}
-      onMouseEnter={() => !isMobile && setIsHovered(true)}
-      onMouseLeave={() => !isMobile && setIsHovered(false)}
-      onTouchStart={() => isMobile && setIsHovered(true)}
-      onTouchEnd={() => isMobile && setTimeout(() => setIsHovered(false), 500)}
-    >
-      <div className="relative aspect-[2/3] w-full">
+    <div className="movie-card-wrapper mb-1 px-0.5">
+      <div
+        className={`aspect-[2/3] relative rounded-xl overflow-hidden shadow-lg transform transition-all duration-300 ease-out ${
+          isLeaving
+            ? "opacity-70 scale-95"
+            : isHovered
+            ? "translate-y-[-8px]"
+            : ""
+        }`}
+        onMouseEnter={() => !isMobile && setIsHovered(true)}
+        onMouseLeave={() => !isMobile && setIsHovered(false)}
+        onTouchStart={() => isMobile && setIsHovered(true)}
+        onTouchEnd={() =>
+          isMobile && setTimeout(() => setIsHovered(false), 500)
+        }
+      >
+        <Link
+          href={`/${moviePath}`}
+          onClick={handleClick}
+          className="block absolute inset-0 z-10"
+          aria-label={`View details for ${title}`}
+        />
+
         {/* Loading skeleton */}
         {!imageLoaded && (
-          <div className="absolute inset-0 bg-gray-900 rounded-xl animate-pulse"></div>
+          <div className="absolute inset-0 bg-gray-800 animate-pulse" />
         )}
 
         {/* Movie poster */}
-        <Image
-          className={`w-full h-full object-cover rounded-xl select-none transition-transform duration-300 
-            ${isHovered ? "scale-105" : "scale-100"}
-            ${imageLoaded ? "opacity-100" : "opacity-0"}`}
-          draggable={false}
-          width={isMobile ? 300 : 500}
-          height={isMobile ? 450 : 750}
-          src={optimizedImageUrl}
-          alt={title || "Movie poster"}
-          loading="lazy"
-          onLoad={() => setImageLoaded(true)}
-          style={{ objectPosition: "center" }}
-        />
+        <div className="h-full w-full overflow-hidden">
+          <Image
+            className={`h-full w-full object-cover transition-transform duration-300 ease-out
+              ${isHovered ? "scale-105" : "scale-100"}
+              ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+            draggable={false}
+            width={isMobile ? 300 : 500}
+            height={isMobile ? 450 : 750}
+            src={optimizedImageUrl}
+            alt={title || "Movie poster"}
+            priority={false}
+            loading="lazy"
+            onLoad={() => setImageLoaded(true)}
+            style={{ objectPosition: "center" }}
+          />
+        </div>
 
         {/* Permanent gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent rounded-xl"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
-        {/* Hover overlay - slides up from bottom */}
+        {/* Hover overlay */}
         <div
-          className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent transition-all duration-300 rounded-xl 
-            ${isHovered ? "opacity-100" : "opacity-0"}`}
-        ></div>
+          className={`absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent 
+            transition-opacity duration-300 ${
+              isHovered ? "opacity-100" : "opacity-0"
+            }`}
+        />
 
         {/* Content container */}
         <div className="absolute inset-0 flex flex-col justify-end p-3 sm:p-5">
           {/* Static content - always visible */}
-          <div className="z-10">
+          <div className="z-[1]">
             <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white line-clamp-2 drop-shadow-lg">
               {title}
             </h3>
@@ -115,59 +129,54 @@ const Movie = memo(function Movie({ title, poster, movie }: MovieProps) {
           </div>
 
           {/* Dynamic content - appears on hover with fade in transition */}
-          <div>
-            <div
-              className={`transition-all duration-300 ease-out transform 
-                ${
-                  isHovered
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-0 translate-y-4"
-                }`}
-            >
-              {/* Rating and comments */}
-              <div className="flex items-center space-x-3 mt-2 mb-2 sm:mb-4">
-                {averageRating && (
-                  <div className="flex items-center">
-                    <AiFillStar className="text-yellow-400 mr-1" size={16} />
-                    <span className="text-white text-sm sm:text-base font-bold">
-                      {averageRating}
-                    </span>
-                  </div>
-                )}
+          <div
+            className={`z-[1] transition-all duration-300 ease-out transform
+              ${
+                isHovered
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-4"
+              }`}
+          >
+            {/* Rating and comments */}
+            <div className="flex items-center space-x-3 mt-2 mb-2 sm:mb-4">
+              {averageRating && (
+                <div className="flex items-center">
+                  <AiFillStar className="text-yellow-400 mr-1" size={16} />
+                  <span className="text-white text-sm sm:text-base font-bold">
+                    {averageRating}
+                  </span>
+                </div>
+              )}
 
-                {commentCount > 0 && (
-                  <div className="flex items-center">
-                    <AiOutlineComment
-                      className="text-blue-300 mr-1"
-                      size={16}
-                    />
-                    <span className="text-white text-sm sm:text-base font-bold">
-                      {commentCount}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Genres if available */}
-              {movie.genres && movie.genres.length > 0 && (
-                <div className="flex flex-wrap gap-1 mb-2 sm:mb-4">
-                  {movie.genres
-                    .slice(0, 2)
-                    .map((genre: string, index: number) => (
-                      <span
-                        key={index}
-                        className="text-[10px] sm:text-xs text-white/80 bg-white/10 px-1.5 sm:px-2 py-0.5 rounded-full"
-                      >
-                        {genre}
-                      </span>
-                    ))}
+              {commentCount > 0 && (
+                <div className="flex items-center">
+                  <AiOutlineComment className="text-blue-300 mr-1" size={16} />
+                  <span className="text-white text-sm sm:text-base font-bold">
+                    {commentCount}
+                  </span>
                 </div>
               )}
             </div>
+
+            {/* Genres if available */}
+            {movie.genres && movie.genres.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-2 sm:mb-4">
+                {movie.genres
+                  .slice(0, 2)
+                  .map((genre: string, index: number) => (
+                    <span
+                      key={index}
+                      className="text-[10px] sm:text-xs text-white/80 bg-white/10 px-1.5 sm:px-2 py-0.5 rounded-full"
+                    >
+                      {genre}
+                    </span>
+                  ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 });
 
