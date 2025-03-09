@@ -998,6 +998,28 @@ function Movies({
                   </div>
                 )}
               </div>
+
+              {/* Mobile close button - only visible on small screens */}
+              <button
+                onClick={closeModal}
+                className="w-full mt-6 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-lg flex items-center justify-center sm:hidden"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+                Lukk
+              </button>
             </div>
           </div>
         </ModalComponent>

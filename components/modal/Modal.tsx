@@ -11,14 +11,29 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      document.body.style.touchAction = "none"; // Prevent touch scrolling
     } else {
       document.body.style.overflow = "auto";
+      document.body.style.touchAction = "auto";
     }
 
     return () => {
       document.body.style.overflow = "auto";
+      document.body.style.touchAction = "auto";
     };
   }, [isOpen]);
+
+  // Handle escape key press
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -38,13 +53,14 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
       <div
         className="relative z-[1000000] bg-gradient-to-b from-gray-900 to-black p-4 sm:p-6 rounded-xl border border-gray-800/50 shadow-xl w-full max-w-3xl mx-2 sm:mx-4 my-2 max-h-[90vh] sm:max-h-[85vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
-        style={{ pointerEvents: "auto" }}
+        style={{ pointerEvents: "auto", touchAction: "auto" }}
       >
         {/* Close button */}
         <button
-          className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-white transition-colors z-10"
+          className="absolute top-2 right-2 sm:top-4 sm:right-4 text-white hover:text-yellow-300 transition-colors z-50 bg-gray-800/60 p-2 rounded-full shadow-lg touch-manipulation"
           onClick={onClose}
           style={{ pointerEvents: "auto" }}
+          aria-label="Close modal"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -52,18 +68,23 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
+            strokeWidth={2.5}
           >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeWidth={2}
               d="M6 18L18 6M6 6l12 12"
             />
           </svg>
         </button>
 
         {/* Modal content wrapper with scrolling */}
-        <div className="z-[1000000] overflow-y-auto flex-1">{children}</div>
+        <div
+          className="z-[1000000] overflow-y-auto flex-1"
+          style={{ WebkitOverflowScrolling: "touch" }} // Smooth scrolling on iOS
+        >
+          {children}
+        </div>
       </div>
     </div>
   );
