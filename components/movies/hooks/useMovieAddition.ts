@@ -92,6 +92,8 @@ function useMovieAddition({
       const imageAssetBackdrop = await uploadExternalImage(imageUrlBackdrop);
       const imageAssetIdBackdrop = imageAssetBackdrop._id;
 
+      const overviewText = mov.overview || responseDetails.overview || "";
+
       const movieData = {
         _type: "movie",
         title: mov.title,
@@ -102,17 +104,23 @@ function useMovieAddition({
         },
         genres: responseDetails.genres.map((genre: any) => genre.name),
         length: responseDetails.runtime,
-        plot: mov.overview || responseDetails.overview || "",
-        overview: {
-          _type: "block",
-          children: [
-            {
-              _type: "span",
-              _key: uuidv4(),
-              text: mov.overview || responseDetails.overview || "",
-            },
-          ],
-        },
+        plot: overviewText,
+        overview: [
+          {
+            _type: "block",
+            _key: uuidv4(),
+            children: [
+              {
+                _type: "span",
+                _key: uuidv4(),
+                text: overviewText,
+                marks: [],
+              },
+            ],
+            markDefs: [],
+            style: "normal",
+          },
+        ],
         poster: {
           _type: "image",
           asset: {
