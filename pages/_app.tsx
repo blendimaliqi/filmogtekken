@@ -508,11 +508,8 @@ export default function App({
                 name="viewport"
                 content="width=device-width, initial-scale=1, maximum-scale=1"
               />
-              <meta
-                name="description"
-                content="Film og Tekken - Film community"
-              />
-              <title>Film og Tekken</title>
+              <meta name="description" content="Film med Gutta" />
+              <title>Film med Gutta</title>
               <link rel="icon" href="/favicon.ico" />
               <link rel="manifest" href="/site.webmanifest" />
             </Head>
