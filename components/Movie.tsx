@@ -3,6 +3,7 @@ import { urlFor } from "../config/client";
 import Image from "next/image";
 import Link from "next/link";
 import { AiFillStar, AiOutlineComment } from "react-icons/ai";
+import { useRouter } from "next/router";
 
 export interface MovieProps {
   title: string;
@@ -16,6 +17,7 @@ const Movie = memo(function Movie({ title, poster, movie }: MovieProps) {
   const [isLeaving, setIsLeaving] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -28,8 +30,11 @@ const Movie = memo(function Movie({ title, poster, movie }: MovieProps) {
 
   const moviePath = movie.slug?.current || movie._id;
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     setIsLeaving(true);
+    // Manually navigate and trigger the route change event
+    router.push(`/${moviePath}`);
   };
 
   // Simplify rating calculation for better consistency

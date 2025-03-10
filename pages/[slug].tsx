@@ -346,6 +346,21 @@ function SingleMovie({ initialMovieData }: { initialMovieData: Movie | null }) {
         <meta name="description" content={movieData.plot || ""} />
       </Head>
 
+      {/* Loading overlay - shown during route changes */}
+      {isRouteLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center">
+          <ColorRing
+            visible={true}
+            height="80"
+            width="80"
+            ariaLabel="loading-spinner"
+            wrapperStyle={{}}
+            wrapperClass="blocks-wrapper"
+            colors={["#cacaca", "#cacaca", "#cacaca", "#cacaca", "#cacaca"]}
+          />
+        </div>
+      )}
+
       {/* Hero section with backdrop */}
       <div className="relative">
         {/* Backdrop image */}
