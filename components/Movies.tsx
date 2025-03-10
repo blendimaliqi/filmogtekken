@@ -261,14 +261,34 @@ function Movies({
     ]
   );
 
-  // Search functionality - only called on demand, not on every keystroke
+  // Debounce search term to avoid excessive API calls
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300); // 300ms delay
+
+    return () => {
+      clearTimeout(timerId);
+    };
+  }, [searchTerm]);
+
+  // Trigger search when debounced search term changes
+  useEffect(() => {
+    if (!isModalOpen) {
+      getMovieRequest();
+    }
+  }, [debouncedSearchTerm, isModalOpen]);
+
+  // Search functionality - now called on every keystroke via debouncing
   const getMovieRequest = useCallback(() => {
     try {
       // For regular search in the main page
       if (!isModalOpen) {
-        if (searchTerm !== "") {
+        if (debouncedSearchTerm !== "") {
           const searchResults = moviesToUse.filter((movie: Movie) =>
-            movie.title.toLowerCase().includes(searchTerm.toLowerCase())
+            movie.title
+              .toLowerCase()
+              .includes(debouncedSearchTerm.toLowerCase())
           );
           setFilteredMovies(searchResults);
           setHasSearched(true);
@@ -286,9 +306,8 @@ function Movies({
       }
       // For TMDB search in the modal
       else if (isModalOpen) {
-        setHasSearched(true);
-
         if (input !== "") {
+          setHasSearched(true);
           setIsLoading(true);
           // Call TMDB API to search for movies
           fetch(
@@ -308,8 +327,9 @@ function Movies({
               setIsLoading(false);
             });
         } else {
-          // Clear results if the user explicitly searches with empty input
+          // Clear results if search term is empty
           setTmdbMovies([]);
+          setHasSearched(false);
         }
       }
     } catch (error) {
@@ -317,14 +337,14 @@ function Movies({
       setIsLoading(false);
     }
   }, [
-    searchTerm,
-    moviesToUse,
+    debouncedSearchTerm,
     isModalOpen,
-    activeFilter,
-    filterMoviesByNewest,
-    handleSortByAverageRating,
     input,
     isMobile,
+    activeFilter,
+    moviesToUse,
+    handleSortByAverageRating,
+    filterMoviesByNewest,
   ]);
 
   // Apply active filter when movies change
@@ -673,11 +693,7 @@ function Movies({
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  getMovieRequest();
-                }
+                // The search is now triggered by the debounced effect, not here
               }}
             />
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -774,14 +790,14 @@ function Movies({
             ) : (
               <button
                 onClick={() => signIn("discord")}
-                className="z-50 w-full sm:w-auto bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 flex flex-col items-center cursor-pointer relative hover:scale-105 active:scale-95"
+                className="z-50 w-full sm:w-auto bg-gradient-to-r from-yellow-700 to-yellow-600 text-white font-medium py-2 px-4 rounded-lg hover:from-yellow-600 hover:to-yellow-500 transition-all duration-300 flex flex-col items-center cursor-pointer relative hover:scale-105 active:scale-95 shadow-md"
                 style={{ position: "relative", pointerEvents: "auto" }}
                 type="button"
               >
-                <div className="flex items-center mb-1">
+                <div className="flex items-center">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 mr-2 text-gray-400"
+                    className="h-4 w-4 mr-2"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -793,9 +809,9 @@ function Movies({
                       d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
                     />
                   </svg>
-                  <span className="font-medium text-lg">Logg inn</span>
+                  <span>Logg inn</span>
                 </div>
-                <p className="text-xs text-gray-400">for å legge til filmer</p>
+                <p className="text-xs mt-1">for å legge til filmer</p>
               </button>
             )}
           </div>

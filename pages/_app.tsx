@@ -510,7 +510,7 @@ export default function App({
               />
               <meta name="description" content="Film med Gutta" />
               <title>Film med Gutta</title>
-              <link rel="icon" href="/favicon.ico" />
+              <link rel="icon" href="/fmg.png" />
               <link rel="manifest" href="/site.webmanifest" />
             </Head>
             <ProfileImageUpdater />
