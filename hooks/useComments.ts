@@ -208,6 +208,7 @@ export function useAddComment() {
           .append("comments", [
             {
               _key: commentKey,
+              _type: "comment",
               person: {
                 _type: "reference",
                 _ref: personId,
@@ -223,6 +224,7 @@ export function useAddComment() {
           ...result,
           addedComment: {
             _key: commentKey,
+            _type: "comment",
             person: {
               _type: "reference",
               _ref: personId,

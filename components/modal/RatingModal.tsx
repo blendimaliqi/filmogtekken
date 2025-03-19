@@ -10,12 +10,17 @@ type RatingModalProps = {
 };
 
 function RatingModal({ open, setOpen, rateMovie, movieId }: RatingModalProps) {
-  function handleRating(value: number) {
-    setOpen(false);
-    rateMovie(movieId, value);
-  }
-
   const [ratingStar, setRatingStar] = useState(0);
+
+  function handleRating(value: number) {
+    setRatingStar(0); // Reset rating star
+    setOpen(false); // Close modal first
+
+    // Delay the rating call to avoid race conditions
+    setTimeout(() => {
+      rateMovie(movieId, value);
+    }, 100);
+  }
 
   return (
     <div>

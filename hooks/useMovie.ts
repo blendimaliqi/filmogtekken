@@ -58,6 +58,8 @@ export function useMovie(
         ratings[] {
           _key,
           rating,
+          _createdAt,
+          _updatedAt,
           person-> {
             _id,
             name,
@@ -66,7 +68,11 @@ export function useMovie(
         }
       }`;
 
-      const result = await client.fetch(movieQuery, { identifier: slugString });
+      // Add a cache-busting parameter to ensure we always get fresh data
+      const result = await client.fetch(movieQuery, {
+        identifier: slugString,
+        cacheBuster: Date.now(), // Add timestamp to bust cache
+      });
 
       // If no data found, throw error
       if (!result) throw new Error(`Movie not found: ${slugString}`);
@@ -85,13 +91,17 @@ export function useMovie(
     },
     initialData,
     enabled: !!slugString,
-    refetchOnWindowFocus: false, // Don't refetch on window focus to avoid unnecessary requests
-    refetchOnMount: true, // Always refetch when component mounts to ensure fresh data
+    refetchOnWindowFocus: true, // Always refetch on window focus
+    refetchOnMount: true, // Always refetch when component mounts
+    staleTime: 0, // Always consider data stale to ensure fresh data
+    cacheTime: 1000, // Only cache for 1 second
   });
 }
 
 // Fetch all movies
 export function useMovies(filters?: string): UseQueryResult<Movie[], Error> {
+  const queryClient = useQueryClient();
+
   return useQuery({
     queryKey: movieKeys.list(filters),
     queryFn: async () => {
@@ -110,6 +120,8 @@ export function useMovies(filters?: string): UseQueryResult<Movie[], Error> {
             ratings[] {
               rating,
               _key,
+              _createdAt,
+              _updatedAt,
               person-> {
                 _id,
                 name,
@@ -131,6 +143,8 @@ export function useMovies(filters?: string): UseQueryResult<Movie[], Error> {
             ratings[] {
               rating,
               _key,
+              _createdAt,
+              _updatedAt,
               person-> {
                 _id,
                 name,
@@ -146,8 +160,9 @@ export function useMovies(filters?: string): UseQueryResult<Movie[], Error> {
 
       return result;
     },
-    // Shorter stale time to ensure fresher data
-    staleTime: 1000 * 60 * 1, // 1 minute
+    // Set stale time to 0 to always fetch fresh data
+    staleTime: 0,
     refetchOnWindowFocus: true, // Refetch when user focuses window to get fresh data
+    refetchOnMount: true, // Always refetch when component mounts
   });
 }

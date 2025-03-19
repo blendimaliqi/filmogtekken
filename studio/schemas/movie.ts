@@ -12,10 +12,9 @@ export default defineType({
       title: 'Comments',
       type: 'array',
       of: [
-        {type: 'reference', to: [{type: 'comment'}]},
         {
           type: 'object',
-          name: 'inlineComment',
+          name: 'comment',
           fields: [
             {
               name: 'person',

@@ -48,14 +48,32 @@ const Movie = memo(function Movie({ title, poster, movie }: MovieProps) {
     }
 
     try {
+      let validRatings = 0;
       const sum = ratings.reduce((acc: number, curr: any) => {
-        // Handle both direct number values and nested rating objects
-        if (typeof curr === "number") return acc + curr;
-        const rating = curr?.rating ? Number(curr.rating) : 0;
-        return acc + rating;
+        // Handle different rating formats
+        let ratingValue = 0;
+
+        // Direct number value
+        if (typeof curr === "number") {
+          ratingValue = curr;
+          validRatings++;
+        }
+        // Object with rating property
+        else if (curr && typeof curr === "object") {
+          const rating = curr.rating;
+          if (
+            typeof rating === "number" ||
+            (typeof rating === "string" && !isNaN(Number(rating)))
+          ) {
+            ratingValue = Number(rating);
+            validRatings++;
+          }
+        }
+
+        return acc + ratingValue;
       }, 0);
 
-      return (sum / ratings.length).toFixed(1);
+      return validRatings > 0 ? (sum / validRatings).toFixed(1) : null;
     } catch (error) {
       console.error("Error calculating average rating:", error);
       return null;

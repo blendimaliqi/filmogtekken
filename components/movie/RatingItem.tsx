@@ -21,7 +21,26 @@ function RatingItem({ rating, index }: RatingItemProps) {
     return urlFor(image).url();
   };
 
-  const person = typeof rating.person === "object" ? rating.person : null;
+  // Handle both nested person objects and direct person references
+  const person = (() => {
+    if (!rating.person) return null;
+
+    // If it's already expanded
+    if (
+      typeof rating.person === "object" &&
+      (rating.person.name || rating.person._id)
+    ) {
+      return rating.person;
+    }
+
+    // If it's a reference that hasn't been expanded
+    if (typeof rating.person === "object" && rating.person._ref) {
+      return { name: "Ukjent bruker" };
+    }
+
+    return null;
+  })();
+
   const hasImage = person && person.image;
   const imageUrl = hasImage ? getImageUrl(person.image) : null;
 

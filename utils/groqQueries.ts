@@ -23,7 +23,6 @@ export const movieQuery = `*[_type == "movie" && (slug.current == $movieId || _i
   "ratings": ratings[] {
     _key,
     rating,
-    _createdAt,
     person-> {
       _id,
       name,
@@ -34,7 +33,7 @@ export const movieQuery = `*[_type == "movie" && (slug.current == $movieId || _i
   _createdAt
 }`;
 
-export const moviesQuery = `*[_type == "movie"] {
+export const moviesQuery = `*[_type == "movie"] | order(_createdAt desc) {
   _id,
   title,
   releaseDate,

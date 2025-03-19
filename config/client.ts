@@ -16,8 +16,9 @@ const token =
 export const client = createClient({
   projectId,
   dataset,
-  useCdn: true, // Use the CDN for better performance on read-only operations
+  useCdn: false, // Disable CDN to always get fresh data
   apiVersion: "2023-05-02",
+  requestTagPrefix: String(Date.now()), // Add unique request tag to prevent caching
 });
 
 // Create a client with write access

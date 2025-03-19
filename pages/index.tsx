@@ -234,6 +234,23 @@ export default function Home() {
     };
   }, []);
 
+  // Force a refresh of movie data when the page is visited
+  useEffect(() => {
+    const refreshOnVisit = async () => {
+      try {
+        // Only refetch if we have stale data
+        await queryClient.invalidateQueries({
+          queryKey: movieKeys.lists(),
+          refetchType: "active",
+        });
+      } catch (error) {
+        console.error("Error refreshing homepage data:", error);
+      }
+    };
+
+    refreshOnVisit();
+  }, [queryClient]);
+
   // Pre-populate movie cache to improve performance
   useEffect(() => {
     if (movies && Array.isArray(movies)) {
