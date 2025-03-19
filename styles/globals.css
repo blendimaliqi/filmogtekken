@@ -274,3 +274,27 @@ body {
 .carousel .control-arrow {
   z-index: 1 !important;
 }
+
+/* Ensure carousel indicators are hidden behind modals */
+.carousel-container .carousel .control-dots {
+  z-index: 10 !important; /* Lower z-index than modal */
+}
+
+.carousel-container .carousel .control-prev,
+.carousel-container .carousel .control-next {
+  z-index: 10 !important; /* Lower z-index than modal */
+}
+
+/* When a modal is open, hide all carousel indicators */
+body.modal-open .carousel .control-dots,
+body.modal-open .carousel .control-prev,
+body.modal-open .carousel .control-next,
+body.modal-open .carousel .control-arrow {
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* Ensure the modal has higher priority than any other element */
+body.modal-open [class*="z-"] {
+  z-index: auto !important;
+}

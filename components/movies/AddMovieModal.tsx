@@ -45,7 +45,7 @@ function AddMovieModal({
 
   return (
     <ModalComponent isOpen={isModalOpen} onClose={closeModal}>
-      <div className="flex flex-col justify-center items-center z-[100000] p-3 sm:p-6 md:p-8 bg-gradient-to-b from-gray-900 to-black">
+      <div className="flex flex-col justify-center items-center z-[10000000] p-3 sm:p-6 md:p-8 bg-gradient-to-b from-gray-900 to-black">
         <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 md:mb-8 w-full">
           <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-yellow-600 to-yellow-700 flex items-center justify-center shadow-lg">
             <svg
